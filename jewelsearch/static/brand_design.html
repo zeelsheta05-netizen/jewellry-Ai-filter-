@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand Design · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318;
+  --tile-a: #ffffff; --tile-b: #fbf6ec;
+  --rose: #e2a792; --white: #dfe2e6; --yellow: #e0b65a;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button { font: inherit; cursor: pointer; color: var(--ink); }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-2px); }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 22px 28px 90px; }
+.crumbs { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.crumbs a { color: var(--accent); text-decoration: none; }
+.product { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+.gallery { position: sticky; top: 86px; display: grid; gap: 12px; animation: up .7s var(--ease) both; }
+.stage { aspect-ratio: 1; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); background: #fff; box-shadow: var(--shadow); display: grid; place-items: center; }
+.stage img { width: 100%; height: 100%; object-fit: contain; animation: stageIn .5s var(--ease); }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumbs button { padding: 0; width: 68px; height: 68px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #fff; }
+.thumbs button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tone2); }
+.thumbs img { width: 100%; height: 100%; object-fit: contain; }
+.from { font-size: 12px; color: var(--muted); }
+
+.panel { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.panel > * { animation: up .6s var(--ease) both; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 36px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 4px; word-break: break-word; }
+.based { color: var(--muted); font-size: 14px; }
+h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0 0 10px; font-weight: 700; }
+h3 .val { color: var(--ink); letter-spacing: .04em; text-transform: none; font-size: 13px; font-weight: 600; margin-left: 6px; }
+.opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 600; padding: 8px 16px; min-height: 42px;
+  border: 1px solid var(--line); border-radius: 999px; background: #fff; transition: all .3s var(--ease); }
+.opt[aria-pressed="true"] { border-color: var(--tone2); background: var(--chip); box-shadow: 0 0 0 1px var(--tone2); }
+.sw { width: 18px; height: 18px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--line-strong); }
+.sw.rose_gold { background: linear-gradient(135deg, #f6d0c2, var(--rose) 50%, #b87562); }
+.sw.white_gold { background: linear-gradient(135deg, #ffffff, var(--white) 50%, #9fa5ad); }
+.sw.yellow_gold { background: linear-gradient(135deg, #fbe7a6, var(--yellow) 50%, #a9792a); }
+.pricebox { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pb { border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; background: #fff; }
+.pb .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.pb .v { font: 500 26px/1.2 var(--serif); margin-top: 4px; font-variant-numeric: lining-nums tabular-nums; }
+.pb .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pb s { color: var(--muted); font-size: 14px; }
+.pb.ours { border: 1.5px solid var(--tone2); background: linear-gradient(160deg, #fffaf0, var(--chip)); box-shadow: 0 14px 30px -20px var(--glow); }
+.pb.ours .v { color: var(--accent-ink); }
+.pb .v.na { font: 600 13px/1.4 var(--sans); color: var(--muted); }
+.jump { font-size: 13px; color: var(--accent); font-weight: 700; }
+
+.sections { margin-top: 44px; display: grid; gap: 22px; }
+.box { border: 1px solid var(--line); border-radius: 22px; background: #fff; padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.box.ours { border: 1.5px solid var(--tone2); background: linear-gradient(170deg, #fffaf0, #fff 45%); box-shadow: 0 20px 44px -28px var(--glow), var(--shadow); }
+.box .title { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.box h2 { font: 500 21px/1.25 var(--serif); margin: 0; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; color: var(--accent-ink);
+  background: var(--chip); border: 1px solid var(--line-strong); padding: 3px 10px; border-radius: 999px; }
+.badge.plain { background: #fff; color: var(--muted); border-color: var(--line); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: lining-nums tabular-nums; }
+th { text-align: left; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 0 10px 8px 0; border-bottom: 1px solid var(--line); }
+td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; }
+tr.total td { font-weight: 700; border-top: 1px solid var(--line-strong); border-bottom: 0; color: var(--accent-ink); }
+tr.on td { background: var(--chip); font-weight: 700; }
+/* the comparison: our column is the highlighted one */
+.cmp th.us, .cmp td.us { background: linear-gradient(180deg, #fff6e0, #fdf0d2); color: var(--accent-ink); font-weight: 700; padding-left: 12px; }
+.cmp th.us { border-radius: 12px 12px 0 0; padding-top: 8px; }
+.cmp td.orig { color: var(--muted); }
+.cmp td:first-child { color: var(--muted); font-size: 13px; white-space: nowrap; }
+dl { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 9px 18px; margin: 0; font-size: 14px; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; text-align: right; word-break: break-word; }
+.note { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; }
+.desc { white-space: pre-line; color: var(--muted); font-size: 14px; margin: 12px 0 0; }
+
+.buy { text-align: center; padding: 30px 22px; }
+.buy h2 { font: 400 28px/1.2 var(--serif); margin: 0 0 6px; }
+.buy p { color: var(--muted); margin: 0 auto 20px; max-width: 620px; }
+.buy-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; max-width: 760px; margin: 0 auto; }
+.buy-opt { display: grid; gap: 8px; justify-items: center; }
+.big { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; border-radius: 999px; font: 700 16px var(--sans);
+  letter-spacing: .02em; text-decoration: none; transition: transform .3s var(--ease), box-shadow .3s, background .3s; }
+.big svg { width: 18px; height: 18px; flex: none; }
+.big.us { border: 1px solid var(--tone2); background: var(--btn); color: var(--accent-ink); box-shadow: 0 14px 30px -16px var(--glow); }
+.big.us:hover { transform: translateY(-2px); box-shadow: 0 18px 34px -14px var(--glow); }
+.big.seller { border: 1.5px solid var(--line-strong); background: #fff; color: var(--ink); }
+.big.seller:hover { transform: translateY(-2px); background: var(--chip); }
+.buy-opt small { color: var(--muted); font-size: 12.5px; }
+.staff { margin-top: 18px; font-size: 13px; color: var(--muted); text-align: center; }
+.staff button { border: 0; background: none; color: var(--danger); font-weight: 700; text-decoration: underline; padding: 0; }
+
+.state { max-width: 520px; margin: 80px auto; text-align: center; color: var(--muted); display: grid; gap: 14px; justify-items: center; }
+.state h2 { font: 400 26px var(--serif); color: var(--ink); margin: 0; }
+.dots i { display: inline-block; width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: var(--tone2); animation: bounce 1s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 50% { transform: translateY(-5px); opacity: .5; } }
+@keyframes up { from { opacity: 0; transform: translateY(18px); } }
+@keyframes stageIn { from { opacity: 0; transform: scale(.97); } }
+
+@media (max-width: 900px) {
+  .product { grid-template-columns: 1fr; gap: 24px; }
+  .gallery { position: static; }
+  .two { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .topbar { padding: 12px 16px; }
+  .brand small { display: none; }
+  .brand b { font-size: 14px; letter-spacing: .12em; }
+  .wrap { padding: 16px 16px 70px; }
+  h1 { font-size: 28px; }
+  .box { padding: 16px; }
+  .pricebox, .buy-btns { grid-template-columns: 1fr; }
+  .thumbs button { width: 56px; height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Fine jewellery atelier</small></div>
+  </a>
+  <a class="ghost" id="back" href="/?browse=all">‹ Catalogue</a>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state"><p>Loading the design<span class="dots"><i></i><i></i><i></i></span></p></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const CAT = { ring: "Ring", earrings: "Earrings", pendant: "Pendant", necklace: "Necklace", bracelet: "Bracelet" };
+const PLURAL = { ring: "Rings", earrings: "Earrings", pendant: "Pendants", necklace: "Necklaces", bracelet: "Bracelets" };
+const METAL = { rose_gold: "Rose gold", white_gold: "White gold", yellow_gold: "Yellow gold" };
+const KEY_METAL = { ...METAL, silver: "Silver", platinum: "Platinum", "gold plated": "Gold plated / base metal" };
+const PURITIES_FOR = { yellow_gold: ["14k", "18k", "22k"], rose_gold: ["14k", "18k"], white_gold: ["14k", "18k"] };
+const money = (n, cur = "INR") => n == null ? null : (cur && cur !== "INR" ? cur + " " : "₹") + Number(n).toLocaleString("en-IN", Number.isInteger(+n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const grams = n => n == null ? null : `${(+n).toFixed(2)} g`;
+const carats = n => (+n).toFixed(n < 0.1 ? 3 : 2) + " ct";
+const BAG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>`;
+const OUT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`;
+
+const id = new URLSearchParams(location.search).get("id");
+let d, state = { pic: 0, metal: null, purity: null };
+
+async function load() {
+  if (!/^\d+$/.test(id || "")) return fail("No design chosen", "Open a brand design from the catalogue.");
+  let r;
+  try { r = await fetch(`/api/brand-designs/${id}`, { credentials: "same-origin" }); }
+  catch { return fail("Couldn't load this design", "Check your connection and try again."); }
+  if (r.status === 401) { location.replace("/login?next=" + encodeURIComponent(location.pathname + location.search)); return; }
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) return fail("Design not found", body.detail || "This design is no longer listed.");
+  d = body;
+  state.metal = d.ours.metals[0];
+  fixPurity();
+  document.title = `${d.name} · Design Finder`;
+  render();
+}
+function fail(title, text) { $("#main").innerHTML = `<div class="state"><h2>${esc(title)}</h2><p>${esc(text)}</p><a class="ghost" href="/?browse=all">Go to the catalogue</a></div>`; }
+function purs() { return d.purities.filter(p => d.ours.purities.includes(p.key) && PURITIES_FOR[state.metal].includes(p.key)); }
+function fixPurity() {
+  const ok = purs().map(p => p.key);
+  if (!ok.includes(state.purity)) state.purity = ok.includes("18k") ? "18k" : ok[0];
+}
+
+function render() {
+  const o = d.original, us = d.ours, cat = CAT[us.category] || us.category;
+  $("#back").href = `/?browse=${us.category}`;
+  $("#main").innerHTML = `
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/?browse=all">Catalogue</a><span>/</span><a href="/?browse=${esc(us.category)}">${esc(PLURAL[us.category] || cat)}</a><span>/</span><span>${esc(d.name)}</span></nav>
+    <div class="product">
+      <div class="gallery" id="gallery"></div>
+      <div class="panel">
+        <div><div class="eyebrow">Based on a ${esc(d.brand)} design · ${esc(cat)}</div>
+          <h1>${esc(d.name)}</h1>
+          <div class="based">Original: “${esc(o.title)}” on ${esc(d.site)}${us.design_no ? ` · our design no. ${esc(us.design_no)}` : ""}</div></div>
+        <div id="choices" style="display:contents"></div>
+        <a class="jump" href="#buy">See the buying options ↓</a>
+      </div>
+    </div>
+    <div class="sections">
+      <section class="box" aria-label="Original and our version side by side"><div class="title"><h2>The original and our version</h2></div><div class="table-scroll" id="compare"></div></section>
+      <div class="two">
+        <section class="box ours" id="oursBox" aria-label="Our version"></section>
+        <section class="box" id="origBox" aria-label="Original details"></section>
+      </div>
+      <section class="box buy" id="buy" aria-label="Buy this design"></section>
+    </div>`;
+  renderGallery(); renderChoices(); renderCompare(); renderOurs(); renderOriginal(); renderBuy();
+}
+
+function renderGallery() {
+  const pics = d.pictures, p = pics[Math.min(state.pic, pics.length - 1)];
+  $("#gallery").innerHTML = `<div class="stage">${p ? `<img src="${esc(p.url)}" alt="${esc(d.name)}">` : ""}</div>
+    ${pics.length > 1 ? `<div class="thumbs" role="group" aria-label="Pictures">${pics.map((x, i) => `<button type="button" data-pic="${i}" aria-pressed="${i === state.pic}" aria-label="Picture ${i + 1}"><img src="${esc(x.url)}" alt=""></button>`).join("")}</div>` : ""}
+    <div class="from">Pictures from ${esc(d.site)}, showing the original design.</div>`;
+}
+
+function renderChoices() {
+  const o = d.original, price = d.ours.prices[state.purity], pur = d.purities.find(p => p.key === state.purity);
+  $("#choices").innerHTML = `
+    <div><h3>Metal colour <span class="val">${esc(METAL[state.metal])}</span></h3>
+      <div class="opts">${d.ours.metals.map(m => `<button type="button" class="opt" data-metal="${m}" aria-pressed="${m === state.metal}"><span class="sw ${m}"></span>${METAL[m]}</button>`).join("")}</div></div>
+    <div><h3>Gold purity <span class="val">${esc(pur.label)} · ${esc(pur.fineness)}</span></h3>
+      <div class="opts">${purs().map(p => `<button type="button" class="opt" data-purity="${p.key}" aria-pressed="${p.key === state.purity}">${p.label}</button>`).join("")}</div></div>
+    <div class="pricebox">
+      <div class="pb"><div class="k">Seller's price</div>${o.price != null ? `<div class="v">${money(o.price, o.currency)}</div><div class="s">${o.mrp ? `<s>${money(o.mrp, o.currency)}</s> · ` : ""}${esc(o.key?.purity || "as listed")} on ${esc(d.site)}</div>` : `<div class="v na">Not shown on ${esc(d.site)}</div>`}</div>
+      <div class="pb ours"><div class="k">Our price</div>${price ? `<div class="v">${money(price.total)}</div><div class="s">${esc(pur.label)} · incl. ${d.ours.pricing.gst_pct}% GST</div>` : `<div class="v na">Not offered</div>`}</div>
+    </div>`;
+}
+
+function stoneSummary(st) {
+  if (!st.length) return "None (plain metal)";
+  const n = st.reduce((a, s) => a + s.count, 0), ct = st.reduce((a, s) => a + s.carat, 0);
+  return `${carats(ct)} · ${n} stone${n === 1 ? "" : "s"}`;
+}
+
+function renderCompare() {
+  const o = d.original, k = o.key || {}, us = d.ours, price = us.prices[state.purity], pur = d.purities.find(p => p.key === state.purity);
+  const dimO = (o.specs || []).filter(s => /size|width|height|length|diameter|dimension/i.test(s.label)).slice(0, 2).map(s => `${s.label}: ${s.value}`).join(" · ");
+  const dimU = [us.ring_size_in ? `Ring size IN ${us.ring_size_in}` : null, ...us.dimensions.map(x => `${x.label}: ${x.value}`)].filter(Boolean).join(" · ");
+  const na = "Not listed";
+  const rows = [
+    ["Metal", k.metal ? KEY_METAL[k.metal] || k.metal : na, us.metals.map(m => METAL[m]).join(", ")],
+    ["Purity", k.purity || na, us.purities.map(p => p.toUpperCase()).join(", ")],
+    ["Gold weight", k.gold_g != null ? `${k.gold_g} g` : k.gross_g != null ? `${k.gross_g} g (gross)` : na, `${grams(us.gold_g[state.purity])} at ${pur.label}`],
+    ["Diamonds", k.diamond_ct != null ? `${k.diamond_ct} ct${k.diamond_count ? ` · ${k.diamond_count} stones` : ""}` : na, stoneSummary(us.stones)],
+    ["Diamond quality", k.diamond_quality || na, us.diamond_quality || "Confirmed with your order"],
+    ["Size", dimO || na, dimU || "Confirmed with your order"],
+    ["Price", o.price != null ? money(o.price, o.currency) : na, price ? `${money(price.total)} (${pur.label})` : "–"],
+  ];
+  $("#compare").innerHTML = `<table class="cmp"><thead><tr><th></th><th>Original · ${esc(d.site)}</th><th class="us">Our version</th></tr></thead>
+    <tbody>${rows.map(([l, a, b]) => `<tr><td>${l}</td><td class="orig">${esc(a)}</td><td class="us">${esc(b)}</td></tr>`).join("")}</tbody></table>`;
+}
+
+function renderOurs() {
+  const us = d.ours, price = us.prices[state.purity], pur = d.purities.find(p => p.key === state.purity), pr = us.pricing;
+  const modes = d.making_modes;
+  const stones = us.stones.length ? `<h3 style="margin-top:18px">Diamonds</h3><div class="table-scroll"><table>
+      <thead><tr><th>Shape</th><th>Size</th><th class="num">Count</th><th class="num">Carats</th>${us.stones.some(s => s.setting) ? "<th>Setting</th>" : ""}</tr></thead>
+      <tbody>${us.stones.map(s => `<tr><td>${esc(s.shape)}</td><td>${esc(s.size || "–")}</td><td class="num">${s.count}</td><td class="num">${carats(s.carat)}</td>${us.stones.some(x => x.setting) ? `<td>${esc(s.setting)}</td>` : ""}</tr>`).join("")}</tbody></table></div>
+      ${us.diamond_quality ? `<p class="note">Diamond quality: <b>${esc(us.diamond_quality)}</b></p>` : ""}`
+    : `<p class="note">Plain metal design, no stones.</p>`;
+  $("#oursBox").innerHTML = `
+    <div class="title"><h2>Our version</h2><span class="badge">New specification · our cost</span></div>
+    <h3>Gold weight of one piece</h3>
+    <div class="table-scroll"><table><thead><tr><th>Purity</th><th class="num">${esc(METAL[state.metal])}</th></tr></thead>
+      <tbody>${d.purities.map(p => {
+        const ok = purs().some(x => x.key === p.key);
+        return `<tr class="${p.key === state.purity ? "on" : ""}"><td>${p.label} · ${p.fineness}</td><td class="num">${ok ? grams(us.gold_g[p.key]) : "Not offered"}</td></tr>`;
+      }).join("")}</tbody></table></div>
+    ${stones}
+    ${us.ring_size_in || us.dimensions.length ? `<h3 style="margin-top:18px">Size</h3><dl>${us.ring_size_in ? `<dt>Made at ring size</dt><dd>IN ${us.ring_size_in}</dd>` : ""}${us.dimensions.map(x => `<dt>${esc(x.label)}</dt><dd>${esc(x.value)}</dd>`).join("")}</dl>` : ""}
+    ${price ? `<h3 style="margin-top:18px">Our price, ${esc(pur.label)}</h3><div class="table-scroll"><table><tbody>
+      <tr><td>Gold · ${grams(us.gold_g[state.purity])} × ${money(price.gold_rate)}/g</td><td class="num">${money(price.gold)}</td></tr>
+      <tr><td>Making charge · ${pr.making_mode === "per_g" ? `${money(pr.making_value)}/g` : pr.making_mode === "percent" ? `${pr.making_value}% of gold` : esc(modes.fixed)}</td><td class="num">${money(price.making)}</td></tr>
+      <tr><td>Diamonds${us.diamond_quality ? ` · ${esc(us.diamond_quality)}` : ""}</td><td class="num">${money(price.diamonds)}</td></tr>
+      ${price.other ? `<tr><td>${esc(pr.other_label || "Other charges")}</td><td class="num">${money(price.other)}</td></tr>` : ""}
+      <tr><td>GST ${pr.gst_pct}%</td><td class="num">${money(price.gst)}</td></tr>
+      <tr class="total"><td>Total, one piece</td><td class="num">${money(price.total)}</td></tr></tbody></table></div>
+      <p class="note">The jeweler confirms the final price before your piece is made. The bill follows the gold actually used.</p>` : ""}
+    ${us.note ? `<p class="desc">${esc(us.note)}</p>` : ""}`;
+}
+
+function renderOriginal() {
+  const o = d.original;
+  const fetched = new Date(o.fetched_at);
+  $("#origBox").innerHTML = `
+    <div class="title"><h2>Original details</h2><span class="badge plain">As listed on ${esc(d.site)}</span></div>
+    <dl>
+      <dt>Product</dt><dd>${esc(o.title)}</dd>
+      <dt>Brand</dt><dd>${esc(o.brand || d.site)}</dd>
+      ${o.sku ? `<dt>SKU</dt><dd>${esc(o.sku)}</dd>` : ""}
+      <dt>Price</dt><dd>${o.price != null ? money(o.price, o.currency) : "Not shown"}</dd>
+      ${o.mrp ? `<dt>MRP</dt><dd>${money(o.mrp, o.currency)}</dd>` : ""}
+      ${(o.specs || []).map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}
+    </dl>
+    ${(o.tables || []).map(t => `<div class="table-scroll" style="margin-top:14px"><table><thead><tr>${t.rows[0].map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+      <tbody>${t.rows.slice(1).map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`).join("")}
+    ${o.description ? `<p class="desc">${esc(o.description)}</p>` : ""}
+    <p class="note">Read from the seller's page on ${esc(isNaN(fetched) ? "" : fetched.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }))}. Their price and details may have changed since.</p>`;
+}
+
+function renderBuy() {
+  const price = d.ours.prices[state.purity];
+  const pur = d.purities.find(p => p.key === state.purity);
+  const usHref = "/buy?" + new URLSearchParams({ brand: d.id, metal: state.metal, purity: state.purity });
+  $("#buy").innerHTML = `
+    <h2>How would you like to buy it?</h2>
+    <p>Have our version made by our workshop, or buy the original from ${esc(d.brand)}.</p>
+    <div class="buy-btns">
+      <div class="buy-opt"><a class="big us" href="${usHref}">${BAG}Buy with us</a>
+        <small>${price ? `${esc(pur.label)} ${esc(METAL[state.metal])} · ${money(price.total)}` : "Our version"} · made to order</small></div>
+      <div class="buy-opt">${d.seller_url ? `<a class="big seller" href="${esc(d.seller_url)}" target="_blank" rel="noopener noreferrer">${OUT}Buy with seller</a>
+        <small>Opens ${esc(d.site)} in a new tab. Their price, terms and delivery apply.</small>` : `<small>The seller's page isn't available.</small>`}</div>
+    </div>
+    ${d.can_manage ? `<div class="staff">${d.status === "hidden" ? "This design is removed from the catalogue. " : `Team: <button type="button" id="hide">Remove from catalogue</button>`}</div>` : ""}`;
+  $("#hide")?.addEventListener("click", async () => {
+    if (!confirm("Remove this design from the catalogue? Orders already placed keep their copy.")) return;
+    const r = await fetch(`/api/brand-designs/${d.id}`, { method: "DELETE", credentials: "same-origin" });
+    if (r.ok) location.href = `/?browse=${d.ours.category}`;
+    else alert((await r.json().catch(() => ({}))).detail || "Couldn't remove it.");
+  });
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || !d) return;
+  if (b.dataset.pic !== undefined) { state.pic = +b.dataset.pic; renderGallery(); }
+  else if (b.dataset.metal) { state.metal = b.dataset.metal; fixPurity(); renderChoices(); renderCompare(); renderOurs(); renderBuy(); }
+  else if (b.dataset.purity) { state.purity = b.dataset.purity; renderChoices(); renderCompare(); renderOurs(); renderBuy(); }
+  else return;
+  const sel = ["pic", "metal", "purity"].find(k => b.dataset[k] !== undefined);
+  document.querySelector(`[data-${sel}="${b.dataset[sel]}"]`)?.focus();
+});
+
+load();
+</script>
+</body>
+</html>

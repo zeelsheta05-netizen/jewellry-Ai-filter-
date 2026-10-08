@@ -1,0 +1,47 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> pick this repository.
+# Secret values (sync: false) are asked for once in the dashboard; copy them from .env.
+services:
+  - type: web
+    name: design-finder
+    runtime: docker
+    region: singapore          # closest Render region to India
+    plan: pro plus             # 8 GB RAM. "pro" (4 GB) is the smallest that fits with the two big models off
+    healthCheckPath: /login
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 20               # data bundle ~3.4 GB + model downloads + sketches
+    envVars:
+      - key: DATA_BUNDLE       # printed by deploy/make_bundle.py
+        sync: false
+      - key: PUBLIC_URL        # e.g. https://design-finder.onrender.com (or your own domain)
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: JEWEL_STORAGE
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_CONDITIONAL_WRITES
+        value: "1"
+      - key: POLLINATIONS_KEY
+        sync: false
+      # No CPU-friendly way to run these on Render; set to 1 only on a 16 GB+ plan
+      - key: JEWEL_JUDGE       # Qwen3-1.7B prompt judge (words + picture check still keep search to jewellery)
+        value: "0"
+      - key: JEWEL_DETAILS     # Qwen3-VL-2B photo detail reader
+        value: "0"
+      - key: LOCAL_IMAGEGEN    # FLUX sketch-to-design on this machine (Pollinations/Google still work)
+        value: "0"

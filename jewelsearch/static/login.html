@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sign in · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .92); --surface-solid: #ffffff; --field: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #1f7a4d;
+  --aurora1: rgba(230, 190, 110, .19); --aurora2: rgba(245, 215, 150, .17);
+  --shadow: 0 30px 70px -36px rgba(90, 65, 20, .3);
+  --display: Outfit, Manrope, system-ui, sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans);
+  display: grid; place-items: center; padding: 32px 16px; overflow-x: hidden;
+}
+.aurora { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
+.aurora i:nth-child(1) { width: 60vw; height: 60vw; left: -18vw; top: -26vw; background: var(--aurora1); animation: drift1 26s ease-in-out infinite alternate; }
+.aurora i:nth-child(2) { width: 50vw; height: 50vw; right: -20vw; bottom: -10vw; background: var(--aurora2); animation: drift2 32s ease-in-out infinite alternate; }
+@keyframes drift1 { to { transform: translate(12vw, 10vh) scale(1.15); } }
+@keyframes drift2 { to { transform: translate(-14vw, -16vh) scale(.9); } }
+#sparkles { position: fixed; inset: 0; pointer-events: none; }
+
+/* orbiting rings behind the card */
+.orbit { position: fixed; left: 50%; top: 50%; width: min(900px, 140vw); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; }
+.orbit i { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--line); }
+.orbit i:nth-child(1) { transform: rotateX(72deg); animation: spinA 40s linear infinite; }
+.orbit i:nth-child(2) { inset: 12%; transform: rotateY(70deg); animation: spinB 55s linear infinite; }
+.orbit i:nth-child(3) { inset: 26%; border-style: dashed; animation: spinC 80s linear infinite; }
+@keyframes spinA { to { transform: rotateX(72deg) rotateZ(360deg); } }
+@keyframes spinB { to { transform: rotateY(70deg) rotateZ(-360deg); } }
+@keyframes spinC { to { transform: rotate(360deg); } }
+
+.card {
+  position: relative; z-index: 1; width: min(440px, 100%); padding: 34px 32px 28px; border-radius: 28px;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+  backdrop-filter: blur(22px) saturate(1.3); -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  animation: rise .9s var(--ease) both;
+}
+.card::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--ang), transparent 0 58%, var(--tone3) 70%, var(--tone1) 78%, var(--tone2) 84%, transparent 94%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: rot 8s linear infinite;
+}
+.card.busy::before { animation-duration: 1.2s; }
+.card.shake { animation: shake .5s; }
+@keyframes rot { to { --ang: 360deg; } }
+@keyframes rise { from { opacity: 0; transform: translateY(30px) scale(.96); filter: blur(8px); } }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+.head { text-align: center; margin-bottom: 24px; }
+/* ---------- animated logo: cycles through every category (ring, earrings, pendant, necklace, bracelet) ---------- */
+.logo { width: 44px; height: 44px; overflow: visible; flex: none; }
+.logo .lg-items { transform-box: view-box; transform-origin: 24px 26px; }
+.logo .lg-item { opacity: 0; transform-box: view-box; transform-origin: 24px 26px; animation: lgCycle 15s infinite; }
+.logo .i1 { animation-delay: 3s; } .logo .i2 { animation-delay: 6s; } .logo .i3 { animation-delay: 9s; } .logo .i4 { animation-delay: 12s; }
+.logo .lg-item .d { stroke-dasharray: 100; stroke-dashoffset: 100; animation: lgTrace 15s infinite; animation-delay: inherit; }
+.logo .lg-item .g { transform-box: fill-box; transform-origin: center; animation: lgGem 15s infinite; animation-delay: inherit; }
+.logo .lg-spark { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: lgSpark 3s ease-in-out 1.2s infinite; }
+.logo .lg-spark.s2 { animation-delay: 2s; }
+@keyframes lgCycle { 0% { opacity: 0; transform: scale(.7) rotate(-10deg); } 3% { opacity: 1; transform: none; } 17% { opacity: 1; transform: none; } 20% { opacity: 0; transform: scale(1.15) rotate(8deg); } 100% { opacity: 0; } }
+@keyframes lgTrace { 0% { stroke-dashoffset: 100; } 9% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
+@keyframes lgGem { 0%, 5% { opacity: 0; transform: scale(.2); } 10% { opacity: 1; transform: scale(1.12); } 12%, 100% { opacity: 1; transform: none; } }
+@keyframes lgSpark { 0%, 50%, 100% { transform: scale(0) rotate(0deg); opacity: 0; } 70% { transform: scale(1.15) rotate(90deg); opacity: 1; } 85% { transform: scale(.6) rotate(140deg); opacity: .6; } }
+@keyframes lgFlip { 50% { transform: scaleX(.12); } }
+.brand:hover .logo .lg-items, .logo-wrap:hover .logo .lg-items { animation: lgFlip 1s cubic-bezier(.4, 0, .2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .logo .lg-item, .logo .lg-item .d, .logo .lg-item .g { animation: none !important; }
+  .logo .lg-item .d { stroke-dashoffset: 0; }
+  .logo .i0 { opacity: 1; }
+}
+.logo-wrap { width: 72px; height: 72px; margin: 0 auto 10px; display: grid; place-items: center; }
+.logo-wrap .logo { width: 72px; height: 72px; }
+.eyebrow { font-size: 11px; letter-spacing: .34em; text-transform: uppercase; color: var(--tone2); }
+h1 { font: 300 34px/1.1 var(--display); letter-spacing: -.02em; margin: 8px 0 6px; }
+h1 em { font-style: normal; font-weight: 500; background: linear-gradient(100deg, var(--tone3), var(--tone1) 30%, var(--tone2) 50%, var(--tone1) 70%, var(--tone3));
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s linear infinite; }
+@keyframes shimmer { to { background-position: -250% 0; } }
+.head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+.tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 14px; background: var(--chip); border: 1px solid var(--line); margin-bottom: 22px; }
+.tabs button { position: relative; z-index: 1; border: 0; background: none; padding: 10px; font: 600 14px var(--sans); color: var(--muted); cursor: pointer; border-radius: 10px; transition: color .3s; }
+.tabs button[aria-selected="true"] { color: var(--accent-ink); }
+.tabs .pill { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 10px;
+  background: var(--btn); border: 1px solid var(--line-strong); box-shadow: 0 6px 16px -10px var(--glow); transition: transform .5s var(--ease); }
+.tabs[data-mode="register"] .pill { transform: translateX(100%); }
+
+form { display: grid; gap: 14px; }
+form.enter > * { animation: fieldIn .5s var(--ease) both; }
+form.enter > *:nth-child(2) { animation-delay: .05s; } form.enter > *:nth-child(3) { animation-delay: .1s; }
+form.enter > *:nth-child(4) { animation-delay: .15s; } form.enter > *:nth-child(5) { animation-delay: .2s; }
+@keyframes fieldIn { from { opacity: 0; transform: translateY(10px); } }
+.field { position: relative; }
+.field input {
+  width: 100%; height: 56px; padding: 22px 16px 6px; border-radius: 14px; border: 1px solid var(--line); background: var(--field);
+  color: var(--ink); font: 500 15px var(--sans); outline: none; transition: border-color .3s, box-shadow .3s;
+}
+.field input:focus { border-color: var(--tone2); box-shadow: 0 0 0 4px var(--chip), 0 0 30px -10px var(--glow); }
+.field label { position: absolute; left: 17px; top: 18px; color: var(--muted); font-size: 14.5px; pointer-events: none; transition: transform .3s var(--ease), color .3s, font-size .3s; transform-origin: 0 0; }
+.field input:focus + label, .field input:not(:placeholder-shown) + label { transform: translateY(-11px); font-size: 11.5px; color: var(--tone2); letter-spacing: .04em; }
+.field .eye { position: absolute; right: 8px; top: 8px; width: 40px; height: 40px; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: 10px; display: grid; place-items: center; }
+.field .eye:hover { color: var(--tone2); }
+.field .eye svg { width: 18px; height: 18px; }
+.field.pw input { padding-right: 52px; }
+.meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 2px; }
+.meter i { height: 4px; border-radius: 4px; background: var(--line); transition: background .4s, transform .4s var(--ease); transform-origin: 0 50%; }
+.meter i.on { background: linear-gradient(90deg, var(--tone3), var(--tone1)); }
+.meter-label { font-size: 12px; color: var(--muted); margin-top: 7px; min-height: 18px; }
+
+.primary {
+  position: relative; overflow: hidden; height: 54px; border-radius: 14px; cursor: pointer; margin-top: 4px;
+  font: 700 15px var(--sans); letter-spacing: .06em; color: var(--accent-ink);
+  background: var(--btn); border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 26px -16px var(--glow), inset 0 1px 0 rgba(255, 255, 255, .8);
+  transition: transform .35s var(--ease), background-position .6s, box-shadow .35s;
+}
+.primary::after { content: ""; position: absolute; top: 0; bottom: 0; width: 45%; left: -60%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .6), transparent); animation: sheen 4.5s ease-in-out infinite; }
+@keyframes sheen { 0%, 60% { left: -60%; } 100% { left: 140%; } }
+.primary:hover { transform: translateY(-2px); background: var(--btn-hover); }
+.primary:active { transform: scale(.98); }
+.primary:disabled { cursor: progress; opacity: .85; }
+.spin { display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: turn .7s linear infinite; vertical-align: -3px; margin-right: 8px; }
+@keyframes turn { to { transform: rotate(360deg); } }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--tone2); outline-offset: 2px; }
+
+.msg { font-size: 13.5px; min-height: 20px; text-align: center; margin: 2px 0 0; }
+.msg.error { color: var(--danger); }
+.msg.ok { color: var(--ok); }
+.done { text-align: center; padding: 8px 0 4px; animation: rise .7s var(--ease); }
+.done svg { width: 76px; height: 76px; color: var(--tone2); }
+.done svg circle, .done svg path { stroke-dasharray: 240; stroke-dashoffset: 240; animation: draw 1.2s var(--ease) forwards; }
+.done svg path { animation-delay: .5s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.done h2 { font: 400 24px var(--display); margin: 12px 0 6px; }
+.done p { color: var(--muted); margin: 0 0 18px; font-size: 14px; }
+.ghost { border: 1px solid var(--line-strong); background: transparent; color: var(--ink); border-radius: 999px; padding: 9px 18px; font: 600 13px var(--sans); cursor: pointer; transition: background .3s, color .3s; }
+.ghost:hover { background: var(--btn-hover); color: var(--accent-ink); }
+.google {
+  position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 12px; height: 52px; margin-bottom: 18px;
+  border-radius: 14px; border: 1px solid var(--line-strong); background: #fff; color: var(--ink); text-decoration: none;
+  font: 600 14.5px var(--sans); transition: transform .35s var(--ease), box-shadow .35s, border-color .3s;
+}
+.google svg { width: 20px; height: 20px; transition: transform .6s var(--ease); }
+.google:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -18px var(--glow); border-color: var(--tone2); }
+.google:hover svg { transform: rotate(360deg); }
+.google.busy { pointer-events: none; opacity: .8; }
+.google.busy svg { animation: turn 1s linear infinite; }
+.or { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; color: var(--muted); font-size: 12px; letter-spacing: .08em; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.foot { text-align: center; margin-top: 18px; font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.foot svg { width: 13px; height: 13px; color: var(--tone2); }
+@media (max-width: 480px) { .card { padding: 28px 20px 22px; border-radius: 24px; } h1 { font-size: 29px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+  #sparkles { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i></div>
+<div class="orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="sparkles" aria-hidden="true"></canvas>
+
+<main class="card" id="card">
+  <div class="head">
+    <div class="logo-wrap"><svg class="logo" viewBox="0 0 48 48" fill="none" role="img" aria-label="Rings, earrings, pendants, necklaces and bracelets">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:#f7e6b0"/><stop offset=".45" style="stop-color:var(--tone2)"/><stop offset="1" style="stop-color:var(--tone3)"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <g class="lg-items" stroke-linecap="round">
+        <g class="lg-item i0"><!-- ring -->
+          <ellipse class="d" pathLength="100" cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+          <g class="g"><path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/></g>
+        </g>
+        <g class="lg-item i1"><!-- earrings -->
+          <path class="d" pathLength="100" d="M15 9c-2.5 0-4 1.6-4 3.8V17M33 9c2.5 0 4 1.6 4 3.8V17" stroke="url(#lgGold)" stroke-width="1.8"/>
+          <g class="g"><circle cx="11" cy="19.5" r="2" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="37" cy="19.5" r="2" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+            <path d="M11 23l-5 9.5a5 5 0 0 0 10 0zM37 23l-5 9.5a5 5 0 0 0 10 0z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        </g>
+        <g class="lg-item i2"><!-- pendant -->
+          <path class="d" pathLength="100" d="M7 5c5 14 11 19 17 20 6-1 12-6 17-20" stroke="url(#lgGold)" stroke-width="1.6"/>
+          <g class="g"><circle cx="24" cy="27.6" r="1.8" stroke="url(#lgGold)" stroke-width="1.3"/>
+            <path d="M24 30.5l-7 6 7 9.5 7-9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><path d="M17 36.5h14M24 30.5v15.5" stroke="url(#lgGold)" stroke-width=".7"/></g>
+        </g>
+        <g class="lg-item i3"><!-- necklace -->
+          <path class="d" pathLength="100" d="M6 6c2 18 10 27 18 27s16-9 18-27" stroke="url(#lgGold)" stroke-width="1.5"/>
+          <g class="g" fill="url(#lgGold)"><circle cx="8.6" cy="19" r="1.7"/><circle cx="12.4" cy="26" r="1.7"/><circle cx="17.6" cy="30.8" r="1.7"/>
+            <circle cx="30.4" cy="30.8" r="1.7"/><circle cx="35.6" cy="26" r="1.7"/><circle cx="39.4" cy="19" r="1.7"/>
+            <path d="M24 33.5l-4.2 4.2 4.2 6.3 4.2-6.3z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        </g>
+        <g class="lg-item i4"><!-- bracelet -->
+          <ellipse class="d" pathLength="100" cx="24" cy="26" rx="17.5" ry="9" transform="rotate(-10 24 26)" stroke="url(#lgGold)" stroke-width="3"/>
+          <g class="g"><circle cx="11.5" cy="31.6" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="17" cy="34.1" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="23" cy="34.9" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+            <circle cx="29" cy="34.2" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="34.6" cy="31.9" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        </g>
+      </g>
+      <path class="lg-spark" d="M40 4.5l1.1 2.9 2.9 1.1-2.9 1.1-1.1 2.9-1.1-2.9-2.9-1.1 2.9-1.1z" fill="var(--tone1)"/>
+      <path class="lg-spark s2" d="M6.5 5.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="var(--tone2)"/>
+    </svg></div>
+    <div class="eyebrow">Design Finder</div>
+    <h1 id="title">Welcome <em>back</em></h1>
+    <p id="subtitle">Sign in to explore the private collection.</p>
+  </div>
+
+  <div id="forms">
+    <div class="tabs" id="tabs" data-mode="login" role="tablist">
+      <span class="pill" aria-hidden="true"></span>
+      <button type="button" role="tab" data-mode="login" aria-selected="true">Sign in</button>
+      <button type="button" role="tab" data-mode="register" aria-selected="false">Register</button>
+    </div>
+
+    <a class="google" id="google" href="/api/auth/google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span id="googleText">Continue with Google</span></a>
+    <div class="or"><span>or use email</span></div>
+
+    <form id="form" class="enter" novalidate>
+      <div class="field" id="nameField" hidden><input id="name" name="name" autocomplete="name" placeholder=" " maxlength="80"><label for="name">Full name</label></div>
+      <div class="field"><input id="email" name="email" type="email" autocomplete="email" placeholder=" " maxlength="254" required><label for="email">Email address</label></div>
+      <div class="field pw"><input id="password" name="password" type="password" autocomplete="current-password" placeholder=" " maxlength="72" required><label for="password">Password</label>
+        <button type="button" class="eye" id="eye" aria-label="Show password"></button></div>
+      <div id="strength" hidden><div class="meter"><i></i><i></i><i></i><i></i></div><div class="meter-label" id="meterLabel">At least 8 characters, with letters and numbers</div></div>
+      <button class="primary" id="submit" type="submit">Sign in</button>
+      <p class="msg" id="msg" role="alert"></p>
+    </form>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="40" cy="40" r="36"/><path d="M25 41l10 10 20-22"/></svg>
+    <h2>Request received</h2>
+    <p id="doneText">You can sign in once an administrator approves your account.</p>
+    <button type="button" class="ghost" id="back">Back to sign in</button>
+  </div>
+
+  <div class="foot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Private collection · access by approval only</div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const EYE_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4.4-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// Only same-site paths are allowed as the post-login destination.
+const nextParam = new URLSearchParams(location.search).get("next") || "/";
+const next = nextParam.startsWith("/") && !nextParam.startsWith("//") && !nextParam.includes("\\") ? nextParam : "/";
+let mode = "login";
+
+$("#eye").innerHTML = EYE;
+$("#eye").addEventListener("click", () => {
+  const pw = $("#password"), show = pw.type === "password";
+  pw.type = show ? "text" : "password";
+  $("#eye").innerHTML = show ? EYE_OFF : EYE;
+  $("#eye").setAttribute("aria-label", show ? "Hide password" : "Show password");
+});
+
+function setMode(m) {
+  mode = m;
+  $("#tabs").dataset.mode = m;
+  $("#tabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", b.dataset.mode === m));
+  const reg = m === "register";
+  $("#nameField").hidden = !reg;
+  $("#strength").hidden = !reg;
+  $("#password").autocomplete = reg ? "new-password" : "current-password";
+  $("#submit").textContent = reg ? "Request access" : "Sign in";
+  $("#title").innerHTML = reg ? "Request <em>access</em>" : "Welcome <em>back</em>";
+  $("#subtitle").textContent = reg ? "Register, then an administrator will approve your account." : "Sign in to explore the private collection.";
+  $("#msg").textContent = ""; $("#msg").className = "msg";
+  const f = $("#form"); f.classList.remove("enter"); void f.offsetWidth; f.classList.add("enter");
+  (reg ? $("#name") : $("#email")).focus();
+}
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b && b.dataset.mode !== mode) setMode(b.dataset.mode); });
+
+$("#password").addEventListener("input", () => {
+  if (mode !== "register") return;
+  const p = $("#password").value;
+  let s = 0;
+  if (p.length >= 8) s++;
+  if (/[a-z]/i.test(p) && /\d/.test(p)) s++;
+  if (/[^a-z0-9]/i.test(p) || (/[a-z]/.test(p) && /[A-Z]/.test(p))) s++;
+  if (p.length >= 12) s++;
+  document.querySelectorAll(".meter i").forEach((el, i) => el.classList.toggle("on", i < s));
+  $("#meterLabel").textContent = !p ? "At least 8 characters, with letters and numbers" : ["Too short", "Weak", "Fair", "Good", "Strong"][s];
+});
+
+// Phone keyboards make these easy to mistype ("gmail.con"); suggest the fix.
+const DOMAIN_FIXES = { "gmail.con": "gmail.com", "gmail.co": "gmail.com", "gmial.com": "gmail.com", "gamil.com": "gmail.com",
+  "gmai.com": "gmail.com", "gmail.cm": "gmail.com", "yahoo.con": "yahoo.com", "hotmail.con": "hotmail.com", "outlook.con": "outlook.com" };
+function emailSuggestion(email) {
+  const [user, domain] = email.toLowerCase().split("@");
+  const fixed = domain && (DOMAIN_FIXES[domain] || domain.replace(/\.con$/, ".com"));
+  return fixed && fixed !== domain ? `${user}@${fixed}` : null;
+}
+
+function fail(text) {
+  const hint = emailSuggestion($("#email").value.trim());
+  if (hint) text += ` Did you mean ${hint}?`;
+  $("#msg").className = "msg error"; $("#msg").textContent = text;
+  const c = $("#card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+}
+
+$("#form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = $("#email").value.trim(), password = $("#password").value, name = $("#name").value.trim();
+  if (mode === "register" && !name) return fail("Enter your name.");
+  if (!email || !password) return fail("Enter your email and password.");
+  if (mode === "register" && password.length < 8) return fail("Password must be at least 8 characters.");
+  const btn = $("#submit"), label = btn.textContent;
+  btn.disabled = true; btn.innerHTML = `<span class="spin"></span>${mode === "register" ? "Sending" : "Signing in"}`;
+  $("#card").classList.add("busy"); $("#msg").textContent = "";
+  try {
+    const r = await fetch(`/api/auth/${mode}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin",
+      body: JSON.stringify(mode === "register" ? { name, email, password } : { email, password }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Check the details and try again.");
+    if (mode === "login") {
+      $("#msg").className = "msg ok"; $("#msg").textContent = `Welcome, ${data.name || ""}`;
+      btn.textContent = "Opening the collection…";
+      setTimeout(() => location.replace(next), reduceMotion ? 0 : 500);
+      return;
+    }
+    $("#forms").hidden = true; $("#done").hidden = false;
+    $("#title").innerHTML = "Almost <em>there</em>"; $("#subtitle").textContent = email;
+    $("#doneText").textContent = data.message;
+    $("#password").value = "";
+  } catch (err) {
+    fail(err.message === "Failed to fetch" ? "Can't reach the server. Check your connection." : err.message);
+  } finally {
+    if (mode !== "login" || !$("#msg").classList.contains("ok")) { btn.disabled = false; btn.textContent = label; }
+    $("#card").classList.remove("busy");
+  }
+});
+// Google: a plain link to our own server, which runs the whole OAuth exchange.
+$("#google").href = "/api/auth/google?next=" + encodeURIComponent(next);
+$("#google").addEventListener("click", () => { $("#google").classList.add("busy"); $("#googleText").textContent = "Opening Google…"; });
+addEventListener("pageshow", () => { $("#google").classList.remove("busy"); $("#googleText").textContent = "Continue with Google"; });
+
+// Messages from the Google round trip (?error=… / ?status=pending).
+(function googleResult() {
+  const q = new URLSearchParams(location.search), err = q.get("error"), status = q.get("status");
+  if (!err && !status) return;
+  history.replaceState(null, "", "/login" + (nextParam !== "/" ? "?next=" + encodeURIComponent(next) : ""));
+  if (status === "pending") {
+    $("#forms").hidden = true; $("#done").hidden = false;
+    $("#title").innerHTML = "Almost <em>there</em>"; $("#subtitle").textContent = "Signed in with Google";
+    $("#doneText").textContent = "Your account is waiting for administrator approval. You can sign in once it's approved.";
+    return;
+  }
+  const text = {
+    google_disabled: "Google sign-in isn't switched on yet. Please use email for now.",
+    google_cancelled: "Google sign-in was cancelled.",
+  }[err] || "Google sign-in didn't complete. Please try again.";
+  setTimeout(() => fail(text), 300);
+})();
+
+$("#back").addEventListener("click", () => { $("#done").hidden = true; $("#forms").hidden = false; setMode("login"); });
+$("#email").focus();
+
+/* sparkle field */
+(function sparkles() {
+  if (reduceMotion) return;
+  const cv = $("#sparkles"), ctx = cv.getContext("2d");
+  let w, h, stars = [];
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + "px"; cv.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    stars = Array.from({ length: Math.round(Math.min(60, w * h / 24000)) }, () => ({
+      x: Math.random() * w, y: Math.random() * h, r: .6 + Math.random() * 2, vy: -(.05 + Math.random() * .16),
+      vx: (Math.random() - .5) * .08, ph: Math.random() * 7, sp: .006 + Math.random() * .016, cross: Math.random() < .3,
+    }));
+  }
+  function frame() {
+    ctx.clearRect(0, 0, w, h);
+    for (const s of stars) {
+      s.x += s.vx; s.y += s.vy; s.ph += s.sp;
+      if (s.y < -10) { s.y = h + 10; s.x = Math.random() * w; }
+      const a = (Math.sin(s.ph) * .5 + .5) * .45;
+      ctx.fillStyle = `rgba(224,182,84,${a * .35})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2.4, 0, 7); ctx.fill();
+      ctx.fillStyle = `rgba(184,134,43,${a * .8})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * .55, 0, 7); ctx.fill();
+      if (s.cross && a > .45) {
+        const L = s.r * 6 * a; ctx.strokeStyle = `rgba(184,134,43,${a * .6})`; ctx.lineWidth = .7;
+        ctx.beginPath(); ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y); ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
+      }
+    }
+    if (!document.hidden) requestAnimationFrame(frame);
+  }
+  resize(); addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) requestAnimationFrame(frame); });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

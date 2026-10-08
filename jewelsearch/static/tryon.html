@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Ring Try-On</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": {
+    "three": "/vendor/three/three.module.js",
+    "three/addons/": "/vendor/three/addons/"
+} }
+</script>
+<style>
+:root {
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --line: #f0e2c4; --gold: #e0b654;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --chip: #fcf7ec;
+  --rose: #e2a792; --white: #dfe2e6; --yellow: #e0b65a; --ok: #3fb57a; --warn: #f2b84b;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: Outfit, Manrope, system-ui, sans-serif;
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+  --panel-h: 196px; --side: 0px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #fff; font: 15px/1.45 var(--sans); -webkit-tap-highlight-color: transparent; }
+button, select { font: inherit; }
+button { cursor: pointer; }
+.glass { background: rgba(18, 14, 8, .55); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); }
+
+/* ---------- camera ---------- */
+#cameraArea { position: fixed; top: 0; left: 0; bottom: 0; right: var(--side); overflow: hidden; }
+#stage { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--s, 1)); }
+#stage.mirror { transform: translate(-50%, -50%) scale(calc(-1 * var(--s, 1)), var(--s, 1)); }
+#stage video, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#stage #gl { opacity: 0; }
+#debug { position: fixed; left: 8px; bottom: 8px; z-index: 9; font: 11px/1.3 ui-monospace, monospace; background: rgba(0,0,0,.6); color: #8ef0bd; padding: 3px 6px; border-radius: 6px; }
+
+/* hand outline shown while no hand is visible */
+#handHint { position: absolute; left: 50%; top: 46%; width: min(46vw, 260px); transform: translate(-50%, -50%);
+  opacity: 0; transition: opacity .4s var(--ease); pointer-events: none; }
+#handHint.show { opacity: .8; animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: translate(-50%, -50%) scale(1.04); } }
+
+/* ---------- top bar ---------- */
+.top { position: fixed; top: 0; left: 0; right: var(--side); display: flex; align-items: center; gap: 10px;
+  padding: calc(10px + var(--safe-t)) 14px 22px; background: linear-gradient(rgba(0,0,0,.6), transparent); z-index: 3; }
+.round { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  color: #fff; border: 0; text-decoration: none; font-size: 18px; }
+.titles { flex: 1; min-width: 0; }
+.titles small { display: block; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+.titles h1 { margin: 1px 0 0; font: 500 17px/1.2 var(--serif); letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titles span { font-size: 12px; color: rgba(255,255,255,.7); }
+
+/* ---------- guide pill ---------- */
+#guide { position: fixed; left: calc((100% - var(--side)) / 2); top: calc(74px + var(--safe-t)); transform: translateX(-50%);
+  z-index: 3; width: max-content; max-width: min(92vw, 460px); }
+#pill { display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,.14); color: #fff;
+  border-radius: 99px; padding: 7px 14px 7px 8px; text-align: left; transition: border-color .3s, background .3s; }
+#progress { --p: 0; width: 26px; height: 26px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: conic-gradient(var(--c, var(--warn)) calc(var(--p) * 360deg), rgba(255,255,255,.18) 0); }
+#progress::after { content: ""; width: 18px; height: 18px; border-radius: 50%; background: rgba(18,14,8,.9); }
+#tip { font-weight: 600; font-size: 14px; }
+#guide[data-state="ready"] #pill { border-color: rgba(63,181,122,.8); background: rgba(20, 60, 38, .6); }
+#guide[data-state="ready"] #progress, #guide[data-state="photo"] #progress { --c: var(--ok); }
+#guide[data-state="photo"] #pill { border-color: rgba(224,182,84,.8); }
+#checks { list-style: none; margin: 8px auto 0; padding: 10px; display: none; flex-wrap: wrap; justify-content: center; gap: 5px;
+  border-radius: 14px; max-width: 360px; }
+#guide.open #checks { display: flex; }
+#checks li { font-size: 12px; padding: 3px 9px; border-radius: 99px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.75); }
+#checks li::before { content: "•"; margin-right: 4px; color: var(--warn); }
+#checks li.ok { background: rgba(63,181,122,.25); color: #fff; }
+#checks li.ok::before { content: "✓"; color: #8ef0bd; }
+
+/* ---------- shutter / photo controls ---------- */
+.controls { position: fixed; left: calc((100% - var(--side)) / 2); transform: translateX(-50%);
+  bottom: calc(var(--panel-h) + 18px + var(--safe-b)); z-index: 3; display: flex; gap: 14px; align-items: center; }
+#shutter { width: 74px; height: 74px; border-radius: 50%; border: 4px solid #fff; background: rgba(255,255,255,.25);
+  box-shadow: 0 6px 24px rgba(0,0,0,.35); transition: transform .2s var(--ease), opacity .3s, background .3s; }
+#shutter:not(:disabled) { background: var(--btn); }
+#shutter:not(:disabled):active { transform: scale(.92); }
+#shutter:disabled { opacity: .45; cursor: default; }
+.pillbtn { border: 0; border-radius: 99px; padding: 12px 20px; font-weight: 700; display: none; align-items: center; gap: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.3); white-space: nowrap; }
+#retake { color: #fff; }
+#save { background: var(--btn); color: #3a2a0c; }
+body.frozen #shutter { display: none; }
+body.frozen .pillbtn { display: inline-flex; }
+
+/* ---------- bottom panel (side panel on wide screens) ---------- */
+.panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; color: var(--ink); background: #fff;
+  border-radius: 22px 22px 0 0; padding: 14px 0 calc(12px + var(--safe-b)); box-shadow: 0 -10px 30px rgba(0,0,0,.28);
+  max-height: 80vh; overflow-y: auto; }
+.bar { display: flex; align-items: center; gap: 8px; padding: 0 14px; }
+.row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 14px 8px; scroll-padding: 0 14px; }
+.row::-webkit-scrollbar { display: none; }
+#metals { padding: 0; gap: 6px; }
+.metal { flex: none; border: 1px solid var(--line); background: var(--chip); color: var(--ink); border-radius: 99px;
+  padding: 6px 11px 6px 7px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.metal[aria-pressed="true"] { background: var(--btn); border-color: #dfc07a; font-weight: 700; }
+.dot { width: 18px; height: 18px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.12); }
+.dot.yellow { background: radial-gradient(circle at 35% 30%, #fff3c4, var(--yellow) 60%); }
+.dot.rose { background: radial-gradient(circle at 35% 30%, #ffe1d6, var(--rose) 60%); }
+.dot.white { background: radial-gradient(circle at 35% 30%, #fff, var(--white) 60%); }
+#more { margin-left: auto; flex: none; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 99px; padding: 6px 11px; font-size: 13px; white-space: nowrap; }
+#more b { color: var(--accent); }
+.label { margin: 12px 14px 8px; font: 700 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.label em { font-style: normal; color: var(--accent); margin-left: 4px; }
+.design { flex: none; width: 92px; border: 1.5px solid var(--line); background: #fff; border-radius: 16px; padding: 6px 6px 7px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink); transition: border-color .2s, transform .2s var(--ease); }
+.design .thumb { width: 78px; height: 78px; border-radius: 12px; background: #faf6ee center / contain no-repeat; }
+.design small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.design[aria-pressed="true"] { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 18px -10px rgba(184,134,43,.7); }
+.design[aria-pressed="true"] small { color: var(--ink); font-weight: 700; }
+.sizebox { display: none; padding: 0 14px; }
+body.panel-open .sizebox { display: block; }
+.sizebox select { width: 100%; padding: 11px 10px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+@media (max-width: 380px) { .metal span { display: none; } .metal { padding: 6px; } }
+@media (min-width: 900px) {
+  :root { --side: 380px; --panel-h: 0px; }
+  .panel { left: auto; top: 0; width: var(--side); border-radius: 0; max-height: none; padding-top: 22px; box-shadow: -10px 0 30px rgba(0,0,0,.25); }
+  .row#designs { flex-wrap: wrap; overflow: visible; }
+  .design { width: calc((100% - 16px) / 3); }
+  .design .thumb { width: 100%; height: auto; aspect-ratio: 1; }
+  .sizebox { display: block; }
+  #more { display: none; }
+  .controls { bottom: 28px; }
+}
+
+/* ---------- start screen ---------- */
+#intro { position: fixed; inset: 0; z-index: 6; display: grid; place-items: center; padding: 24px;
+  background: radial-gradient(circle at 50% 30%, #3a2c12, #0b0905 70%); text-align: center; }
+#intro .card { width: min(380px, 100%); }
+#intro h2 { font: 300 30px/1.15 var(--serif); letter-spacing: .06em; margin: 0 0 10px; }
+#intro p { color: rgba(255,255,255,.75); margin: 0 0 8px; }
+#intro ul { text-align: left; color: rgba(255,255,255,.85); padding-left: 20px; margin: 14px 0 20px; }
+#start { width: 100%; padding: 14px; border: 0; border-radius: 99px; background: var(--btn); color: #3a2a0c; font-weight: 700; }
+#start:disabled { opacity: .6; }
+#intro #steps { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 6px; }
+#steps li { font-size: 13px; color: rgba(255,255,255,.5); display: flex; gap: 8px; align-items: center; }
+#steps li::before { content: "○"; width: 16px; text-align: center; }
+#steps li[data-state="busy"] { color: #f2d990; }
+#steps li[data-state="busy"]::before { content: "◌"; animation: spin 1s linear infinite; display: inline-block; }
+#steps li[data-state="done"] { color: #fff; }
+#steps li[data-state="done"]::before { content: "✓"; color: #8ef0bd; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#startMsg { min-height: 1.4em; margin-top: 12px; font-size: 13px; color: #f2d990; }
+.private { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 14px; }
+</style>
+</head>
+<body>
+<div id="cameraArea">
+  <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="frame"></canvas><canvas id="gl"></canvas></div>
+  <svg id="handHint" viewBox="-30 0 230 260" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round" aria-hidden="true">
+    <rect x="48" y="118" width="104" height="112" rx="42"/>
+    <rect x="52" y="44" width="22" height="92" rx="11"/>
+    <rect x="78" y="22" width="22" height="108" rx="11"/>
+    <rect x="104" y="30" width="22" height="100" rx="11"/>
+    <rect x="130" y="56" width="20" height="80" rx="10"/>
+    <rect x="10" y="130" width="22" height="80" rx="11" transform="rotate(-40 21 190)"/>
+  </svg>
+</div>
+
+<header class="top">
+  <a class="round glass" href="/" aria-label="Back to designs">&#8592;</a>
+  <div class="titles"><small>Ring try-on</small><h1 id="title">Loading…</h1><span id="subtitle"></span></div>
+  <button class="round glass" id="flip" aria-label="Switch camera">&#8646;</button>
+</header>
+
+<div id="guide" aria-live="polite">
+  <button id="pill" class="glass" aria-label="Show all checks"><i id="progress"></i><span id="tip">Show one hand to the camera</span></button>
+  <ul id="checks" class="glass"></ul>
+</div>
+
+<div class="controls">
+  <button id="retake" class="pillbtn glass">&#8634; Retake</button>
+  <button id="shutter" aria-label="Take a photo" disabled></button>
+  <button id="save" class="pillbtn">&#8595; Save photo</button>
+</div>
+
+<section class="panel">
+  <div class="bar">
+    <div class="row" id="metals"></div>
+    <button id="more" aria-label="Ring size">Size <b id="sizeNow"></b></button>
+  </div>
+  <div class="sizebox">
+    <p class="label">Your ring size</p>
+    <select id="size" aria-label="Ring size"></select>
+    <p class="hint">Not sure? Keep the average. The stone always stays its real size; only the band changes.</p>
+  </div>
+  <p class="label">Designs <em id="designCount"></em></p>
+  <div class="row" id="designs"></div>
+</section>
+
+<div id="intro">
+  <div class="card">
+    <h2>Try rings on your hand</h2>
+    <p>See each design on your own finger at its real size.</p>
+    <ul>
+      <li>Use the back camera and hold your hand about 30 cm away</li>
+      <li>Show the back of your hand, fingers straight</li>
+      <li>Good light, no ring on that finger</li>
+    </ul>
+    <button id="start">Start camera</button>
+    <ul id="steps" hidden>
+      <li data-step="camera">Camera</li>
+      <li data-step="tracking">Hand tracking (first time takes a few seconds)</li>
+    </ul>
+    <div id="startMsg" role="status"></div>
+    <p class="private">Your camera video stays on this device. Nothing is recorded or uploaded.</p>
+  </div>
+</div>
+
+<div id="debug" hidden></div>
+<script type="module" src="/tryon-app/main.js"></script>
+</body>
+</html>

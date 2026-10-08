@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Variations · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #2f7a3f;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+body.lock { overflow: hidden; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.top-links { display: flex; gap: 8px; }
+.ghost { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover:not(:disabled) { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost.small { padding: 5px 12px; font-size: 12px; }
+.ghost:disabled { opacity: .45; cursor: not-allowed; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 999px;
+  border: 1px solid var(--tone2); background: var(--btn); color: var(--accent-ink); font-weight: 700; letter-spacing: .02em;
+  transition: transform .3s var(--ease), box-shadow .3s; white-space: nowrap; }
+.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px -14px var(--glow); }
+.primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 26px 28px 120px; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 36px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 6px; }
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 760px; }
+h2 { font: 500 20px/1.25 var(--serif); margin: 0 0 10px; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.err { color: var(--danger); font-size: 13.5px; font-weight: 600; margin: 10px 0 0; }
+.err:empty { display: none; }
+.card { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.mode { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line-strong); background: var(--chip); border-radius: 16px;
+  padding: 12px 16px; margin: 0 0 20px; font-size: 13.5px; }
+.mode b { color: var(--accent-ink); }
+.mode .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--tone1); margin-top: 6px; flex: none; }
+.mode.live .dot { background: var(--ok); }
+
+/* source */
+.drop { border: 1.5px dashed var(--line-strong); border-radius: 18px; background: #fffdf8; min-height: 210px; display: grid; place-items: center; text-align: center; padding: 24px; }
+.drop.drag { border-color: var(--tone2); background: var(--chip); }
+.drop .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.camwrap { position: relative; border-radius: 18px; overflow: hidden; background: #111; aspect-ratio: 4 / 3; }
+.camwrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.camwrap .bar { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; }
+.cropwrap { position: relative; margin: 0 auto; touch-action: none; user-select: none; background: #3b342b; border-radius: 12px; overflow: hidden; width: fit-content; max-width: 100%; }
+.cropwrap canvas { display: block; max-width: 100%; }
+.cropbox { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(30, 24, 16, .55); cursor: move; }
+.cropbox::before, .cropbox::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+.cropbox::before { border-left: 1px dashed rgba(255,255,255,.55); border-right: 1px dashed rgba(255,255,255,.55); left: 33.3%; right: 33.3%; }
+.cropbox::after { border-top: 1px dashed rgba(255,255,255,.55); border-bottom: 1px dashed rgba(255,255,255,.55); top: 33.3%; bottom: 33.3%; }
+.handle { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; background: #fff; border: 2px solid var(--tone2); border-radius: 50%; z-index: 2; }
+.crop-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.crop-actions .primary { flex: 1; }
+
+.zoombox { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: #f6efe0; height: 420px; touch-action: none; cursor: grab; }
+.zoombox.grabbing { cursor: grabbing; }
+.zoomlayer { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.zoomlayer img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.zhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+.zhead span { font-weight: 500; font-size: 12px; color: var(--muted); }
+
+label.f { display: block; font-size: 13px; font-weight: 700; margin: 16px 0 6px; }
+select, textarea, input[type=text] { width: 100%; border: 1px solid var(--line-strong); border-radius: 12px; padding: 11px 14px; background: #fff; }
+textarea { resize: vertical; min-height: 92px; line-height: 1.5; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line-strong); background: #fff; border-radius: 999px; padding: 8px 16px; font-weight: 600; font-size: 14px;
+  display: inline-flex; align-items: center; gap: 7px; transition: background .25s, transform .3s var(--ease); }
+.chip svg { width: 16px; height: 16px; }
+.chip[aria-pressed="true"] { background: var(--btn); border-color: var(--tone2); color: var(--accent-ink); }
+.chip:hover { transform: translateY(-1px); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+
+.progress { margin-top: 16px; }
+.pbar { height: 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line); overflow: hidden; }
+.pbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--tone1), var(--tone2)); transition: width .6s var(--ease); }
+.progress p { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+
+.result img.sheet { display: block; width: 100%; border-radius: 14px; border: 1px solid var(--line); cursor: zoom-in; background: #f8f3e8; }
+
+/* viewer */
+.viewer { position: fixed; inset: 0; z-index: 100; background: rgba(28, 22, 14, .78); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; gap: 10px; }
+.viewer .zoombox { width: min(92vw, 860px); height: min(70vh, 860px); background: #f8f3e8; border: 0; }
+.viewer .close { position: absolute; top: 14px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--tone2); color: #fff; font-size: 22px; line-height: 1; }
+.viewer .vhint { color: #efe5d0; font-size: 12.5px; text-align: center; }
+.viewer .vbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 860px; }
+.viewer .vbar .ghost { background: rgba(255,255,255,.94); }
+.selbox { position: absolute; border: 3px solid var(--tone1); border-radius: 6px; box-shadow: 0 0 0 9999px rgba(28,22,14,.35); pointer-events: none; }
+.touch { display: flex; gap: 8px; width: min(92vw, 860px); }
+.touch input { flex: 1; min-width: 0; }
+.analysis { width: min(92vw, 860px); max-height: 32vh; overflow: auto; background: #fff; border-radius: 16px; padding: 14px 16px; font-size: 13.5px; }
+.analysis .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 4px 0; }
+.analysis .k { width: 96px; flex: none; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.trait { font-size: 12.5px; background: var(--chip); border: 1px solid var(--line-strong); border-radius: 999px; padding: 2px 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
+.mini { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; text-decoration: none; color: var(--ink); position: relative;
+  transition: transform .3s var(--ease), box-shadow .3s; }
+.mini:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.mini img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #faf8f3; }
+.mini .cap { padding: 6px 9px; font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
+.mini button.x { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-strong);
+  background: rgba(255,255,255,.92); font-size: 14px; line-height: 1; }
+section.block { margin-top: 26px; }
+.toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 200; background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13.5px; }
+
+@media (max-width: 700px) {
+  .wrap { padding: 18px 16px 100px; }
+  h1 { font-size: 28px; }
+  .topbar { padding: 10px 16px; }
+  .brand small, .top-links .hide-sm { display: none; }
+  .two { grid-template-columns: 1fr; }
+  .zoombox { height: 320px; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Design variations</small></div>
+  </a>
+  <div class="top-links"><a class="ghost hide-sm" href="/sketch">Sketch to design</a><a class="ghost" href="/">← Catalogue</a></div>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">AI design studio</div>
+  <h1>Variation (Sketch)</h1>
+  <p class="lead">Add a sketch or photo of a design. The AI studies that exact piece, plans its own set of variations and draws them together, so you can compare and take the best one further.</p>
+  <div class="mode" id="mode"><span class="dot"></span><div id="modeText">Loading…</div></div>
+
+  <div class="card">
+    <!-- 1. pick -->
+    <div class="drop" id="drop">
+      <div>
+        <div class="row">
+          <button type="button" class="ghost" id="camBtn">Camera</button>
+          <button type="button" class="ghost" id="fileBtn">Upload image</button>
+        </div>
+        <p class="hint">…or paste an image (Ctrl + V) / drag &amp; drop it anywhere on this page</p>
+      </div>
+    </div>
+    <div class="camwrap" id="camWrap" hidden>
+      <video id="cam" playsinline muted></video>
+      <div class="bar"><button type="button" class="primary" id="snap">Take photo</button><button type="button" class="ghost" id="camCancel">Cancel</button></div>
+    </div>
+    <input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden>
+    <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+
+    <!-- 2. crop -->
+    <div id="cropStep" hidden>
+      <div class="cropwrap" id="cropWrap"><canvas id="cropCanvas"></canvas><div class="cropbox" id="cropBox"></div></div>
+      <div class="crop-actions">
+        <button type="button" class="ghost" id="rotate">↻ Rotate</button>
+        <button type="button" class="ghost" id="cropCancel">Cancel</button>
+        <button type="button" class="primary" id="cropOk">✓ Crop &amp; continue</button>
+      </div>
+      <p class="hint">Drag the box or its corners to keep only the design.</p>
+    </div>
+
+    <!-- 3. source preview -->
+    <div id="srcStep" hidden>
+      <div class="zhead">Source image <span>Scroll or pinch to zoom · drag to move · double-click to reset</span></div>
+      <div class="zoombox" id="srcZoom"><div class="zoomlayer"><img id="srcImg" alt="Source design"></div></div>
+      <div class="actions" style="margin-top:10px"><button type="button" class="ghost small" id="changeSrc">Change image</button></div>
+    </div>
+
+    <div class="two">
+      <div><label class="f" for="count">Number of variations</label><select id="count"></select></div>
+      <div><label class="f" for="look">Look</label><select id="look"></select></div>
+    </div>
+    <label class="f" for="model">Model / quality</label>
+    <select id="model"></select>
+    <label class="f" for="direction">Direction <span style="font-weight:500;color:var(--muted)">(optional, any language)</span></label>
+    <textarea id="direction" maxlength="600" placeholder="Leave empty and the AI plans fresh ideas for this exact piece. Or guide it: e.g. lighter for daily wear, temple style, more open work, keep the halo…"></textarea>
+    <p class="hint">Every set is planned for the picture you add, and pressing Generate again brings new ideas, never the same set.</p>
+
+    <div class="actions"><button type="button" class="primary" id="go">Generate variations</button></div>
+    <div class="progress" id="progress" hidden><div class="pbar"><i id="pbar"></i></div><p id="ptext"></p></div>
+    <p class="err" id="err" role="alert"></p>
+  </div>
+
+  <section class="block card result" id="resultCard" hidden>
+    <h2 id="resultTitle">Your variations</h2>
+    <img class="sheet" id="sheet" alt="Variations">
+    <p class="hint" id="resultNote"></p>
+    <div class="actions"><button type="button" class="ghost" id="openViewer">Open · zoom · pick one</button></div>
+  </section>
+
+  <section class="block">
+    <h2>My variations</h2>
+    <p class="hint" style="margin-top:0" id="budget"></p>
+    <div class="cards" id="mine"></div>
+  </section>
+</main>
+
+<div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Variations viewer">
+  <button type="button" class="close" id="vClose" aria-label="Close">×</button>
+  <div class="zoombox" id="vZoom"><div class="zoomlayer"><img id="vImg" alt="Variations"><div class="selbox" id="selBox" hidden></div></div></div>
+  <div class="vhint" id="vHint">Scroll to zoom · drag to pan · double-click resets · tap a variation to pick it</div>
+  <div class="vbar">
+    <button type="button" class="ghost" id="aDownload">Download</button>
+    <button type="button" class="ghost" id="aShare">Share</button>
+    <button type="button" class="ghost" id="aSketch">Sketch to Design</button>
+    <button type="button" class="ghost" id="aVariation">Variation</button>
+    <button type="button" class="ghost" id="aTouch">Touch Up</button>
+    <button type="button" class="ghost" id="aAnalyze">Analyze</button>
+    <button type="button" class="ghost" id="aCopy">Copy link</button>
+  </div>
+  <div class="touch" id="touchRow" hidden>
+    <input type="text" id="touchText" maxlength="200" placeholder="Touch up… e.g. make the drops longer, add milgrain on the edges">
+    <button type="button" class="ghost" id="touchGo">Apply</button>
+  </div>
+  <div class="analysis" id="analysis" hidden></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let opts = null, source = null, current = null, busy = false, stream = null;
+
+async function api(url, init = {}) {
+  const r = await fetch(url, { credentials: "same-origin", ...init });
+  if (r.status === 401) { location.href = "/login?next=" + encodeURIComponent(location.pathname + location.search); throw new Error("Sign in required"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `Something went wrong (${r.status})`);
+  return data;
+}
+const post = (url, body) => api(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+async function waitJob(job, onTick) {   // Touch Up runs in the background like the sets
+  const t0 = Date.now();
+  while (job.status === "running") {
+    if (onTick) onTick(Math.round((Date.now() - t0) / 1000));
+    await new Promise(r => setTimeout(r, 3000));
+    job = await api(`/api/sketch/job/${job.id}`);
+  }
+  if (job.status === "error") throw new Error(job.error);
+  return job.result;
+}
+const isLocal = key => opts?.models.find(m => m.key === key)?.provider === "local";
+function showErr(t) { $("#err").textContent = t; }
+let toastT;
+function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2200); }
+
+/* ---------- zoom / pan (source preview and viewer) ---------- */
+function makeZoom(box, onTap) {
+  const layer = box.querySelector(".zoomlayer"), img = layer.querySelector("img");
+  let s = 1, x = 0, y = 0, fit = { w: 0, h: 0, x: 0, y: 0 }, drag = null;
+  const pointers = new Map();
+  let pinch = null;
+  function apply() { layer.style.transform = `translate(${x}px, ${y}px) scale(${s})`; }
+  function reset() {
+    const bw = box.clientWidth, bh = box.clientHeight, iw = img.naturalWidth || 1, ih = img.naturalHeight || 1;
+    const k = Math.min(bw / iw, bh / ih);
+    fit = { w: iw * k, h: ih * k }; layer.style.width = fit.w + "px"; layer.style.height = fit.h + "px";
+    s = 1; x = (bw - fit.w) / 2; y = (bh - fit.h) / 2; apply();
+  }
+  function zoomAt(cx, cy, f) {
+    const ns = Math.min(8, Math.max(1, s * f)), r = box.getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
+    x = px - (px - x) * ns / s; y = py - (py - y) * ns / s; s = ns;
+    if (s === 1) return reset();
+    apply();
+  }
+  img.addEventListener("load", reset);
+  window.addEventListener("resize", () => { if (box.offsetParent) reset(); });
+  box.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+  box.addEventListener("dblclick", reset);
+  box.addEventListener("pointerdown", e => {
+    box.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) }; drag = null; }
+    else { drag = { sx: e.clientX, sy: e.clientY, x, y, moved: false }; box.classList.add("grabbing"); }
+  });
+  box.addEventListener("pointermove", e => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pointers.size === 2) {
+      const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+      zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, d / pinch.d); pinch.d = d; return;
+    }
+    if (!drag) return;
+    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
+    if (s > 1) { x = drag.x + dx; y = drag.y + dy; apply(); }
+  });
+  const end = e => {
+    const tap = drag && !drag.moved && pointers.size === 1;
+    pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null;
+    box.classList.remove("grabbing");
+    if (tap && onTap) {
+      const r = img.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width * img.naturalWidth, ny = (e.clientY - r.top) / r.height * img.naturalHeight;
+      if (nx >= 0 && ny >= 0 && nx <= img.naturalWidth && ny <= img.naturalHeight) onTap(nx, ny);
+    }
+    drag = null;
+  };
+  box.addEventListener("pointerup", end); box.addEventListener("pointercancel", end);
+  return { reset };
+}
+const srcZoom = makeZoom($("#srcZoom"));
+
+/* ---------- picking: camera, upload, paste, drop ---------- */
+function step(name) {
+  $("#drop").hidden = name !== "drop"; $("#camWrap").hidden = name !== "cam";
+  $("#cropStep").hidden = name !== "crop"; $("#srcStep").hidden = name !== "src";
+}
+$("#fileBtn").onclick = () => $("#file").click();
+$("#camBtn").onclick = async () => {
+  if (!navigator.mediaDevices?.getUserMedia || /Mobi/.test(navigator.userAgent)) { $("#fileCam").click(); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1600 } }, audio: false });
+    $("#cam").srcObject = stream; await $("#cam").play(); step("cam");
+  } catch { $("#fileCam").click(); }
+};
+function stopCam() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+$("#camCancel").onclick = () => { stopCam(); step(source ? "src" : "drop"); };
+$("#snap").onclick = () => {
+  const v = $("#cam"), c = document.createElement("canvas");
+  c.width = v.videoWidth; c.height = v.videoHeight; c.getContext("2d").drawImage(v, 0, 0);
+  stopCam(); startCrop(c);
+};
+["#file", "#fileCam"].forEach(id => $(id).onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ""; });
+function loadFile(f) {
+  if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { showErr("Use a JPG, PNG or WebP image."); return; }
+  if (f.size > 25 * 1024 * 1024) { showErr("The image is too large."); return; }
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => { startCrop(img); URL.revokeObjectURL(url); };
+  img.onerror = () => { showErr("This image could not be opened."); URL.revokeObjectURL(url); };
+  img.src = url;
+}
+document.addEventListener("paste", e => {
+  const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith("image/"));
+  if (f && $("#viewer").hidden) { e.preventDefault(); loadFile(f); }
+});
+let dragDepth = 0;
+document.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; $("#drop").classList.add("drag"); });
+document.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("#drop").classList.remove("drag"); } });
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; $("#drop").classList.remove("drag");
+  const f = [...(e.dataTransfer?.files || [])].find(x => x.type.startsWith("image/"));
+  if (f) loadFile(f);
+});
+
+/* ---------- crop + rotate ---------- */
+let base = null, rot = 0, box = null;   // base: the picture (canvas), rot: quarter turns, box: crop in canvas px
+const cc = $("#cropCanvas");
+function startCrop(src) {
+  const k = Math.min(1, 2400 / Math.max(src.naturalWidth || src.width, src.naturalHeight || src.height));
+  base = document.createElement("canvas");
+  base.width = Math.round((src.naturalWidth || src.width) * k); base.height = Math.round((src.naturalHeight || src.height) * k);
+  base.getContext("2d").drawImage(src, 0, 0, base.width, base.height);
+  rot = 0; showErr(""); step("crop"); drawCrop(true);
+}
+function rotated() {
+  const c = document.createElement("canvas"), g = c.getContext("2d"), q = rot % 4;
+  c.width = q % 2 ? base.height : base.width; c.height = q % 2 ? base.width : base.height;
+  g.translate(c.width / 2, c.height / 2); g.rotate(q * Math.PI / 2); g.drawImage(base, -base.width / 2, -base.height / 2);
+  return c;
+}
+function drawCrop(resetBox) {
+  const r = rotated(), maxW = Math.min($("#cropStep").clientWidth || 600, 900), maxH = 460, k = Math.min(maxW / r.width, maxH / r.height, 1);
+  cc.width = Math.round(r.width * k); cc.height = Math.round(r.height * k);
+  cc.getContext("2d").drawImage(r, 0, 0, cc.width, cc.height);
+  cc.dataset.k = k;
+  if (resetBox || !box) { const m = .04; box = { x: cc.width * m, y: cc.height * m, w: cc.width * (1 - 2 * m), h: cc.height * (1 - 2 * m) }; }
+  placeBox();
+}
+const HANDLES = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+HANDLES.forEach(h => { const d = document.createElement("div"); d.className = "handle"; d.dataset.h = h; $("#cropBox").appendChild(d); });
+function placeBox() {
+  const b = $("#cropBox");
+  Object.assign(b.style, { left: box.x + "px", top: box.y + "px", width: box.w + "px", height: box.h + "px" });
+  b.querySelectorAll(".handle").forEach(el => {
+    const h = el.dataset.h;
+    el.style.left = (h.includes("w") ? 0 : h.includes("e") ? 100 : 50) + "%";
+    el.style.top = (h.includes("n") ? 0 : h.includes("s") ? 100 : 50) + "%";
+  });
+}
+let cdrag = null;
+$("#cropWrap").addEventListener("pointerdown", e => {
+  const h = e.target.dataset?.h || (e.target.id === "cropBox" ? "move" : null);
+  if (!h) return;
+  $("#cropWrap").setPointerCapture(e.pointerId);
+  const scale = cc.width / cc.getBoundingClientRect().width;
+  cdrag = { h, sx: e.clientX, sy: e.clientY, b: { ...box }, scale };
+});
+$("#cropWrap").addEventListener("pointermove", e => {
+  if (!cdrag) return;
+  const dx = (e.clientX - cdrag.sx) * cdrag.scale, dy = (e.clientY - cdrag.sy) * cdrag.scale, b = { ...cdrag.b }, min = 40, W = cc.width, H = cc.height;
+  if (cdrag.h === "move") { b.x = Math.min(Math.max(0, b.x + dx), W - b.w); b.y = Math.min(Math.max(0, b.y + dy), H - b.h); }
+  else {
+    if (cdrag.h.includes("w")) { const nx = Math.min(Math.max(0, b.x + dx), b.x + b.w - min); b.w += b.x - nx; b.x = nx; }
+    if (cdrag.h.includes("e")) b.w = Math.min(Math.max(min, b.w + dx), W - b.x);
+    if (cdrag.h.includes("n")) { const ny = Math.min(Math.max(0, b.y + dy), b.y + b.h - min); b.h += b.y - ny; b.y = ny; }
+    if (cdrag.h.includes("s")) b.h = Math.min(Math.max(min, b.h + dy), H - b.y);
+  }
+  box = b; placeBox();
+});
+["pointerup", "pointercancel"].forEach(t => $("#cropWrap").addEventListener(t, () => cdrag = null));
+$("#rotate").onclick = () => { rot = (rot + 1) % 4; drawCrop(true); };
+$("#cropCancel").onclick = () => step(source ? "src" : "drop");
+$("#cropOk").onclick = () => {
+  const r = rotated(), k = +cc.dataset.k, sx = box.x / k, sy = box.y / k, sw = box.w / k, sh = box.h / k;
+  const s = Math.min(1, 1024 / Math.max(sw, sh)), out = document.createElement("canvas");
+  out.width = Math.round(sw * s); out.height = Math.round(sh * s);
+  const g = out.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, out.width, out.height);
+  g.drawImage(r, sx, sy, sw, sh, 0, 0, out.width, out.height);
+  setSource(out.toDataURL("image/jpeg", 0.9));
+};
+function setSource(dataUrl) { source = dataUrl; $("#srcImg").src = dataUrl; step("src"); }
+$("#changeSrc").onclick = () => step("drop");
+
+/* ---------- options ---------- */
+async function loadOptions() {
+  opts = await api("/api/variation/options");
+  $("#count").innerHTML = opts.counts.map(c => `<option value="${c.n}">${esc(c.label)}</option>`).join("");
+  $("#count").value = "4";
+  $("#look").innerHTML = opts.looks.map(l => `<option value="${l.key}">${esc(l.label)}</option>`).join("");
+  $("#model").innerHTML = `<option value="">Auto · ${esc(opts.models.find(m => m.key === opts.default_model)?.label || "best for variation sets")}</option>` + opts.models.map(m => `<option value="${m.key}">${esc(m.label)} · ${esc(m.note)}</option>`).join("");
+  $("#mode").classList.toggle("live", opts.live);
+  $("#modeText").innerHTML = opts.live ? `<b>AI is on</b> (${esc(opts.providers.join(" + "))}). Variations are made on our server.`
+    : "<b>AI is not connected yet.</b> An admin adds the AI key on the server, then variations work here.";
+  $("#go").disabled = !opts.live;
+  showBudget(opts.budget);
+}
+function showBudget(b) { if (b) $("#budget").textContent = `${b.left_today} of ${b.per_user_day} designs left for you today`; }
+
+/* ---------- generate ---------- */
+$("#go").onclick = async () => {
+  if (busy) return;
+  if (!source) { showErr("Add a sketch or photo first."); step(base ? "crop" : "drop"); return; }
+  showErr(""); busy = true; $("#go").disabled = true;
+  const n = +$("#count").value;
+  progress(0, 1, n);
+  try {
+    let job = await post("/api/variation/generate", { image: source, count: n, direction: $("#direction").value,
+                                                     look: $("#look").value, model: $("#model").value });
+    const t0 = Date.now();
+    while (job.status === "running") {
+      progress(job.done_calls, job.calls, n, job.stage, Math.round((Date.now() - t0) / 1000));
+      await new Promise(r => setTimeout(r, 2500));
+      job = await api(`/api/variation/job/${job.id}`);
+    }
+    if (job.status === "error") throw new Error(job.error);
+    showBudget(job.budget);
+    showResult(job.result, true);
+  } catch (e) { showErr(e.message); }
+  finally { busy = false; $("#go").disabled = !opts?.live; $("#progress").hidden = true; }
+};
+function progress(done, total, n, stage = "planning", sec = 0) {
+  $("#progress").hidden = false;
+  $("#pbar").style.width = (stage === "planning" ? 5 : Math.max(12, Math.round((done + .5) / (total + .5) * 100))) + "%";
+  $("#ptext").textContent = stage === "planning" ? "Studying your design and planning fresh ideas for it…"
+    : (total > 1 ? `Drawing ${n} variations… part ${Math.min(done + 1, total)} of ${total}` : `Drawing ${n === 1 ? "your variation" : n + " variations"}…`)
+      + (isLocal($("#model").value || opts.default_model) ? ` · on our server, about 6 minutes per part · ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : "");
+}
+function showResult(r, scroll) {
+  current = r; sel = null; cellCache = {};
+  $("#resultCard").hidden = false;
+  $("#sheet").src = r.image;
+  const m = r.meta || {};
+  $("#resultTitle").textContent = m.n > 1 ? `${m.n} variations` : (m.label || (m.cells && m.cells[0]?.label) || "Your variation");
+  $("#resultNote").textContent = m.note || (m.n > 1 ? "Open it to zoom in and tap one variation to see its idea, download it, touch it up, or take it further." : (m.cells?.[0]?.brief || ""));
+  if (scroll) $("#resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  loadMine();
+}
+
+/* ---------- viewer ---------- */
+let sel = null, cellCache = {};
+const vZoom = makeZoom($("#vZoom"), (nx, ny) => {
+  const cells = current?.meta?.cells || [];
+  if (cells.length < 2) return;
+  const i = cells.findIndex(c => nx >= c.x && nx <= c.x + c.w && ny >= c.y && ny <= c.y + c.h + 50);
+  select(i >= 0 && i !== sel ? i : null);
+});
+function select(i) {
+  sel = i;
+  const b = $("#selBox"), img = $("#vImg"), cells = current?.meta?.cells || [];
+  if (i == null) { b.hidden = true; $("#vHint").textContent = cells.length > 1 ? "Tap a variation to pick it · actions apply to the whole set until you do" : "Scroll to zoom · drag to pan · double-click resets"; return; }
+  const c = cells[i], W = img.naturalWidth, H = img.naturalHeight;
+  Object.assign(b.style, { left: c.x / W * 100 + "%", top: c.y / H * 100 + "%", width: c.w / W * 100 + "%", height: c.h / H * 100 + "%" });
+  b.hidden = false;
+  $("#vHint").textContent = `Picked: ${c.label}${c.brief && c.brief !== c.label ? " — " + c.brief : ""} · actions apply to this one · tap it again for the whole set`;
+}
+function openViewer() {
+  if (!current) return;
+  $("#viewer").hidden = false; document.body.classList.add("lock");
+  $("#analysis").hidden = true; $("#touchRow").hidden = true;
+  if ($("#vImg").src.endsWith(current.image) && $("#vImg").complete) vZoom.reset(); else $("#vImg").src = current.image;
+  select(null);
+}
+$("#sheet").onclick = openViewer; $("#openViewer").onclick = openViewer;
+function closeViewer() { $("#viewer").hidden = true; document.body.classList.remove("lock"); }
+$("#vClose").onclick = closeViewer;
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#viewer").hidden) closeViewer(); });
+
+// the design an action works on: the picked cell (cut out once, on the server) or the whole set
+async function target() {
+  if (sel == null || (current.meta?.cells || []).length < 2) return current;
+  if (!cellCache[sel]) cellCache[sel] = await post(`/api/sketch/${current.id}/cell`, { index: sel });
+  return cellCache[sel];
+}
+async function act(btn, fn) {
+  btn.disabled = true;
+  try { await fn(); } catch (e) { toast(e.message); } finally { btn.disabled = false; }
+}
+$("#aDownload").onclick = e => act(e.target, async () => {
+  const t = await target(); const a = document.createElement("a"); a.href = t.image + "?download=1"; a.download = ""; document.body.appendChild(a); a.click(); a.remove();
+});
+$("#aShare").onclick = e => act(e.target, async () => {
+  const t = await target(), blob = await (await fetch(t.image)).blob();
+  const file = new File([blob], `design-${t.id}.${blob.type.includes("png") ? "png" : "jpg"}`, { type: blob.type });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: "Jewellery design" });
+  else { await navigator.clipboard.writeText(location.origin + t.image); toast("Sharing isn't available here, so the link was copied"); }
+});
+$("#aCopy").onclick = e => act(e.target, async () => {
+  const t = await target(); await navigator.clipboard.writeText(location.origin + t.image); toast("Link copied · opens for signed-in team members");
+});
+$("#aSketch").onclick = e => act(e.target, async () => { const t = await target(); location.href = `/sketch?from=${encodeURIComponent(t.id)}`; });
+$("#aVariation").onclick = e => act(e.target, async () => {
+  const t = await target(); closeViewer(); await loadFrom(t.id); window.scrollTo({ top: 0, behavior: "smooth" }); toast("Picked as the new source");
+});
+$("#aTouch").onclick = () => { $("#touchRow").hidden = !$("#touchRow").hidden; $("#analysis").hidden = true; if (!$("#touchRow").hidden) $("#touchText").focus(); };
+$("#touchGo").onclick = e => act(e.target, async () => {
+  const change = $("#touchText").value.trim();
+  if (!change) throw new Error("Write what to change.");
+  const t = await target();
+  const touchModel = opts.models.find(m => m.key === "local-klein") ? "local-klein"
+    : opts.models.find(m => m.key === "p-kontext") ? "p-kontext" : "";   // keeps the design closest
+  const r = await waitJob(await post(`/api/sketch/${t.id}/refine`, { change, model: touchModel }),
+    sec => $("#vHint").textContent = `Touching up${isLocal(touchModel || opts.default_model) ? " on our server" : ""}… ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`);
+  $("#touchText").value = ""; $("#touchRow").hidden = true;
+  showResult(r, false); $("#vImg").src = r.image; select(null);
+  if (r.budget) showBudget(r.budget);
+});
+$("#aAnalyze").onclick = e => act(e.target, async () => {
+  const t = await target(); const el = $("#analysis"); $("#touchRow").hidden = true;
+  el.hidden = false; el.innerHTML = "Reading the design…";
+  const res = await api(`/api/sketch/${t.id}/similar`), d = res.dna || {}, rows = [];
+  const tr = xs => xs.map(x => `<span class="trait">${esc(x)}</span>`).join("");
+  if (d.type) rows.push(`<div class="row"><span class="k">Type</span>${tr([d.type.value + (d.type.sure ? "" : " (perhaps)")])}</div>`);
+  if (d.metal?.metal) rows.push(`<div class="row"><span class="k">Metal colour</span>${tr([d.metal.metal.replace("_", " ")])}</div>`);
+  const dd = d.diamonds || {}, dia = [...(d.traits || []).filter(x => x.group === "Stones").map(x => x.label)];
+  if (dd.layout) dia.push(dd.layout.label); if (dd.centre_cut) dia.push(dd.centre_cut.label + " centre stone");
+  (dd.settings || []).forEach(m => dia.push(m.label));
+  if (dia.length) rows.push(`<div class="row"><span class="k">Diamonds</span>${tr(dia)}</div>`);
+  const look = (d.traits || []).filter(x => x.group !== "Stones").map(x => x.label);
+  if (look.length) rows.push(`<div class="row"><span class="k">Look</span>${tr(look)}</div>`);
+  if ((d.motifs || []).length) rows.push(`<div class="row"><span class="k">Style</span>${tr(d.motifs.map(m => m.label))}</div>`);
+  if ((d.details || []).length) rows.push(`<div class="row"><span class="k">Details</span>${tr(d.details.map(x => x.label))}</div>`);
+  const items = (res.results || []).slice(0, 6);
+  el.innerHTML = `<b>Design reading</b>${rows.join("") || "<p class='hint'>No clear traits.</p>"}
+    <div style="margin-top:10px"><b>Closest in our collection</b></div>
+    <div class="cards">${items.map(c => `<a class="mini" href="/buy?${new URLSearchParams({ uid: c.uid, id: c.design_id, metal: c.metal_shown || "" })}"><img loading="lazy" src="${esc(c.thumb)}" alt=""><div class="cap"><span>${esc(c.design_id)}</span></div></a>`).join("")}</div>`;
+});
+
+/* ---------- gallery + hand-over from other panels ---------- */
+async function loadMine() {
+  try {
+    const r = await api("/api/sketch/mine?panel=variation");
+    showBudget(r.budget);
+    $("#mine").innerHTML = r.items.length ? r.items.map(d => `<div class="mini" data-id="${esc(d.id)}" role="button" tabindex="0">
+        <button type="button" class="x" data-del="${esc(d.id)}" aria-label="Remove">×</button>
+        <img loading="lazy" src="${esc(d.image)}" alt=""><div class="cap"><span>${esc(d.meta?.n > 1 ? d.meta.n + " variations" : (d.meta?.label || d.prompt || "Variation").slice(0, 28))}</span><span>${new Date(d.ts * 1000).toLocaleDateString()}</span></div></div>`).join("")
+      : `<p class="hint">Variation sets you make are kept here.</p>`;
+    $("#mine").querySelectorAll(".mini").forEach(el => el.onclick = e => {
+      if (e.target.dataset.del) return;
+      const d = r.items.find(x => x.id === el.dataset.id); if (d) { current = d; showResult(d, true); }
+    });
+    $("#mine").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+      try { await api(`/api/sketch/${b.dataset.del}`, { method: "DELETE" }); loadMine(); } catch (e) { toast(e.message); }
+    });
+  } catch { /* gallery is optional */ }
+}
+async function loadFrom(gid) {
+  const blob = await (await fetch(`/api/sketch/img/${encodeURIComponent(gid)}`, { credentials: "same-origin" })).blob();
+  if (!blob.type.startsWith("image/")) throw new Error("That design is no longer available.");
+  const url = URL.createObjectURL(blob), img = new Image();
+  await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; });
+  const k = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(url);
+  setSource(c.toDataURL("image/jpeg", 0.9));
+}
+
+step("drop");
+loadOptions().then(() => {
+  const from = new URLSearchParams(location.search).get("from");
+  if (from) loadFrom(from).catch(e => showErr(e.message));
+}).catch(e => showErr(e.message));
+loadMine();
+</script>
+</body>
+</html>

@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --bg2: #fdfaf3; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22);
+  --danger: #b42318; --ok: #2f7a3f; --aurora1: rgba(230, 190, 110, .17); --aurora2: rgba(245, 215, 150, .15);
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", "Noto Sans Gujarati", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button { font: inherit; cursor: pointer; color: var(--ink); }
+.aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
+.aurora i:nth-child(1) { width: 60vw; height: 60vw; left: -18vw; top: -26vw; background: var(--aurora1); }
+.aurora i:nth-child(2) { width: 50vw; height: 50vw; right: -20vw; top: 8vh; background: var(--aurora2); }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.pill { font: 600 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); background: var(--btn);
+  border: 1px solid var(--line-strong); padding: 4px 10px; border-radius: 999px; }
+.top-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 12px; border-radius: 999px; text-decoration: none;
+  border: 1px solid var(--line); background: var(--surface); font: 600 13px var(--sans); color: var(--ink); transition: border-color .3s, transform .35s var(--ease); }
+.top-btn:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.top-btn svg { width: 17px; height: 17px; color: var(--tone2); }
+
+.wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 36px 28px 90px; }
+h1 { font: 300 clamp(28px, 4vw, 40px)/1.15 var(--serif); letter-spacing: .01em; margin: 0 0 6px; }
+h1 em { font-style: normal; background: linear-gradient(90deg, var(--tone3), var(--tone2), var(--tone1)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { color: var(--muted); margin: 0 0 26px; }
+code, .mono { font: 500 12.5px/1.5 ui-monospace, "SF Mono", Menlo, monospace; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.step { display: flex; align-items: baseline; gap: 10px; margin: 0 0 14px; font: 500 17px var(--serif); }
+.step span { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--sans); color: var(--accent-ink); background: var(--btn); border: 1px solid var(--line-strong); }
+.step small { font: 500 12px var(--sans); color: var(--muted); }
+
+.drive { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.drive .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent); }
+.drive.off .dot { background: var(--danger); box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 18%, transparent); }
+.drive .meter { flex: 1; min-width: 180px; height: 8px; border-radius: 99px; background: var(--chip); border: 1px solid var(--line); overflow: hidden; }
+.drive .meter i { display: block; height: 100%; background: linear-gradient(90deg, var(--tone1), var(--tone2)); }
+.drive .txt { font-size: 13px; color: var(--muted); }
+.drive .txt b { color: var(--ink); }
+
+.cats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+@media (max-width: 760px) { .cats { grid-template-columns: repeat(3, 1fr); } }
+.cat { border: 1px solid var(--line); background: var(--surface-solid); border-radius: 16px; padding: 14px 8px; text-align: center; font: 600 13px var(--sans);
+  transition: border-color .25s, transform .35s var(--ease), background .25s; }
+.cat:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+.cat[aria-pressed="true"] { background: var(--btn); border-color: var(--tone2); color: var(--accent-ink); box-shadow: 0 0 0 3px var(--glow); }
+.field { display: grid; gap: 6px; margin-top: 16px; }
+.field label { font: 600 12px var(--sans); color: var(--muted); letter-spacing: .04em; }
+.field input { height: 44px; border-radius: 12px; border: 1px solid var(--line); padding: 0 14px; font: 500 14px var(--sans); color: var(--ink); background: var(--surface-solid); outline: none; }
+.field input:focus { border-color: var(--tone2); box-shadow: 0 0 0 3px var(--glow); }
+.inbox { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-solid); overflow: hidden; }
+.inbox:focus-within { border-color: var(--tone2); box-shadow: 0 0 0 3px var(--glow); }
+.inbox .prefix { flex: none; max-width: 55%; padding: 0 4px 0 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; user-select: none; }
+.inbox input { flex: 1; min-width: 0; border: 0; padding-left: 2px; box-shadow: none !important; }
+.dest { margin-top: 14px; padding: 10px 14px; border-radius: 12px; background: var(--chip); border: 1px dashed var(--line-strong); color: var(--accent-ink); word-break: break-all; }
+
+.drop { position: relative; border: 2px dashed var(--line-strong); border-radius: 20px; padding: 34px 18px; text-align: center; background: var(--bg2);
+  transition: background .25s, border-color .25s, transform .35s var(--ease); }
+.drop.over { background: color-mix(in srgb, var(--tone1) 16%, var(--bg2)); border-color: var(--tone2); transform: scale(1.01); }
+.drop.disabled { opacity: .55; }
+.drop svg { width: 40px; height: 40px; color: var(--tone2); }
+.drop p { margin: 8px 0 16px; color: var(--muted); }
+.drop p b { color: var(--ink); }
+.btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn { height: 42px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-solid); font: 600 13px var(--sans);
+  transition: transform .35s var(--ease), background .25s, opacity .25s; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); background: var(--chip); }
+.btn.primary { background: var(--btn); color: var(--accent-ink); border-color: var(--tone2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.ghost { border-color: var(--line); }
+
+.qhead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.qhead .sum { flex: 1; font-size: 13px; color: var(--muted); min-width: 200px; }
+.qhead .sum b { color: var(--ink); }
+.overall { height: 6px; border-radius: 99px; background: var(--chip); overflow: hidden; margin-bottom: 14px; border: 1px solid var(--line); }
+.overall i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--tone3), var(--tone1)); transition: width .3s; }
+.queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 520px; overflow: auto; }
+.item { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface-solid); }
+.thumb { width: 44px; height: 44px; border-radius: 10px; background: var(--chip); display: grid; place-items: center; overflow: hidden; font: 700 10px var(--sans); color: var(--accent-ink); text-transform: uppercase; }
+.thumb img { width: 100%; height: 100%; object-fit: contain; }
+.meta { min-width: 0; }
+.meta .n { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta .s { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta .s.err { color: var(--danger); white-space: normal; }
+.meta .s.okc { color: var(--ok); }
+.bar { height: 4px; border-radius: 99px; background: var(--chip); margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--tone2), var(--tone1)); transition: width .25s; }
+.item.done .bar i { background: var(--ok); }
+.item.failed .bar i { background: var(--danger); }
+.tag { font: 600 11px var(--sans); padding: 2px 8px; border-radius: 99px; background: var(--chip); border: 1px solid var(--line); color: var(--accent-ink); margin-right: 6px; }
+.x { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: none; display: grid; place-items: center; color: var(--muted); }
+.x:hover { border-color: var(--line-strong); color: var(--ink); }
+.x svg { width: 14px; height: 14px; }
+.empty { text-align: center; color: var(--muted); padding: 18px; font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font: 600 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.p { word-break: break-all; }
+.tablewrap { max-height: 380px; overflow: auto; }
+.note { font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; z-index: 60; padding: 12px 18px; border-radius: 14px; background: var(--ink); color: #fff; font-size: 13.5px; transition: .35s var(--ease); max-width: calc(100vw - 32px); }
+dialog.done { width: min(560px, calc(100vw - 32px)); max-height: min(640px, calc(100vh - 48px)); padding: 0; border: 1px solid var(--line-strong); border-radius: 22px;
+  background: var(--surface-solid); color: var(--ink); box-shadow: 0 30px 80px -30px rgba(90, 65, 20, .45); }
+dialog.done[open] { display: flex; flex-direction: column; animation: pop .35s var(--ease); }
+dialog.done::backdrop { background: rgba(90, 65, 20, .18); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+.dhead { padding: 22px 22px 12px; display: flex; gap: 14px; align-items: center; }
+.dhead .ic { width: 42px; height: 42px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--btn); border: 1px solid var(--line-strong); color: var(--accent-ink); }
+.dhead .ic svg { width: 20px; height: 20px; }
+.dhead h3 { margin: 0; font: 500 19px/1.25 var(--serif); }
+.dhead p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.dbody { padding: 4px 22px; overflow: auto; flex: 1; }
+.dgroup { margin: 10px 0 14px; }
+.dgroup .where { font-size: 12px; color: var(--accent-ink); background: var(--chip); border: 1px dashed var(--line-strong); border-radius: 10px; padding: 6px 10px; word-break: break-all; }
+.dgroup ul { list-style: none; margin: 6px 0 0; padding: 0 0 0 6px; }
+.dgroup li { font-size: 13px; padding: 3px 0; display: flex; gap: 8px; justify-content: space-between; border-bottom: 1px solid var(--line); }
+.dgroup li span:first-child { word-break: break-all; }
+.dgroup li span:last-child { color: var(--muted); white-space: nowrap; }
+.dfail { font-size: 13px; color: var(--danger); margin: 6px 0 12px; }
+.dfoot { padding: 14px 22px 20px; display: flex; justify-content: flex-end; border-top: 1px solid var(--line); }
+.dfoot .btn { min-width: 110px; }
+.dfoot.three { gap: 10px; flex-wrap: wrap; }
+.dhead .ic.warn { background: #fdecc8; border-color: #e7b75a; color: #8a5a00; }
+.clist { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; gap: 8px; }
+.clist li { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+.clist .p { word-break: break-all; font-weight: 600; }
+.clist .m { color: var(--muted); margin-top: 2px; }
+.clist .m b { color: var(--accent-ink); }
+.dnote { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 560px) {
+  .topbar { padding: 12px 16px; } .brand b { font-size: 14px; letter-spacing: .12em; } .top-btn span { display: none; } .top-btn { padding: 0 11px; }
+  .wrap { padding: 24px 16px 80px; } .card { padding: 16px; border-radius: 18px; }
+  .hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i></div>
+
+<header class="topbar">
+  <a class="brand" href="/"><b>Design Finder</b><span class="pill">Admin</span></a>
+  <a class="top-btn" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>Back to search</span></a>
+</header>
+
+<main class="wrap">
+  <h1>Upload <em>new designs</em></h1>
+  <p class="lead">Files are saved straight to the dataset storage with their original names. Any file type is accepted: renders, photos, 3D videos, CAD files.</p>
+
+  <section class="card">
+    <div class="drive" id="drive">
+      <span class="dot"></span>
+      <div class="txt" id="driveTxt">Checking the dataset storage…</div>
+      <div class="meter" title="Free space"><i id="driveBar" style="width:0"></i></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="step"><span>1</span>Category</h2>
+    <div class="cats" id="cats" role="group" aria-label="Category"></div>
+    <div class="field" id="customField" hidden>
+      <label for="custom">Category name (required for Other), e.g. "Mangalsutra" or "Nose Pins"</label>
+      <div class="inbox"><span class="prefix mono" id="customPrefix"></span><input id="custom" maxlength="120" autocomplete="off" list="customList" placeholder="new or existing category name"></div>
+      <datalist id="customList"></datalist>
+    </div>
+    <div class="field">
+      <label for="batch">Folder name inside the category (optional). Type only the name, e.g. "Loat - 15" or "Diwali 2026"</label>
+      <div class="inbox"><span class="prefix mono" id="prefix" title="Fixed location"></span><input id="batch" maxlength="120" autocomplete="off" placeholder="folder name (optional)"></div>
+    </div>
+    <div class="dest mono" id="dest">Choose a category</div>
+  </section>
+
+  <section class="card">
+    <h2 class="step"><span>2</span>Add files <small>· drag files or whole folders here</small></h2>
+    <div class="drop disabled" id="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <p id="dropMsg"><b>Choose a category first</b></p>
+      <div class="btns">
+        <button type="button" class="btn" id="pickFiles" disabled>Choose files</button>
+        <button type="button" class="btn" id="pickFolder" disabled>Choose folder</button>
+      </div>
+      <input type="file" id="fileInput" multiple hidden>
+      <input type="file" id="folderInput" webkitdirectory multiple hidden>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="step"><span>3</span>Upload</h2>
+    <div class="qhead">
+      <div class="sum" id="sum">No files added yet.</div>
+      <button type="button" class="btn ghost" id="clearDone" disabled>Clear list</button>
+      <button type="button" class="btn primary" id="start" disabled>Upload</button>
+    </div>
+    <div class="overall"><i id="overall"></i></div>
+    <ul class="queue" id="queue"></ul>
+    <p class="note">New files show up in search after the index is rebuilt (see README, "Building the index").</p>
+  </section>
+
+  <section class="card">
+    <h2 class="step"><span>✓</span>Recently uploaded</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>When</th><th>File</th><th class="hide-sm">Size</th><th class="hide-sm">By</th></tr></thead>
+        <tbody id="recent"><tr><td colspan="4" class="empty">Nothing uploaded yet.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<dialog class="done" id="conflictDlg" aria-labelledby="conflictTitle">
+  <div class="dhead">
+    <span class="ic warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/></svg></span>
+    <div><h3 id="conflictTitle"></h3><p>Choose what to do so files from different batches don't get mixed.</p></div>
+  </div>
+  <div class="dbody"><ul class="clist" id="conflictList"></ul>
+    <p class="dnote">Either way nothing is overwritten: a file whose name already exists is saved as a copy, e.g. <span class="mono">name (2).png</span>.</p></div>
+  <div class="dfoot three">
+    <button type="button" class="btn ghost" data-choice="cancel">Cancel</button>
+    <button type="button" class="btn" data-choice="merge">Add to existing folder</button>
+    <button type="button" class="btn primary" data-choice="new">Create new folder</button>
+  </div>
+</dialog>
+<dialog class="done" id="doneDlg" aria-labelledby="doneTitle">
+  <div class="dhead">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+    <div><h3 id="doneTitle"></h3><p id="doneSub"></p></div>
+  </div>
+  <div class="dbody" id="doneBody"></div>
+  <div class="dfoot"><button type="button" class="btn primary" id="doneOk">OK</button></div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = b => b < 1024 ? b + " B" : b < 1048576 ? (b / 1024).toFixed(0) + " KB" : b < 1073741824 ? (b / 1048576).toFixed(1) + " MB" : (b / 1073741824).toFixed(2) + " GB";
+const JUNK = n => n.startsWith(".") || n.startsWith("~$") || /^(thumbs\.db|desktop\.ini)$/i.test(n);
+const IMG = /\.(png|jpe?g|webp|gif|avif|bmp)$/i;
+const PARALLEL = 3;
+
+let info = null, category = "", queue = [], running = false, seq = 0;
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 3800);
+}
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, { credentials: "same-origin", ...opts });
+  if (r.status === 401) { location.replace("/login?next=/admin"); throw new Error("Sign in required"); }
+  if (r.status === 403) { location.replace("/"); throw new Error("Admins only"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(data.detail || `Error ${r.status}`); e.status = r.status; throw e; }
+  return data;
+}
+
+/* ---------- drive status, categories, recent ---------- */
+async function loadInfo() {
+  info = await api("/api/admin/uploads");
+  const d = $("#drive");
+  d.classList.toggle("off", !info.drive_ready);
+  const cloud = info.storage === "s3";
+  if (info.drive_ready && cloud) {
+    $("#driveTxt").innerHTML = `Cloud storage connected · <b>no space limit</b> <span class="hide-sm">(${esc(info.root)})</span>`;
+  } else if (info.drive_ready) {
+    $("#driveTxt").innerHTML = `Dataset drive connected · <b>${fmt(info.free_bytes)}</b> free <span class="hide-sm">(${fmt(info.reserve_bytes)} is always kept free)</span>`;
+  } else {
+    $("#driveTxt").innerHTML = cloud ? `<b>Cloud storage not reachable.</b> Check the server's internet connection and S3 keys.`
+                                     : `<b>Dataset drive not connected.</b> Plug in the SSD on the server Mac to upload.`;
+  }
+  // bar shows usable free space relative to 100 GB, enough to tell "plenty" from "almost full"
+  $("#driveBar").parentElement.hidden = cloud;
+  $("#driveBar").style.width = Math.min(100, (info.free_bytes || 0) / 1073741824) + "%";
+  if (!$("#cats").children.length) {
+    $("#cats").innerHTML = [...Object.entries(info.folders), ["other", "Other…"]].map(([k, v]) => `<button type="button" class="cat" data-cat="${k}" aria-pressed="false">${esc(v)}</button>`).join("");
+  }
+  $("#customList").innerHTML = info.custom_categories.map(c => `<option value="${esc(c)}">`).join("");
+  renderRecent(info.recent);
+  updateDest();
+}
+
+function renderRecent(rows) {
+  if (!rows.length) return;
+  $("#recent").innerHTML = rows.map(r => `<tr><td>${esc(new Date(r.at).toLocaleString())}</td><td class="p mono">${esc(r.path)}</td><td class="hide-sm">${fmt(r.size)}</td><td class="hide-sm">${esc(r.by)}</td></tr>`).join("");
+}
+
+$("#cats").addEventListener("click", e => {
+  const b = e.target.closest(".cat"); if (!b) return;
+  category = b.dataset.cat;
+  for (const c of $("#cats").children) c.setAttribute("aria-pressed", c === b);
+  $("#customField").hidden = category !== "other";
+  if (category === "other") $("#custom").focus();
+  updateDest();
+});
+// "Other": the admin's own category name (last part if a path was pasted); reuse an existing folder's spelling.
+function customName() {
+  const v = $("#custom").value.replace(/\\/g, "/").split("/").map(x => x.trim()).filter(Boolean).pop() || "";
+  const known = [...Object.values(info?.folders || {}), ...(info?.custom_categories || [])];
+  return known.find(k => k.toLowerCase() === v.toLowerCase()) || v;
+}
+function catFolder() { return !category ? "" : category === "other" ? customName() : info.folders[category]; }
+
+// Keep only the admin's own folder name: a pasted full path loses its drive/category part.
+function cleanBatch(v) {
+  let segs = v.replace(/\\/g, "/").split("/").map(x => x.trim()).filter(Boolean);
+  if (!info) return segs.join("/");
+  const root = info.root.split("/").filter(Boolean).map(x => x.toLowerCase());
+  for (let k = 0; k < root.length; k++) {
+    const tail = root.slice(k);
+    if (segs.length >= tail.length && tail.every((x, i) => segs[i].toLowerCase() === x)) { segs = segs.slice(tail.length); break; }
+  }
+  if (catFolder() && segs[0]?.toLowerCase() === catFolder().toLowerCase()) segs = segs.slice(1);
+  return segs.join("/");
+}
+function tidyBatch() {
+  const el = $("#batch"), v = cleanBatch(el.value);
+  if (v !== el.value.trim()) { el.value = v; toast("Only the folder name is kept; the location is fixed."); }
+  updateDest();
+}
+$("#batch").addEventListener("input", updateDest);
+$("#custom").addEventListener("input", updateDest);
+$("#custom").addEventListener("change", () => { $("#custom").value = customName(); updateDest(); });
+$("#batch").addEventListener("change", tidyBatch);
+$("#batch").addEventListener("paste", () => setTimeout(tidyBatch));
+
+function destFor(folder, batch, sub = "") {
+  return [info.root, folder, batch.trim(), sub].filter(Boolean).join("/") + "/";
+}
+function updateDest() {
+  const folder = info ? catFolder() : "", ready = info && info.drive_ready && folder;
+  $("#customPrefix").textContent = info ? `${info.root}/` : "";
+  $("#prefix").textContent = info ? `${info.root}/${folder || "<category>"}/` : "";
+  $("#dest").textContent = folder ? destFor(folder, cleanBatch($("#batch").value))
+    : category === "other" ? "Type a category name" : "Choose a category";
+  $("#drop").classList.toggle("disabled", !ready);
+  $("#pickFiles").disabled = $("#pickFolder").disabled = !ready;
+  $("#dropMsg").innerHTML = !info?.drive_ready ? "<b>Dataset storage not connected</b>" : folder
+    ? `Drop files or folders here for <b>${esc(folder)}</b>` : category === "other" ? "<b>Type a category name first</b>" : "<b>Choose a category first</b>";
+}
+
+/* ---------- adding files ---------- */
+function addFiles(list) {
+  if (!info?.drive_ready || !catFolder()) return toast(category === "other" ? "Type a category name first." : "Choose a category first.");
+  tidyBatch();
+  const batch = $("#batch").value.trim(), folder = catFolder(), custom = category === "other" ? folder : "";
+  let added = 0, skipped = 0;
+  for (const { file, dir } of list) {
+    if (JUNK(file.name)) { skipped++; continue; }
+    queue.push({ id: ++seq, file, dir, category, custom, folder, batch, status: "waiting", sent: 0, error: "", path: "" });
+    added++;
+  }
+  render();
+  if (added) toast(`Added ${added} file${added > 1 ? "s" : ""}${skipped ? ` · skipped ${skipped} system file${skipped > 1 ? "s" : ""}` : ""}.`);
+}
+
+// folder picker: keep the folder structure (relative path minus the file name)
+const dirOf = f => (f.webkitRelativePath || "").split("/").slice(0, -1).join("/");
+$("#pickFiles").onclick = () => $("#fileInput").click();
+$("#pickFolder").onclick = () => $("#folderInput").click();
+$("#fileInput").onchange = e => { addFiles([...e.target.files].map(file => ({ file, dir: "" }))); e.target.value = ""; };
+$("#folderInput").onchange = e => { addFiles([...e.target.files].map(file => ({ file, dir: dirOf(file) }))); e.target.value = ""; };
+
+// drag and drop, including whole folders
+async function walk(entry, dir, out) {
+  if (entry.isFile) {
+    out.push({ file: await new Promise((res, rej) => entry.file(res, rej)), dir });
+  } else if (entry.isDirectory) {
+    if (JUNK(entry.name)) return;
+    const reader = entry.createReader(), sub = dir ? dir + "/" + entry.name : entry.name;
+    let batch;
+    do {   // readEntries returns at most ~100 at a time
+      batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+      for (const e of batch) await walk(e, sub, out);
+    } while (batch.length);
+  }
+}
+const drop = $("#drop");
+["dragenter", "dragover"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); if (catFolder()) drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(t => drop.addEventListener(t, () => drop.classList.remove("over")));
+drop.addEventListener("drop", async e => {
+  e.preventDefault();
+  if (!catFolder()) return toast(category === "other" ? "Type a category name first." : "Choose a category first.");
+  const entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry?.()).filter(Boolean);
+  const out = [];
+  if (entries.length) { for (const en of entries) await walk(en, "", out); }
+  else out.push(...[...e.dataTransfer.files].map(file => ({ file, dir: "" })));
+  addFiles(out);
+});
+// dropping outside the box shouldn't open the file in the tab
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
+
+/* ---------- queue ---------- */
+const ICON_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+const ICON_RETRY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6"/><path d="M4 4v4.6h4.6"/></svg>`;
+
+function statusText(q) {
+  switch (q.status) {
+    case "waiting": return `<span class="tag">${esc(q.folder)}</span>${fmt(q.file.size)} · ${esc(destFor(q.folder, q.batch, q.dir))}`;
+    case "uploading": return `Uploading… ${fmt(q.sent)} of ${fmt(q.file.size)}`;
+    case "done": return `<span class="okc">Saved${q.renamed ? " (name was taken, saved as a copy)" : ""}</span> · <span class="mono">${esc(q.path)}</span>`;
+    case "failed": return esc(q.error);
+    case "cancelled": return "Cancelled";
+  }
+}
+
+function itemHTML(q) {
+  const ext = (q.file.name.split(".").pop() || "file").slice(0, 4);
+  if (IMG.test(q.file.name) && q.file.size < 40 * 1048576 && !q.url) q.url = URL.createObjectURL(q.file);
+  const btn = q.status === "failed" || q.status === "cancelled"
+    ? `<button type="button" class="x" data-retry="${q.id}" title="Try again" aria-label="Try again">${ICON_RETRY}</button>`
+    : q.status === "done" ? "" : `<button type="button" class="x" data-remove="${q.id}" title="Remove" aria-label="Remove">${ICON_X}</button>`;
+  return `<li class="item ${q.status}" id="q${q.id}">
+    <div class="thumb">${q.url ? `<img src="${q.url}" alt="" loading="lazy">` : esc(ext)}</div>
+    <div class="meta"><div class="n" title="${esc(q.file.name)}">${esc(q.file.name)}</div>
+      <div class="s ${q.status === "failed" ? "err" : ""}">${statusText(q)}</div>
+      <div class="bar"><i style="width:${q.file.size ? (q.sent / q.file.size * 100) : (q.status === "done" ? 100 : 0)}%"></i></div></div>
+    ${btn}</li>`;
+}
+
+function render() {
+  $("#queue").innerHTML = queue.length ? queue.map(itemHTML).join("") : `<li class="empty">Files you add appear here.</li>`;
+  summary();
+}
+function update(q) {
+  const el = $("#q" + q.id); if (el) el.outerHTML = itemHTML(q);
+  summary();
+}
+function summary() {
+  const c = s => queue.filter(q => q.status === s).length;
+  const total = queue.reduce((a, q) => a + q.file.size, 0), sent = queue.reduce((a, q) => a + (q.status === "done" ? q.file.size : q.sent), 0);
+  const waiting = c("waiting"), failed = c("failed");
+  $("#sum").innerHTML = queue.length
+    ? `<b>${queue.length}</b> file${queue.length > 1 ? "s" : ""} · ${fmt(total)} · <b>${c("done")}</b> saved${c("uploading") ? ` · ${c("uploading")} uploading` : ""}${waiting ? ` · ${waiting} waiting` : ""}${failed ? ` · <span style="color:var(--danger)">${failed} failed</span>` : ""}`
+    : "No files added yet.";
+  $("#overall").style.width = total ? (sent / total * 100) + "%" : "0";
+  $("#start").disabled = running || !waiting;
+  $("#start").textContent = running ? "Uploading…" : waiting ? `Upload ${waiting} file${waiting > 1 ? "s" : ""}` : "Upload";
+  $("#clearDone").disabled = running || !queue.length;
+}
+
+$("#queue").addEventListener("click", e => {
+  const r = e.target.closest("[data-remove]"), t = e.target.closest("[data-retry]");
+  if (r) {
+    const q = queue.find(x => x.id === +r.dataset.remove);
+    if (q.status === "uploading") { q.cancel = true; return; }
+    if (q.url) URL.revokeObjectURL(q.url);
+    queue = queue.filter(x => x !== q); render();
+  } else if (t) {
+    const q = queue.find(x => x.id === +t.dataset.retry);
+    Object.assign(q, { status: "waiting", sent: 0, error: "", cancel: false }); update(q);
+    if (!running) startAll();
+  }
+});
+$("#clearDone").onclick = () => { queue.forEach(q => q.url && URL.revokeObjectURL(q.url)); queue = []; render(); };
+$("#start").onclick = startAll;
+
+/* ---------- uploading (chunked, resumable per chunk) ---------- */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function sendChunk(id, offset, blob) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await api(`/api/admin/uploads/${encodeURIComponent(id)}?offset=${offset}`, { method: "PUT", headers: { "Content-Type": "application/octet-stream" }, body: blob });
+    } catch (e) {
+      if (e.status && e.status !== 409 && e.status < 500) throw e;
+      if (e.status === 409) { const m = /offset (\d+)/.exec(e.message); if (m) return { received: +m[1], done: false, resync: true }; }
+      if (attempt >= 4) throw e;
+      await sleep(1000 * 2 ** attempt);   // network hiccup: 1, 2, 4, 8 s
+    }
+  }
+}
+
+async function uploadOne(q) {
+  q.status = "uploading"; q.sent = 0; update(q);
+  let id;
+  try {
+    const s = await api("/api/admin/uploads", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: q.category, custom: q.custom, name: q.file.name, size: q.file.size, batch: q.batch, subdirs: q.dir }),
+    });
+    id = s.id;
+    let offset = 0, res;
+    do {
+      if (q.cancel) throw Object.assign(new Error("Cancelled"), { cancelled: true });
+      const end = Math.min(offset + s.chunk_bytes, q.file.size);
+      res = await sendChunk(id, offset, q.file.slice(offset, end));
+      offset = res.received; q.sent = offset; update(q);
+    } while (!res.done);
+    Object.assign(q, { status: "done", path: res.path, renamed: res.renamed });
+  } catch (e) {
+    if (id) fetch(`/api/admin/uploads/${encodeURIComponent(id)}`, { method: "DELETE", credentials: "same-origin" }).catch(() => {});
+    Object.assign(q, e.cancelled ? { status: "cancelled" } : { status: "failed", error: e.message || "Upload failed" });
+  }
+  update(q);
+}
+
+/* ---------- same-name folder already in the storage: ask before mixing ---------- */
+const topOf = q => q.batch || q.dir.split("/")[0] || "";   // the folder this upload creates inside the category
+
+async function checkConflicts() {
+  // retried files were already checked; their folder exists because the rest of their batch was saved there
+  const waiting = queue.filter(q => q.status === "waiting" && !q.checked), groups = new Map();
+  for (const q of waiting) {
+    const top = topOf(q); if (!top) continue;
+    const k = q.category + "|" + q.custom;
+    if (!groups.has(k)) groups.set(k, { category: q.category, custom: q.custom, folder: q.folder, tops: new Set() });
+    groups.get(k).tops.add(top);
+  }
+  const conflicts = [];
+  for (const g of groups.values()) {
+    const r = await api("/api/admin/uploads/check", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: g.category, custom: g.custom, folders: [...g.tops] }) });
+    for (const e of r.existing) conflicts.push({ ...e, category: g.category, custom: g.custom, folder: g.folder });
+  }
+  const choice = conflicts.length ? await askConflict(conflicts, waiting) : "none";
+  if (choice === "cancel") return false;
+  waiting.forEach(q => { q.checked = true; });
+  if (choice === "new") {
+    for (const q of waiting) {
+      const c = conflicts.find(c => c.category === q.category && c.custom === q.custom && c.rel === topOf(q));
+      if (!c) continue;
+      if (q.batch) q.batch = c.suggestion;
+      else q.dir = [c.suggestion, ...q.dir.split("/").slice(1)].join("/");
+    }
+    render();
+  }
+  return true;
+}
+
+function askConflict(conflicts, waiting) {
+  const drive = info.root.slice(0, info.root.lastIndexOf("/"));
+  $("#conflictTitle").textContent = conflicts.length > 1 ? `${conflicts.length} folders already exist` : "This folder already exists";
+  $("#conflictList").innerHTML = conflicts.map(c => {
+    const n = waiting.filter(q => q.category === c.category && q.custom === c.custom && topOf(q) === c.rel).length;
+    return `<li><div class="p mono">${esc(drive + "/" + c.path)}/</div>
+      <div class="m">Already has <b>${c.files.toLocaleString()}</b> file${c.files === 1 ? "" : "s"} · you are adding ${n} ·
+      new folder would be <b>${esc(c.folder + "/" + c.suggestion)}</b></div></li>`;
+  }).join("");
+  const dlg = $("#conflictDlg");
+  return new Promise(resolve => {
+    const done = choice => { dlg.onclick = dlg.oncancel = null; dlg.close(); resolve(choice); };
+    dlg.onclick = e => { const b = e.target.closest("[data-choice]"); if (b) done(b.dataset.choice); };
+    dlg.oncancel = e => { e.preventDefault(); done("cancel"); };   // Esc
+    dlg.showModal();
+    dlg.querySelector('[data-choice="new"]').focus();
+  });
+}
+
+async function startAll() {
+  if (running) return;
+  running = true; summary();
+  let go = false;
+  try { go = await checkConflicts(); } catch (e) { toast(e.message); }
+  if (!go) { running = false; summary(); return; }
+  const worker = async () => { let q; while ((q = queue.find(x => x.status === "waiting"))) { q.status = "uploading"; await uploadOne(q); } };
+  await Promise.all(Array.from({ length: PARALLEL }, worker));
+  running = false; summary();
+  // Saved files leave the list right away; failed ones stay so they can be retried.
+  const done = queue.filter(q => q.status === "done"), failed = queue.filter(q => q.status === "failed").length;
+  done.forEach(q => q.url && URL.revokeObjectURL(q.url));
+  queue = queue.filter(q => q.status !== "done");
+  render();
+  // Start the next batch with an empty folder name (failed files keep the folder they were added with).
+  if (done.length) { $("#batch").value = ""; updateDest(); }
+  if (done.length) showDone(done, failed); else if (failed) toast(`${failed} file${failed > 1 ? "s" : ""} failed. Use the retry button.`);
+  loadInfo().catch(() => {});
+}
+
+function showDone(done, failed) {
+  const groups = new Map();
+  for (const q of done) {
+    const i = q.path.lastIndexOf("/"), dir = info.root.replace(/\/[^/]*$/, "") + "/" + q.path.slice(0, i) + "/";
+    if (!groups.has(dir)) groups.set(dir, []);
+    groups.get(dir).push({ name: q.path.slice(i + 1), size: q.file.size, renamed: q.renamed });
+  }
+  const bytes = done.reduce((a, q) => a + q.file.size, 0);
+  $("#doneTitle").textContent = `${done.length} file${done.length > 1 ? "s" : ""} uploaded`;
+  $("#doneSub").textContent = `${fmt(bytes)} saved to the dataset storage`;
+  $("#doneBody").innerHTML = (failed ? `<p class="dfail">${failed} file${failed > 1 ? "s" : ""} failed and are still in the list. Use the retry button.</p>` : "") +
+    [...groups].map(([dir, files]) => `<div class="dgroup"><div class="where mono">${esc(dir)}</div><ul>${files.map(f =>
+      `<li><span>${esc(f.name)}${f.renamed ? " <em>(name was taken, saved as a copy)</em>" : ""}</span><span>${fmt(f.size)}</span></li>`).join("")}</ul></div>`).join("");
+  $("#doneDlg").showModal();
+  $("#doneOk").focus();
+}
+$("#doneOk").onclick = () => $("#doneDlg").close();
+
+window.addEventListener("beforeunload", e => { if (running) { e.preventDefault(); e.returnValue = ""; } });
+
+render();
+loadInfo().catch(e => { $("#driveTxt").textContent = e.message; });
+</script>
+</body>
+</html>

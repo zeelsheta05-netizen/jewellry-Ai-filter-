@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jeweler Panel · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22);
+  --danger: #b42318; --danger-bg: #fef3f2; --ok: #2f7a3f; --ok-bg: #effaf1; --new: #b54708; --new-bg: #fff6e8;
+  --tile-a: #ffffff; --tile-b: #fbf6ec; --aurora1: rgba(230, 190, 110, .17); --aurora2: rgba(245, 215, 150, .15);
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", "Noto Sans Gujarati", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+::selection { background: #f2d990; color: var(--ink); }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--tone2); outline-offset: 2px; }
+.aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
+.aurora i:nth-child(1) { width: 60vw; height: 60vw; left: -18vw; top: -26vw; background: var(--aurora1); }
+.aurora i:nth-child(2) { width: 50vw; height: 50vw; right: -20vw; top: 20vh; background: var(--aurora2); }
+
+/* ---------- top bar ---------- */
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.top-right { display: flex; gap: 8px; align-items: center; }
+.who { font-size: 12.5px; color: var(--muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-1px); }
+.ghost svg { width: 16px; height: 16px; color: var(--tone2); flex: none; }
+.ghost.small { padding: 6px 12px; font-size: 12.5px; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--tone2); background: var(--btn);
+  border-radius: 999px; padding: 10px 20px; font-weight: 700; font-size: 14px; color: var(--accent-ink); min-height: 44px;
+  transition: transform .3s var(--ease), box-shadow .3s; }
+.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 22px -12px var(--glow); }
+.primary:disabled, .ghost:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.danger { border: 1px solid #f1b8b2; background: var(--danger-bg); color: var(--danger); border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 13px; }
+.link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.link.bad { color: var(--danger); }
+
+/* ---------- layout ---------- */
+.wrap { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 24px 28px 90px; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 34px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 0; font-variant-numeric: lining-nums; }
+h2 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0 0 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sub { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+.head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.card { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.muted { color: var(--muted); }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.err { color: var(--danger); font-size: 13px; font-weight: 600; margin: 8px 0 0; min-height: 0; }
+.err:empty { display: none; }
+
+/* ---------- list ---------- */
+.toolbar { display: grid; gap: 12px; margin-bottom: 16px; }
+.filters { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: thin; }
+.chip { flex: none; display: inline-flex; gap: 7px; align-items: center; border: 1px solid var(--line); background: var(--surface-solid); border-radius: 999px;
+  padding: 7px 14px; font-size: 13px; font-weight: 600; transition: all .25s var(--ease); white-space: nowrap; }
+.chip:hover { border-color: var(--line-strong); }
+.chip[aria-selected="true"] { border-color: var(--tone2); background: var(--chip); box-shadow: 0 0 0 1px var(--tone2); }
+.chip .n { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip .n.hot { color: #fff; background: var(--new); border-radius: 999px; padding: 0 7px; }
+.search { width: 100%; max-width: 440px; height: 44px; border-radius: 14px; border: 1px solid var(--line-strong); padding: 0 16px; background: var(--surface-solid); }
+.rows { display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 12px 16px 12px 12px;
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface-solid); text-decoration: none; color: var(--ink);
+  transition: transform .3s var(--ease), box-shadow .3s, border-color .3s; animation: up .45s var(--ease) both; }
+.row:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: var(--shadow); }
+.row img, .row .noimg { width: 72px; height: 72px; object-fit: contain; border-radius: 14px; background: radial-gradient(circle at 50% 40%, var(--tile-a), var(--tile-b)); border: 1px solid var(--line); }
+.row .top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row .top b { font: 500 18px/1.2 var(--serif); font-variant-numeric: lining-nums; }
+.row .line { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .side { text-align: right; display: grid; gap: 4px; justify-items: end; }
+.row .when { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.row .amt { font: 500 17px var(--serif); color: var(--accent-ink); font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.stage { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .03em; padding: 3px 10px; border-radius: 999px;
+  background: var(--chip); color: var(--accent-ink); border: 1px solid var(--line-strong); white-space: nowrap; }
+.stage.s-request { background: var(--new-bg); color: var(--new); border-color: #f7c98b; }
+.stage.s-delivered { background: var(--ok-bg); color: var(--ok); border-color: #a9dcb3; }
+.stage.s-cancelled { background: var(--danger-bg); color: var(--danger); border-color: #f1b8b2; }
+.empty { text-align: center; color: var(--muted); padding: 60px 20px; border: 1px dashed var(--line-strong); border-radius: 22px; }
+.empty b { display: block; font: 400 22px var(--serif); color: var(--ink); margin-bottom: 6px; }
+
+/* ---------- one order ---------- */
+.crumbs { margin-bottom: 14px; }
+.crumbs a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 13.5px; }
+.ohead { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.ohead h1 { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ohead .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.stepper { list-style: none; display: flex; gap: 0; margin: 22px 0; padding: 0 0 6px; overflow-x: auto; counter-reset: s; }
+.stepper li { flex: 1 0 96px; position: relative; text-align: center; font-size: 11.5px; font-weight: 600; color: var(--muted); padding-top: 30px; }
+.stepper li::before { counter-increment: s; content: counter(s); position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px; background: var(--surface-solid); border: 1px solid var(--line-strong); z-index: 1; }
+.stepper li::after { content: ""; position: absolute; top: 11px; left: calc(-50% + 14px); right: calc(50% + 14px); height: 2px; background: var(--line); }
+.stepper li:first-child::after { display: none; }
+.stepper li.done { color: var(--accent-ink); }
+.stepper li.done::before { content: "✓"; background: var(--tone2); color: #fff; border-color: var(--tone2); }
+.stepper li.done::after, .stepper li.now::after { background: var(--tone2); }
+.stepper li.now { color: var(--ink); font-weight: 800; }
+.stepper li.now::before { background: var(--btn); border: 2px solid var(--tone2); color: var(--accent-ink); box-shadow: 0 0 0 4px var(--glow); }
+.banner { border-radius: 18px; padding: 14px 18px; margin: 18px 0; font-weight: 600; }
+.banner.cancel { background: var(--danger-bg); color: var(--danger); border: 1px solid #f1b8b2; }
+.banner.done { background: var(--ok-bg); color: var(--ok); border: 1px solid #a9dcb3; }
+
+.stagebox { display: grid; gap: 12px; margin-bottom: 20px; background: linear-gradient(160deg, #fffdf8, var(--chip)); border-color: var(--line-strong); }
+.stagebox .now { font: 400 22px/1.2 var(--serif); }
+.stagebox .moves { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.stagebox .blocked { font-size: 13px; color: var(--new); font-weight: 600; }
+.stagebox input { flex: 1 1 240px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px; align-items: start; }
+.col { display: grid; gap: 20px; min-width: 0; }
+
+.gal { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
+.gal .big { aspect-ratio: 4 / 3; border-radius: 18px; border: 1px solid var(--line); background: radial-gradient(110% 90% at 50% 35%, var(--tile-a), var(--tile-b)); display: grid; place-items: center; overflow: hidden; }
+.gal .big img { width: 100%; height: 100%; object-fit: contain; }
+.gal .th { display: flex; gap: 8px; }
+.gal .th button { width: 56px; height: 56px; padding: 0; border-radius: 12px; border: 1px solid var(--line); overflow: hidden; background: var(--tile-b); }
+.gal .th button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tone2); }
+.gal .th img { width: 100%; height: 100%; object-fit: contain; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin: 0; font-size: 14px; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: lining-nums tabular-nums; word-break: break-word; }
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--accent-ink); background: var(--chip);
+  border: 1px solid var(--line-strong); padding: 2px 9px; border-radius: 999px; text-transform: none; }
+.badge.est { background: #fff; border-style: dashed; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: lining-nums tabular-nums; }
+th { text-align: left; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 0 10px 8px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; padding-right: 0; white-space: nowrap; }
+td.num + td, th.num + th { padding-left: 18px; }
+tr.total td { font-weight: 800; border-top: 1px solid var(--line-strong); border-bottom: 0; font-size: 15px; }
+tr.sub td { color: var(--muted); }
+.note-box { white-space: pre-wrap; background: var(--chip); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; margin-top: 12px; }
+.contact { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.form { display: grid; gap: 12px; }
+.f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+label.f { display: grid; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--muted); min-width: 0; }
+label.f input, label.f select, label.f textarea, .stagebox input, .inline input, .inline select { height: 42px; border-radius: 12px; border: 1px solid var(--line-strong);
+  padding: 0 12px; background: var(--surface-solid); font-size: 14px; font-weight: 600; min-width: 0; width: 100%; }
+label.f textarea { height: auto; padding: 10px 12px; resize: vertical; font-weight: 500; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.inline > * { flex: 1 1 120px; }
+.inline > button { flex: 0 0 auto; }
+.locked { font-size: 13px; color: var(--muted); background: var(--chip); border-radius: 12px; padding: 10px 12px; margin-top: 12px; }
+.sums { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 14px; }
+.sum { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.sum .k { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.sum .v { font: 500 20px/1.25 var(--serif); color: var(--accent-ink); font-variant-numeric: lining-nums tabular-nums; }
+.sum.due .v { color: var(--new); }
+.sum.clear .v { color: var(--ok); }
+
+.events { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 0; }
+.events li { display: grid; grid-template-columns: 10px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.events li:last-child { border-bottom: 0; }
+.events .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tone1); margin-top: 6px; }
+.events .dot.k-note { background: #8aa4c8; } .events .dot.k-cancelled { background: var(--danger); } .events .dot.k-created { background: var(--new); }
+.events .dot.k-payment, .events .dot.k-quote { background: var(--ok); } .events .dot.k-payment_removed { background: var(--danger); }
+.events .meta { font-size: 12px; color: var(--muted); }
+.events .txt { white-space: pre-wrap; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); opacity: 0; z-index: 50; max-width: min(520px, calc(100vw - 32px));
+  background: var(--ink); color: #fff; padding: 12px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; box-shadow: 0 14px 30px -12px rgba(0,0,0,.4);
+  transition: all .35s var(--ease); pointer-events: none; }
+.toast.on { opacity: 1; transform: translateX(-50%); }
+.toast.bad { background: var(--danger); }
+.state { max-width: 520px; margin: 80px auto; text-align: center; color: var(--muted); display: grid; gap: 14px; justify-items: center; }
+.state h2 { font: 400 26px var(--serif); color: var(--ink); margin: 0; letter-spacing: 0; text-transform: none; justify-content: center; }
+.dots i { display: inline-block; width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: var(--tone2); animation: bounce 1s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 50% { transform: translateY(-5px); opacity: .5; } }
+@keyframes up { from { opacity: 0; transform: translateY(12px); } }
+
+@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .topbar { padding: 12px 16px; }
+  .brand small, .who, .top-right .ghost span { display: none; }
+  .top-right .ghost { padding: 8px 12px; }
+  .brand b { font-size: 14px; letter-spacing: .12em; }
+  .wrap { padding: 16px 16px 70px; }
+  h1 { font-size: 28px; }
+  .card { padding: 16px; }
+  .row { grid-template-columns: 56px minmax(0, 1fr); gap: 12px; }
+  .row img, .row .noimg { width: 56px; height: 56px; }
+  .row .side { grid-column: 2; justify-items: start; text-align: left; display: flex; gap: 12px; align-items: baseline; }
+  .f2, .pair { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i></div>
+<header class="topbar">
+  <a class="brand" href="/jeweler" aria-label="Jeweler panel home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Jeweler panel · orders</small></div>
+  </a>
+  <div class="top-right">
+    <span class="who" id="who"></span>
+    <a class="ghost" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span>Designs</span></a>
+    <button class="ghost" type="button" id="logout">Sign out</button>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state"><p>Loading orders<span class="dots"><i></i><i></i><i></i></span></p></div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const CAT = { ring: "Ring", earrings: "Earrings", pendant: "Pendant", necklace: "Necklace", bracelet: "Bracelet" };
+const METAL = { rose_gold: "Rose gold", white_gold: "White gold", yellow_gold: "Yellow gold" };
+const PURITY = { "14k": "14K", "18k": "18K", "22k": "22K" };
+const INR0 = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+const INR2 = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = n => n == null ? "–" : (Number.isInteger(Math.round(n * 100) / 100) ? INR0 : INR2).format(n);
+const grams = n => n == null ? "–" : `${(+n).toFixed(3).replace(/\.?0+$/, "")} g`;
+const carats = n => n.toFixed(n < 0.1 ? 3 : 2);
+const when = iso => new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+function ago(iso) {
+  const s = (Date.now() - new Date(iso)) / 1000;
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  if (s < 86400 * 7) return `${Math.floor(s / 86400)} d ago`;
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+const ringText = rs => rs ? `IN ${rs.in} · US ${rs.us} · ${rs.diameter_mm} mm inside` : "";
+
+let S = { show: "active", q: "", list: null, page: null, draft: null, pic: 0, cancelOpen: false };
+
+// ---------------------------------------------------------------- server
+async function api(method, url, body) {
+  let res;
+  try {
+    res = await fetch(url, { method, credentials: "same-origin", headers: body ? { "Content-Type": "application/json" } : {},
+      body: body ? JSON.stringify(body) : undefined });
+  } catch { throw Object.assign(new Error("No connection. Check the network and try again."), { status: 0 }); }
+  if (res.status === 401) { location.replace("/login?next=" + encodeURIComponent(location.pathname + location.search)); throw new Error("Sign in required"); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.detail || "Something went wrong. Try again."), { status: res.status });
+  return data;
+}
+
+let toastTimer;
+function toast(msg, bad = false) {
+  const t = $("#toast");
+  t.textContent = msg; t.classList.toggle("bad", bad); t.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), bad ? 6000 : 3000);
+}
+
+// ---------------------------------------------------------------- routing: ?id=N is one order, otherwise the list
+function route() {
+  const id = new URLSearchParams(location.search).get("id");
+  if (id && /^\d+$/.test(id)) openOrder(+id); else showList();
+}
+function go(id) {
+  history.pushState(null, "", id ? `/jeweler?id=${id}` : "/jeweler");
+  window.scrollTo(0, 0);
+  route();
+}
+window.addEventListener("popstate", route);
+
+// ---------------------------------------------------------------- the list
+async function showList(quiet = false) {
+  S.page = null;
+  document.title = "Orders · Jeweler Panel · Design Finder";
+  if (!quiet || !S.list) renderListShell();
+  try {
+    S.list = await api("GET", `/api/jeweler/orders?show=${encodeURIComponent(S.show)}&q=${encodeURIComponent(S.q)}`);
+    renderRows();
+  } catch (e) {
+    if (e.status === 403) return location.replace("/");
+    $("#rows").innerHTML = `<div class="empty"><b>Orders can't be shown</b>${esc(e.message)}</div>`;
+  }
+}
+
+function renderListShell() {
+  $("#main").innerHTML = `
+    <section class="head">
+      <div><div class="eyebrow">Jeweler panel</div><h1>Orders</h1>
+        <p class="sub">Orders customers placed from the buy page, newest first. Open one to price it, move it through the workshop and print its job card.</p></div>
+      <button class="ghost" type="button" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>Refresh</button>
+    </section>
+    <div class="toolbar">
+      <div class="filters" role="tablist" aria-label="Order stage" id="filters"></div>
+      <input class="search" type="search" id="q" placeholder="Search order no., design, customer or phone" value="${esc(S.q)}" aria-label="Search orders">
+    </div>
+    <div class="rows" id="rows"><div class="state"><p>Loading orders<span class="dots"><i></i><i></i><i></i></span></p></div></div>`;
+  renderFilters();
+  $("#refresh").addEventListener("click", () => showList(true));
+  let t;
+  $("#q").addEventListener("input", e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value.trim(); showList(true); }, 300); });
+}
+
+function renderFilters() {
+  const c = S.list?.counts || {};
+  const stages = S.list?.stages || [];
+  const tabs = [["active", "Active"], ...stages, ["cancelled", "Cancelled"], ["all", "All"]];
+  $("#filters").innerHTML = tabs.map(([k, label]) => {
+    const n = c[k] || 0;
+    return `<button type="button" class="chip" role="tab" data-show="${k}" aria-selected="${k === S.show}">${esc(label)}<span class="n ${k === "request" && n ? "hot" : ""}">${n}</span></button>`;
+  }).join("");
+}
+
+function renderRows() {
+  renderFilters();
+  const items = S.list.items;
+  if (!items.length) {
+    $("#rows").innerHTML = `<div class="empty"><b>${S.q ? "Nothing matches that search" : "No orders here"}</b>${S.q ? "Try an order number, a design number or the customer's name." : "New orders from the buy page appear here."}</div>`;
+    return;
+  }
+  $("#rows").innerHTML = items.map((o, i) => `
+    <a class="row" href="/jeweler?id=${o.id}" data-id="${o.id}" style="animation-delay:${Math.min(i, 12) * 30}ms">
+      ${o.thumb ? `<img src="${esc(o.thumb)}" alt="" loading="lazy">` : `<span class="noimg"></span>`}
+      <div class="main">
+        <div class="top"><b>${esc(o.order_no)}</b><span class="stage s-${esc(o.status)}">${esc(o.stage_label)}</span></div>
+        <div class="line">${esc(o.design_id)} · ${esc(CAT[o.category] || o.category)} · ${esc(PURITY[o.purity] || o.purity)} ${esc(METAL[o.metal] || o.metal)}${o.ring_size_in ? ` · Size ${o.ring_size_in}` : ""} · Qty ${o.quantity}</div>
+        <div class="line muted">${esc(o.customer_name)} · ${esc(o.customer_phone)}</div>
+      </div>
+      <div class="side"><span class="when" title="${esc(when(o.created_at))}">${esc(ago(o.created_at))}</span>${o.quoted_total != null ? `<span class="amt">${money(o.quoted_total)}</span>` : `<span class="when">No price yet</span>`}</div>
+    </a>`).join("");
+}
+
+// ---------------------------------------------------------------- one order
+async function openOrder(id, quiet = false) {
+  if (!quiet) $("#main").innerHTML = `<div class="state"><p>Loading order<span class="dots"><i></i><i></i><i></i></span></p></div>`;
+  try {
+    const page = await api("GET", `/api/jeweler/orders/${id}`);
+    if (!S.page || S.page.order.id !== page.order.id) { S.draft = null; S.pic = 0; S.cancelOpen = false; }
+    S.page = page;
+    renderOrder();
+  } catch (e) {
+    if (e.status === 403) return location.replace("/");
+    $("#main").innerHTML = `<div class="state"><h2>${e.status === 404 ? "Order not found" : "Couldn't load this order"}</h2><p>${esc(e.message)}</p><a class="ghost" href="/jeweler">All orders</a></div>`;
+  }
+}
+
+// every change is sent with the version of the order this page shows
+async function change(method, url, body, okMsg) {
+  const o = S.page.order;
+  document.querySelectorAll("#main button").forEach(b => b.disabled = true);
+  try {
+    S.page = await api(method, url, body && { ...body, seen: o.updated_at });
+    toast(okMsg);
+    return true;
+  } catch (e) {
+    if (e.status === 409) { await openOrder(o.id, true); toast(e.message, true); return false; }
+    toast(e.message, true);
+    return false;
+  } finally {
+    renderOrder();
+  }
+}
+
+function renderOrder() {
+  const { order: o, stages, catalogue_uid, brand_id } = S.page;
+  document.title = `${o.order_no} · Jeweler Panel · Design Finder`;
+  const flow = stages.map(s => s[0]);
+  const at = flow.indexOf(o.status);
+  const sel = o.snapshot.selection;
+  const openLink = brand_id != null ? `/brand-design?id=${brand_id}`
+    : catalogue_uid != null
+    ? `/buy?uid=${catalogue_uid}&id=${encodeURIComponent(o.design_id)}&metal=${o.metal}&purity=${o.purity}${o.ring_size_in ? `&size=${o.ring_size_in}` : ""}` : null;
+  $("#main").innerHTML = `
+    <nav class="crumbs"><a href="/jeweler" id="toList">‹ All orders</a></nav>
+    <section class="ohead">
+      <div><div class="eyebrow">Order · placed ${esc(when(o.created_at))}</div>
+        <h1>${esc(o.order_no)} <span class="stage s-${esc(o.status)}">${esc(o.stage_label)}</span></h1></div>
+      <div class="actions">
+        <a class="ghost" href="/jeweler/jobcard?id=${o.id}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>Print job card</a>
+        ${openLink ? `<a class="ghost" href="${openLink}" target="_blank" rel="noopener">Open design</a>` : ""}
+        <button class="ghost" type="button" id="reload">Refresh</button>
+      </div>
+    </section>
+    ${o.status === "cancelled" ? `<div class="banner cancel">Cancelled. Reason: ${esc(o.cancel_reason || "not given")}</div>`
+      : `<ol class="stepper">${stages.map(([k, label], i) => `<li class="${i < at ? "done" : i === at ? "now" : ""}">${esc(label)}</li>`).join("")}</ol>`}
+    ${o.status === "delivered" ? `<div class="banner done">Delivered. This order is complete.</div>` : ""}
+    ${stageBox(o)}
+    <div class="grid">
+      <div class="col">${designCard(o, sel, catalogue_uid)}${customerCard(o)}</div>
+      <div class="col">${priceCard(o, sel)}${paymentCard(o)}${weightCard(o, flow)}${historyCard()}</div>
+    </div>`;
+  wireOrder();
+}
+
+function stageBox(o) {
+  if (o.status === "cancelled" || (!o.next && !o.prev)) return "";
+  const nx = o.next, pv = o.prev;
+  return `<section class="card stagebox" aria-label="Stage">
+    <div><h2 style="margin-bottom:4px">Stage</h2><div class="now">${esc(o.stage_label)}</div></div>
+    ${nx ? `<div class="moves">
+        <input type="text" id="stageNote" maxlength="500" placeholder="Note for the history (optional), e.g. approved on a call" aria-label="Note for this stage change">
+        <button class="primary" type="button" id="next" ${nx.blocked ? "disabled" : ""}>Move to: ${esc(nx.label)}</button>
+      </div>${nx.blocked ? `<div class="blocked">${esc(nx.blocked)}</div>` : ""}` : ""}
+    <div class="moves">
+      ${pv ? `<button class="link" type="button" id="prev">Move back to “${esc(pv.label)}”</button>` : ""}
+      ${o.can.cancel ? `<button class="link bad" type="button" id="cancelOpen">Cancel order…</button>` : ""}
+    </div>
+    <div class="inline" id="cancelBox" ${S.cancelOpen ? "" : "hidden"}>
+      <label class="f" style="flex:1 1 300px">Why is it cancelled?<input type="text" id="cancelWhy" maxlength="500" placeholder="Required: it is kept in the history"></label>
+      <button class="danger" type="button" id="cancelGo">Cancel this order</button>
+    </div>
+  </section>`;
+}
+
+function designCard(o, sel, catalogueUid) {
+  const snap = o.snapshot, specs = snap.specs || {};
+  const views = snap.design.views?.length ? snap.design.views : (o.thumb ? [o.thumb] : []);
+  const pic = views[Math.min(S.pic, views.length - 1)];
+  const w = snap.gold_weight_g;
+  const src = snap.gold_source === "card" ? `<span class="badge">Job card</span>` : snap.gold_source === "cad" ? `<span class="badge est">≈ 3D estimate</span>`
+    : snap.gold_source === "ours" ? `<span class="badge">Our spec</span>` : "";
+  const b = snap.brand;   // our version of another jeweller's design
+  const rupees = n => n == null ? "–" : "₹" + Number(n).toLocaleString("en-IN");
+  const designed = specs.ring_size;
+  const rows = [
+    ["Design", `${esc(o.design_id)}`],
+    b ? ["Based on", `${esc(b.title)} · <a href="${esc(b.seller_url || "#")}" target="_blank" rel="noopener noreferrer">${esc(b.brand)} ↗</a>`] : null,
+    b ? ["Listed prices", `Ours ${rupees(b.listed_price)} a piece · seller ${b.seller_price != null ? rupees(b.seller_price) : "not shown"}`] : null,
+    ["Category", esc(CAT[o.category] || o.category)],
+    specs.design_type ? ["Design type", esc(specs.design_type)] : null,
+    ["Metal", esc(METAL[sel.metal] || sel.metal)],
+    ["Purity", `${esc(sel.purity_label)} · ${esc(sel.fineness)}`],
+    sel.ring_size ? ["Ring size", esc(ringText(sel.ring_size))] : null,
+    designed && sel.ring_size && designed.in !== sel.ring_size.in ? ["Designed at", `IN ${designed.in}${designed.estimated ? " (estimated)" : ""}`] : null,
+    ["Quantity", `${sel.quantity}`],
+    ["Gold per piece", w != null ? `${snap.gold_source === "cad" ? "≈ " : ""}${grams(w)} ${src}` : "Not on file"],
+    ...(specs.dimensions || []).map(d => [esc(d.label), esc(d.value)]),
+  ].filter(Boolean);
+  const st = specs.stones;
+  let stones = "";
+  if (st && st.groups?.length) {
+    const est = st.source === "cad", hasSetting = st.groups.some(x => x.setting);
+    stones = `<h2 style="margin-top:18px">Diamonds ${est ? `<span class="badge est">≈ 3D file</span>` : `<span class="badge">Job card</span>`}</h2>
+      <div class="table-scroll"><table><thead><tr><th>Shape</th><th>Size</th>${st.counted ? `<th class="num">Count</th><th class="num">Carats</th>` : ""}${hasSetting ? "<th>Setting</th>" : ""}</tr></thead>
+      <tbody>${st.groups.map(x => `<tr><td>${esc(x.shape)}</td><td>${esc(x.size)}</td>${st.counted ? `<td class="num">${x.count ?? "–"}</td><td class="num">${x.carat != null ? (est ? "≈ " : "") + carats(x.carat) : "–"}</td>` : ""}${hasSetting ? `<td>${esc(x.setting)}</td>` : ""}</tr>`).join("")}
+      ${st.counted ? `<tr class="total"><td colspan="2">Per piece</td><td class="num">${st.count}</td><td class="num">${est ? "≈ " : ""}${carats(st.carat)}</td>${hasSetting ? "<td></td>" : ""}</tr>` : ""}</tbody></table></div>
+      ${!st.counted ? `<p class="hint">The 3D file doesn't say whether it holds one earring or the pair: confirm the count.</p>` : ""}`;
+  } else if (st && st.counted && st.count === 0) {
+    stones = `<p class="hint">Plain metal design, no stones.</p>`;
+  } else {
+    stones = `<p class="hint">No stone details on file for this design.</p>`;
+  }
+  return `<section class="card">
+    <h2>Design as ordered <span class="badge">Frozen at order time</span></h2>
+    ${views.length ? `<div class="gal"><div class="big">${pic ? `<img src="${esc(pic)}" alt="${esc(o.design_id)}">` : ""}</div>
+      ${views.length > 1 ? `<div class="th">${views.map((v, i) => `<button type="button" data-pic="${i}" aria-pressed="${i === S.pic}" aria-label="Picture ${i + 1}"><img src="${esc(v)}" alt=""></button>`).join("")}</div>` : ""}</div>` : ""}
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
+    ${stones}
+    ${b ? `<p class="hint">Ordered with “Buy with us” on a design from ${esc(b.brand)}. The price below starts from our listed pricing.</p>`
+      : catalogueUid == null ? `<p class="hint">This design has since left the catalogue. The order keeps its own copy of the details above.</p>` : ""}
+  </section>`;
+}
+
+function customerCard(o) {
+  const digits = (o.customer_phone || "").replace(/\D/g, "");
+  return `<section class="card">
+    <h2>Customer</h2>
+    <dl><dt>Name</dt><dd>${esc(o.customer_name)}</dd><dt>Email</dt><dd>${esc(o.customer_email)}</dd><dt>Phone</dt><dd>${esc(o.customer_phone)}</dd></dl>
+    <div class="contact">
+      <a class="ghost small" href="tel:${esc(o.customer_phone)}">Call</a>
+      ${digits ? `<a class="ghost small" href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
+      <a class="ghost small" href="mailto:${esc(o.customer_email)}?subject=${encodeURIComponent("Your order " + o.order_no)}">Email</a>
+    </div>
+    ${o.customer_note ? `<div class="note-box"><b>Customer's note</b>\n${esc(o.customer_note)}</div>` : `<p class="hint">No note from the customer.</p>`}
+  </section>`;
+}
+
+// ---- price
+function defaultQuote(o, sel) {
+  if (o.quote) return { ...o.quote };
+  const w = o.snapshot.gold_weight_g;
+  const bq = o.snapshot.brand?.quote;   // a brand design: our listed pricing, for the whole order
+  if (bq) {
+    const n = sel.quantity, fixed = bq.making_mode === "fixed";
+    return { gold_weight_g: +(bq.gold_weight_g * n).toFixed(3), gold_rate: bq.gold_rate, making_mode: bq.making_mode,
+             making_value: fixed ? +(bq.making_value * n).toFixed(2) : bq.making_value, diamond_quality: bq.diamond_quality || "",
+             diamond_value: +(bq.diamond_value * n).toFixed(2), other_label: bq.other_label || "", other_value: +(bq.other_value * n).toFixed(2),
+             gst_pct: bq.gst_pct, note: "" };
+  }
+  return { gold_weight_g: w != null ? +(w * sel.quantity).toFixed(3) : "", gold_rate: "", making_mode: "per_g", making_value: "",
+           diamond_quality: "", diamond_value: "", other_label: "", other_value: "", gst_pct: 3, note: "" };
+}
+
+function calc(q, weight) {
+  const n = k => Number(q[k]) || 0;
+  const w = weight ?? n("gold_weight_g");
+  const gold = w * n("gold_rate");
+  const making = q.making_mode === "per_g" ? w * n("making_value") : q.making_mode === "percent" ? gold * n("making_value") / 100 : n("making_value");
+  const subtotal = gold + making + n("diamond_value") + n("other_value");
+  const gst = subtotal * n("gst_pct") / 100;
+  const r2 = x => Math.round((x + Number.EPSILON) * 100) / 100;
+  return { weight_g: w, gold: r2(gold), making: r2(making), diamonds: r2(n("diamond_value")), other: r2(n("other_value")),
+           subtotal: r2(subtotal), gst: r2(gst), total: Math.round(subtotal + gst) };
+}
+
+function billRows(b, q, label = "Total") {
+  const modes = S.page.making_modes;
+  return `<tr><td>Gold · ${grams(b.weight_g)} × ${money(+q.gold_rate || 0)}/g</td><td class="num">${money(b.gold)}</td></tr>
+    <tr><td>Making charge · ${q.making_mode === "per_g" ? `${money(+q.making_value || 0)}/g` : q.making_mode === "percent" ? `${+q.making_value || 0}% of gold` : esc(modes.fixed)}</td><td class="num">${money(b.making)}</td></tr>
+    <tr><td>Diamonds${q.diamond_quality ? ` · ${esc(q.diamond_quality)}` : ""}</td><td class="num">${money(b.diamonds)}</td></tr>
+    ${+b.other ? `<tr><td>${esc(q.other_label || "Other charges")}</td><td class="num">${money(b.other)}</td></tr>` : ""}
+    <tr class="sub"><td>Subtotal</td><td class="num">${money(b.subtotal)}</td></tr>
+    <tr class="sub"><td>GST ${+q.gst_pct || 0}%</td><td class="num">${money(b.gst)}</td></tr>
+    <tr class="total"><td>${label} <span class="muted" style="font-weight:500;font-size:12px">rounded to the rupee</span></td><td class="num">${money(b.total)}</td></tr>`;
+}
+
+function priceCard(o, sel) {
+  const snap = o.snapshot;
+  if (!o.can.quote) {
+    if (!o.quote) return `<section class="card"><h2>Price</h2><p class="hint" style="margin:0">No price was saved for this order.</p></section>`;
+    return `<section class="card"><h2>Price sent to the customer</h2>
+      <div class="table-scroll"><table><tbody>${billRows(o.totals.quote, o.quote, "Quoted total")}</tbody></table></div>
+      ${o.quote.note ? `<div class="note-box">${esc(o.quote.note)}</div>` : ""}
+      <p class="locked">Saved by ${esc(o.quote.by)} on ${esc(when(o.quote.saved_at))}. ${o.status === "cancelled" || o.status === "delivered" ? "" : "The price is locked once the customer approves it. Move the order back to “Price sent” to change it."}</p></section>`;
+  }
+  const q = S.draft || defaultQuote(o, sel);
+  const w = snap.gold_weight_g;
+  const wHint = w == null ? "No weight on file for this design: enter the expected weight."
+    : snap.gold_source === "cad" ? `≈ Estimated from the 3D file (${grams(w)} a piece × ${sel.quantity}). Check it before sending the price.`
+    : snap.gold_source === "ours" ? `From our specification of this brand design (${grams(w)} a piece × ${sel.quantity}). The rates are our listed pricing: update the gold rate to today's.`
+    : `From the job card, after polishing (${grams(w)} a piece × ${sel.quantity}).`;
+  const sizeNote = snap.specs?.ring_size && sel.ring_size && snap.specs.ring_size.in !== sel.ring_size.in
+    ? ` Designed at size ${snap.specs.ring_size.in}; this order is size ${sel.ring_size.in}, so the weight differs slightly.` : "";
+  const modes = S.page.making_modes;
+  return `<section class="card">
+    <h2>Price ${o.quote ? `<span class="badge">Saved · ${money(o.totals.quote.total)}</span>` : `<span class="badge est">Not saved yet</span>`}</h2>
+    <form class="form" id="quoteForm" novalidate>
+      <div class="f2">
+        <label class="f">Gold weight for the order (g)<input name="gold_weight_g" type="number" inputmode="decimal" step="any" min="0" value="${esc(q.gold_weight_g)}" required></label>
+        <label class="f">Gold rate, ${esc(sel.purity_label)} (₹ per gram)<input name="gold_rate" type="number" inputmode="decimal" step="any" min="0" value="${esc(q.gold_rate)}" placeholder="Today's rate" required></label>
+      </div>
+      <p class="hint" style="margin-top:-4px">${esc(wHint + sizeNote)}</p>
+      <div class="f2">
+        <label class="f">Making charge<div class="pair"><select name="making_mode">${Object.entries(modes).map(([k, v]) => `<option value="${k}" ${q.making_mode === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>
+          <input name="making_value" type="number" inputmode="decimal" step="any" min="0" value="${esc(q.making_value)}" aria-label="Making charge value" required></div></label>
+        <label class="f">GST (%)<input name="gst_pct" type="number" inputmode="decimal" step="any" min="0" max="28" value="${esc(q.gst_pct)}" required></label>
+      </div>
+      <div class="f2">
+        <label class="f">Diamond quality<input name="diamond_quality" type="text" maxlength="60" value="${esc(q.diamond_quality)}" placeholder="e.g. GH VS, lab-grown EF VVS"></label>
+        <label class="f">Diamond value (₹)<input name="diamond_value" type="number" inputmode="decimal" step="any" min="0" value="${esc(q.diamond_value)}" placeholder="0"></label>
+      </div>
+      <div class="f2">
+        <label class="f">Other charge<input name="other_label" type="text" maxlength="60" value="${esc(q.other_label)}" placeholder="e.g. Hallmarking, certificate"></label>
+        <label class="f">Other charge (₹)<input name="other_value" type="number" inputmode="decimal" step="any" min="0" value="${esc(q.other_value)}" placeholder="0"></label>
+      </div>
+      <label class="f">Note kept with the price (optional)<textarea name="note" rows="2" maxlength="500" placeholder="e.g. rate of 30 Sep, valid 3 days">${esc(q.note)}</textarea></label>
+      <div class="table-scroll"><table><tbody id="quotePreview"></tbody></table></div>
+      <p class="hint">The customer pays by the actual weight: the final bill uses the weight measured at quality check.</p>
+      <div><button class="primary" type="submit">Save price</button></div>
+    </form>
+  </section>`;
+}
+
+function readQuote() {
+  const f = $("#quoteForm");
+  const q = Object.fromEntries(new FormData(f).entries());
+  return q;
+}
+
+// what the jeweler has typed but not saved survives re-renders of the page (in memory only)
+function previewQuote(typed = false) {
+  const q = readQuote();
+  if (typed) S.draft = q;
+  $("#quotePreview").innerHTML = billRows(calc(q), q, "Total");
+}
+
+// ---- payments
+function paymentCard(o) {
+  const t = o.totals, pays = o.payments || [], methods = S.page.pay_methods;
+  const owed = t.final || t.quote;
+  return `<section class="card">
+    <h2>Payments</h2>
+    ${pays.length ? `<div class="table-scroll"><table><thead><tr><th>Date</th><th>How</th><th class="num">Amount</th><th></th></tr></thead><tbody>
+      ${pays.map(p => `<tr><td>${esc(when(p.at))}<div class="hint" style="margin:0">by ${esc(p.by)}</div></td><td>${esc(methods[p.method] || p.method)}${p.ref ? `<div class="hint" style="margin:0">${esc(p.ref)}</div>` : ""}</td>
+        <td class="num">${money(p.amount)}</td><td class="num">${o.can.pay ? `<button class="link bad" type="button" data-unpay="${esc(p.id)}">Remove</button>` : ""}</td></tr>`).join("")}
+    </tbody></table></div>` : `<p class="hint" style="margin:0">No payment recorded yet.</p>`}
+    <div class="sums">
+      <div class="sum"><div class="k">${t.final ? "Final bill" : "Quoted"}</div><div class="v">${owed ? money(owed.total) : "–"}</div></div>
+      <div class="sum"><div class="k">Paid</div><div class="v">${money(t.paid)}</div></div>
+      <div class="sum ${t.due > 0 ? "due" : t.due != null ? "clear" : ""}"><div class="k">${t.due < 0 ? "Refund due" : "Balance"}</div><div class="v">${t.due == null ? "–" : money(Math.abs(t.due))}</div></div>
+    </div>
+    ${o.can.pay ? `<form class="inline" id="payForm" style="margin-top:14px" novalidate>
+      <label class="f">Amount received (₹)<input name="amount" type="number" inputmode="decimal" step="any" min="0" required></label>
+      <label class="f">How<select name="method">${Object.entries(methods).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select></label>
+      <label class="f">Reference<input name="ref" type="text" maxlength="80" placeholder="UTR, cheque no."></label>
+      <button class="primary" type="submit">Add payment</button>
+    </form>` : ""}
+  </section>`;
+}
+
+// ---- quality check: the real weight, and the final bill from it
+function weightCard(o, flow) {
+  const reached = flow.indexOf(o.status) >= flow.indexOf("quality_check");
+  if (!reached && !o.actual_weight_g) return "";
+  const t = o.totals, q = o.quote;
+  const expected = q?.gold_weight_g;
+  const diff = o.actual_weight_g != null && expected ? o.actual_weight_g - expected : null;
+  return `<section class="card">
+    <h2>Quality check · actual weight</h2>
+    ${o.can.weight ? `<form class="inline" id="weightForm" novalidate>
+        <label class="f">Actual gold weight (g)<input name="grams" type="number" inputmode="decimal" step="any" min="0" value="${esc(o.actual_weight_g ?? "")}" required></label>
+        <label class="f" style="flex:2 1 200px">Note<input name="note" type="text" maxlength="300" placeholder="e.g. weighed after polish, without stones"></label>
+        <button class="primary" type="submit">${o.actual_weight_g ? "Update weight" : "Save weight"}</button>
+      </form>` : `<dl><dt>Actual gold weight</dt><dd>${grams(o.actual_weight_g)}</dd></dl>`}
+    ${expected ? `<p class="hint">Quoted weight ${grams(expected)}${diff != null ? `, difference ${diff >= 0 ? "+" : "−"}${grams(Math.abs(diff))} (${(diff / expected * 100).toFixed(1)}%)` : ""}.</p>` : ""}
+    ${t.final ? `<h2 style="margin-top:16px">Final bill</h2><div class="table-scroll"><table><tbody>${billRows(t.final, q, "Final total")}</tbody></table></div>
+      <p class="hint">Gold${q.making_mode === "per_g" ? " and the per-gram making charge" : q.making_mode === "percent" ? " and the making charge" : ""} follow the actual weight. Diamonds and other charges stay as quoted.</p>`
+      : !q ? `<p class="hint">No price was saved, so no final bill can be worked out.</p>` : ""}
+  </section>`;
+}
+
+// ---- history
+const EV = {
+  created: (e) => `Order placed${e.detail?.quantity ? `, ${e.detail.quantity} piece${e.detail.quantity > 1 ? "s" : ""}` : ""}`,
+  stage: (e, L) => `Moved to “${L[e.to_status] || e.to_status}”${e.detail?.note ? `\n${e.detail.note}` : ""}`,
+  cancelled: (e) => `Cancelled\n${e.detail?.note || ""}`,
+  quote: (e) => `Price saved: ${money(e.detail?.total)} (gold ${money(e.detail?.gold_rate)}/g, ${grams(e.detail?.gold_weight_g)})`,
+  payment: (e, L, M) => `Payment received: ${money(e.detail?.amount)} by ${M[e.detail?.method] || e.detail?.method}${e.detail?.ref ? ` · ${e.detail.ref}` : ""}`,
+  payment_removed: (e, L, M) => `Payment removed: ${money(e.detail?.amount)} (${M[e.detail?.method] || e.detail?.method})`,
+  weight: (e) => `Actual weight entered: ${grams(e.detail?.grams)}${e.detail?.note ? `\n${e.detail.note}` : ""}`,
+  note: (e) => e.detail?.text || "",
+};
+function historyCard() {
+  const { events, labels, pay_methods } = S.page;
+  const role = r => r === "customer" ? "customer" : r === "admin" ? "admin" : "jeweler";
+  return `<section class="card">
+    <h2>History and notes</h2>
+    <form class="inline" id="noteForm" novalidate>
+      <label class="f" style="flex:1 1 260px">Internal note (the customer never sees it)<input name="text" type="text" maxlength="1000" placeholder="e.g. Karigar Mahesh, due 12 Oct" required></label>
+      <button class="ghost" type="submit">Add note</button>
+    </form>
+    <ul class="events">${events.map(e => `<li><span class="dot k-${esc(e.kind)}"></span><div>
+      <div class="txt">${esc((EV[e.kind] || (() => e.kind))(e, labels, pay_methods))}</div>
+      <div class="meta">${esc(e.actor_name || "Someone")} · ${role(e.actor_role)} · ${esc(when(e.created_at))}</div></div></li>`).join("") || `<li><span></span><span class="muted">Nothing yet.</span></li>`}</ul>
+  </section>`;
+}
+
+// ---------------------------------------------------------------- actions
+function numOrNull(v) { return v === "" || v == null ? null : Number(v); }
+
+function wireOrder() {
+  const o = S.page.order;
+  $("#toList").addEventListener("click", e => { e.preventDefault(); go(null); });
+  $("#reload").addEventListener("click", () => openOrder(o.id, true));
+  document.querySelectorAll("[data-pic]").forEach(b => b.addEventListener("click", () => { S.pic = +b.dataset.pic; renderOrder(); }));
+
+  $("#next")?.addEventListener("click", () =>
+    change("POST", `/api/jeweler/orders/${o.id}/stage`, { to: o.next.key, note: $("#stageNote").value }, `Moved to “${o.next.label}”.`));
+  $("#prev")?.addEventListener("click", () => {
+    if (confirm(`Move ${o.order_no} back to “${o.prev.label}”?`))
+      change("POST", `/api/jeweler/orders/${o.id}/stage`, { to: o.prev.key, note: $("#stageNote")?.value || "" }, `Moved back to “${o.prev.label}”.`);
+  });
+  $("#cancelOpen")?.addEventListener("click", () => { S.cancelOpen = !S.cancelOpen; $("#cancelBox").hidden = !S.cancelOpen; if (S.cancelOpen) $("#cancelWhy").focus(); });
+  $("#cancelGo")?.addEventListener("click", () => {
+    const why = $("#cancelWhy").value.trim();
+    if (!why) { toast("Write why the order is cancelled.", true); $("#cancelWhy").focus(); return; }
+    if (confirm(`Cancel ${o.order_no}? This can't be undone.`)) {
+      S.cancelOpen = false;
+      change("POST", `/api/jeweler/orders/${o.id}/stage`, { to: "cancelled", note: why }, "Order cancelled.");
+    }
+  });
+
+  const qf = $("#quoteForm");
+  if (qf) {
+    previewQuote();
+    qf.addEventListener("input", () => previewQuote(true));
+    qf.addEventListener("submit", async e => {
+      e.preventDefault();
+      const q = readQuote();
+      const body = { ...q };
+      for (const k of ["gold_weight_g", "gold_rate", "making_value", "diamond_value", "other_value", "gst_pct"]) body[k] = numOrNull(q[k]);
+      for (const k of ["diamond_value", "other_value"]) if (body[k] == null) body[k] = 0;
+      const missing = [["gold_weight_g", "the gold weight"], ["gold_rate", "the gold rate"], ["making_value", "the making charge"], ["gst_pct", "the GST"]]
+        .find(([k]) => body[k] == null || !(body[k] >= 0));
+      if (missing) { toast(`Enter ${missing[1]}.`, true); qf.elements[missing[0]].focus(); return; }
+      if (await change("PUT", `/api/jeweler/orders/${o.id}/quote`, body, "Price saved.")) { S.draft = null; renderOrder(); }
+    });
+  }
+
+  $("#payForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target).entries());
+    const amount = numOrNull(f.amount);
+    if (!(amount > 0)) { toast("Enter the amount received.", true); e.target.elements.amount.focus(); return; }
+    change("POST", `/api/jeweler/orders/${o.id}/payments`, { amount, method: f.method, ref: f.ref }, `Payment of ${money(amount)} added.`);
+  });
+  document.querySelectorAll("[data-unpay]").forEach(b => b.addEventListener("click", () => {
+    const p = o.payments.find(x => x.id === b.dataset.unpay);
+    if (p && confirm(`Remove the payment of ${money(p.amount)}? The history keeps a record of it.`))
+      change("DELETE", `/api/jeweler/orders/${o.id}/payments/${encodeURIComponent(p.id)}?seen=${encodeURIComponent(o.updated_at)}`, null, "Payment removed.");
+  }));
+
+  $("#weightForm")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target).entries());
+    const g = numOrNull(f.grams);
+    if (!(g > 0)) { toast("Enter the actual weight in grams.", true); e.target.elements.grams.focus(); return; }
+    change("PUT", `/api/jeweler/orders/${o.id}/weight`, { grams: g, note: f.note }, "Actual weight saved.");
+  });
+
+  $("#noteForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const text = e.target.elements.text.value.trim();
+    if (!text) { e.target.elements.text.focus(); return; }
+    try {
+      S.page = await api("POST", `/api/jeweler/orders/${o.id}/notes`, { text });
+      toast("Note added.");
+      renderOrder();
+    } catch (err) { toast(err.message, true); }
+  });
+}
+
+// list clicks: open inside the page (a new tab still works with Ctrl/Cmd-click)
+document.addEventListener("click", e => {
+  const row = e.target.closest("a.row[data-id]");
+  if (row && !e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0) { e.preventDefault(); go(+row.dataset.id); return; }
+  const chip = e.target.closest("[data-show]");
+  if (chip) { S.show = chip.dataset.show; renderFilters(); showList(true); }
+});
+
+// new orders show up without a reload while the list is open
+setInterval(() => {
+  if (!S.page && document.visibilityState === "visible" && document.activeElement?.id !== "q" && $("#rows")) showList(true);
+}, 60000);
+
+$("#logout").addEventListener("click", async () => {
+  await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
+  location.href = "/login";
+});
+api("GET", "/api/auth/me").then(u => { $("#who").textContent = u.name || u.email; }).catch(() => {});
+
+route();
+</script>
+</body>
+</html>

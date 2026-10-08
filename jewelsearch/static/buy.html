@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proceed to Buy · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318;
+  --tile-a: #ffffff; --tile-b: #fbf6ec; --aurora1: rgba(230, 190, 110, .17); --aurora2: rgba(245, 215, 150, .15);
+  --rose: #e2a792; --white: #dfe2e6; --yellow: #e0b65a;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+::selection { background: #f2d990; color: var(--ink); }
+button { font: inherit; cursor: pointer; color: var(--ink); }
+button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
+.aurora i:nth-child(1) { width: 60vw; height: 60vw; left: -18vw; top: -26vw; background: var(--aurora1); }
+.aurora i:nth-child(2) { width: 50vw; height: 50vw; right: -20vw; top: 20vh; background: var(--aurora2); }
+
+/* ---------- top bar ---------- */
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost svg { width: 16px; height: 16px; color: var(--tone2); flex: none; }
+
+/* ---------- layout ---------- */
+.wrap { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 22px 28px 90px; }
+.crumbs { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 18px; }
+.crumbs a { color: var(--accent); text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+.product { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+
+/* gallery */
+.gallery { position: sticky; top: 86px; display: grid; gap: 12px; animation: up .7s var(--ease) both; }
+.stage { position: relative; aspect-ratio: 1; border-radius: 26px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(110% 90% at 50% 35%, var(--tile-a), var(--tile-b)); box-shadow: var(--shadow); display: grid; place-items: center; }
+.stage img, .stage video { width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; animation: stageIn .5s var(--ease); }
+.stage img { transition: transform .35s var(--ease); transform-origin: var(--zx, 50%) var(--zy, 50%); cursor: zoom-in; }
+.stage.zoom img { transform: scale(2.1); }
+.stage .full { position: absolute; right: 14px; bottom: 14px; font-size: 12px; font-weight: 600; color: var(--accent-ink); background: rgba(255, 255, 255, .9);
+  border: 1px solid var(--line-strong); padding: 5px 12px; border-radius: 999px; text-decoration: none; backdrop-filter: blur(6px); }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumbs button { padding: 0; width: 70px; height: 70px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, var(--tile-a), var(--tile-b)); transition: transform .35s var(--ease), box-shadow .3s; }
+.thumbs button:hover { transform: translateY(-3px); }
+.thumbs button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tone2), 0 8px 20px -8px var(--glow); }
+.thumbs img { width: 100%; height: 100%; object-fit: contain; }
+.thumbs .vid { font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+
+/* panel */
+.panel { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.panel > * { animation: up .6s var(--ease) both; }
+.panel > *:nth-child(2) { animation-delay: .05s; } .panel > *:nth-child(3) { animation-delay: .1s; }
+.panel > *:nth-child(4) { animation-delay: .15s; } .panel > *:nth-child(5) { animation-delay: .2s; } .panel > *:nth-child(6) { animation-delay: .25s; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 38px/1.08 var(--serif); letter-spacing: -.02em; margin: 6px 0 0; font-variant-numeric: lining-nums; word-break: break-word; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.tags span { font-size: 12px; background: var(--chip); color: var(--muted); padding: 3px 11px; border-radius: 999px; border: 1px solid var(--line); }
+h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0 0 10px; font-weight: 700; }
+h3 .val { color: var(--ink); letter-spacing: .04em; text-transform: none; font-size: 13px; font-weight: 600; margin-left: 6px; }
+
+.opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.opt { display: inline-flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 600; padding: 8px 16px; min-height: 42px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface-solid); transition: all .3s var(--ease); }
+.opt:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--line-strong); }
+.opt[aria-pressed="true"] { border-color: var(--tone2); background: var(--chip); box-shadow: 0 0 0 1px var(--tone2); }
+.opt small { font-weight: 500; color: var(--muted); font-size: 11.5px; }
+.opt:disabled { opacity: .45; cursor: not-allowed; }
+.sw { width: 20px; height: 20px; border-radius: 50%; flex: none; border: 2px solid var(--surface-solid); box-shadow: 0 0 0 1px var(--line-strong); }
+.sw.rose_gold { background: linear-gradient(135deg, #f6d0c2, var(--rose) 50%, #b87562); }
+.sw.white_gold { background: linear-gradient(135deg, #ffffff, var(--white) 50%, #9fa5ad); }
+.sw.yellow_gold { background: linear-gradient(135deg, #fbe7a6, var(--yellow) 50%, #a9792a); }
+.hint { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+select { appearance: none; -webkit-appearance: none; width: 100%; max-width: 360px; height: 46px; padding: 0 42px 0 16px; border-radius: 14px;
+  border: 1px solid var(--line-strong); font: 600 14px var(--sans); color: var(--ink); background: var(--surface-solid)
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23b8862b' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center; }
+
+/* summary */
+.summary { border: 1px solid var(--line-strong); border-radius: 22px; padding: 18px 20px; background: linear-gradient(160deg, #fffdf8, var(--chip));
+  box-shadow: var(--shadow); display: grid; gap: 12px; }
+.summary .sel { font: 500 19px/1.3 var(--serif); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.stat { background: var(--surface-solid); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+.stat .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.stat .v { font: 500 22px/1.2 var(--serif); color: var(--accent-ink); margin-top: 4px; font-variant-numeric: lining-nums tabular-nums; }
+.stat .v.na { font: 600 13.5px/1.35 var(--sans); color: var(--muted); }
+.stat .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.source { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--muted); }
+.source svg { width: 16px; height: 16px; flex: none; color: var(--tone2); margin-top: 2px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; color: var(--accent-ink);
+  background: var(--chip); border: 1px solid var(--line-strong); padding: 3px 10px; border-radius: 999px; }
+.badge.est { background: #fff; border-style: dashed; }
+
+/* details */
+.details { margin-top: 44px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.box { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.box.wide { grid-column: 1 / -1; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; margin: 0; font-size: 14px; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: lining-nums tabular-nums; word-break: break-word; }
+.table-scroll { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: lining-nums tabular-nums; }
+th { text-align: left; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 0 10px 8px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; padding-right: 0; padding-left: 10px; }
+td.num + td, th.num + th { padding-left: 24px; }
+td.nowrap { white-space: nowrap; }
+tr.on td { background: var(--chip); font-weight: 700; }
+tr.on td:first-child { box-shadow: inset 3px 0 0 var(--tone2); padding-left: 10px; }
+tfoot td { font-weight: 700; border-top: 1px solid var(--line-strong); border-bottom: 0; }
+.note { font-size: 12.5px; color: var(--muted); margin: 12px 0 0; }
+
+/* order */
+.orderbox { border: 1px solid var(--line); border-radius: 22px; padding: 18px 20px; background: var(--surface-solid); box-shadow: var(--shadow); display: grid; gap: 14px; }
+.orderbox .row2 { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: end; }
+.orderbox label { display: grid; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.orderbox input[type="tel"], .orderbox textarea { width: 100%; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface-solid);
+  font: 600 14px var(--sans); color: var(--ink); padding: 0 14px; height: 46px; }
+.orderbox textarea { height: auto; padding: 10px 14px; font-weight: 500; resize: vertical; }
+.orderbox input:focus-visible, .orderbox textarea:focus-visible { outline: 2px solid var(--tone2); outline-offset: 2px; }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: 14px; height: 46px; overflow: hidden; }
+.qty button { width: 42px; height: 100%; border: 0; background: var(--chip); font-size: 18px; font-weight: 700; color: var(--accent-ink); }
+.qty button:disabled { opacity: .4; cursor: not-allowed; }
+.qty output { min-width: 40px; text-align: center; font: 600 16px var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); }
+.order-go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; border-radius: 999px; border: 1px solid var(--tone2);
+  background: var(--btn); color: var(--accent-ink); font: 700 15px var(--sans); letter-spacing: .02em; transition: transform .3s var(--ease), box-shadow .3s; }
+.order-go:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px -14px var(--glow); }
+.order-go:disabled { opacity: .5; cursor: not-allowed; }
+.orderbox label.sizeok { display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--ink); font-weight: 600; cursor: pointer;
+  background: var(--chip); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+.orderbox label.sizeok input { width: 18px; height: 18px; accent-color: var(--tone2); flex: none; margin: 0; }
+.order-err { color: var(--danger); font-size: 13px; font-weight: 600; margin: 0; }
+.order-err:empty { display: none; }
+.placed { display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
+.placed svg { width: 40px; height: 40px; color: #2f7a3f; }
+.placed b { font: 500 20px/1.25 var(--serif); display: block; }
+.placed p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
+
+.state { max-width: 520px; margin: 80px auto; text-align: center; color: var(--muted); display: grid; gap: 14px; justify-items: center; }
+.state h2 { font: 400 26px var(--serif); color: var(--ink); margin: 0; }
+.dots i { display: inline-block; width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: var(--tone2); animation: bounce 1s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 50% { transform: translateY(-5px); opacity: .5; } }
+@keyframes up { from { opacity: 0; transform: translateY(18px); } }
+@keyframes stageIn { from { opacity: 0; transform: scale(.96); filter: blur(8px); } }
+
+@media (max-width: 900px) {
+  .product { grid-template-columns: 1fr; gap: 24px; }
+  .details { grid-template-columns: 1fr; }
+  .gallery { position: static; }
+}
+@media (max-width: 560px) {
+  .topbar { padding: 12px 16px; }
+  .brand small { display: none; }
+  .brand b { font-size: 14px; letter-spacing: .12em; }
+  .wrap { padding: 16px 16px 70px; }
+  h1 { font-size: 30px; }
+  .thumbs button { width: 58px; height: 58px; }
+  .details { grid-template-columns: 1fr; margin-top: 32px; }
+  .box { padding: 16px; }
+  .summary { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i></div>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Fine jewellery atelier</small></div>
+  </a>
+  <a class="ghost" id="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span>Back to results</span></a>
+</header>
+
+<main class="wrap" id="main">
+  <div class="state"><p>Loading design details<span class="dots"><i></i><i></i><i></i></span></p></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const CAT = { ring: "Ring", earrings: "Earrings", pendant: "Pendant", necklace: "Necklace", bracelet: "Bracelet" };
+const METAL = { rose_gold: "Rose gold", white_gold: "White gold", yellow_gold: "Yellow gold" };
+const INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`;
+const finePointer = matchMedia("(pointer: fine)").matches;
+const params = new URLSearchParams(location.search);
+
+// "Back to results": the results page is the previous page when we came from it
+function goBack(e) {
+  if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+    e.preventDefault();
+    history.back();
+  }
+}
+$("#back").addEventListener("click", goBack);
+
+const g = n => n == null ? null : n.toFixed(2) + " g";
+const carats = n => n.toFixed(n < 0.1 ? 3 : 2);
+const ct = n => n == null ? null : carats(n) + " ct";
+
+// Indian ring sizes (circumference minus 40 mm), with US and inner diameter
+const RING_SIZES = Array.from({ length: 21 }, (_, i) => {
+  const ind = i + 6, d = (ind + 40) / Math.PI;
+  return { in: ind, us: Math.round((d - 11.63) / 0.8128 * 2) / 2, d: d.toFixed(1) };
+});
+
+let d, specs, state;
+
+// ?brand=<id>: our version of another jeweller's design ("Buy with us" on its page), same flow
+const brandId = /^\d+$/.test(params.get("brand") || "") ? params.get("brand") : null;
+const money = n => "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+async function load() {
+  const uid = params.get("uid");
+  if (!brandId && (!uid || !/^\d+$/.test(uid))) return fail("No design chosen", "Open a design from your search results and press Proceed to buy.");
+  const q = new URLSearchParams();
+  if (params.get("id")) q.set("id", params.get("id"));
+  let res;
+  try { res = await fetch(brandId ? `/api/brand-designs/${brandId}/buy` : `/api/buy/${uid}?${q}`, { credentials: "same-origin" }); }
+  catch { return fail("Couldn't load this design", "Check your connection and try again."); }
+  if (res.status === 401) { location.replace("/login?next=" + encodeURIComponent(location.pathname + location.search)); return; }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return fail("Design not found", body.detail || "This design is no longer in the catalogue.");
+  if (brandId) { $("#back span").textContent = "Back to the design"; $("#back").href = `/brand-design?id=${brandId}`; }
+  d = body; specs = d.specs;
+  const metal = d.metals.includes(params.get("metal")) ? params.get("metal") : d.metal_shown;
+  const ringIn = +params.get("size") || specs.ring_size?.in || null;
+  state = { metal, purity: params.get("purity") || specs.default_purity, size: RING_SIZES.some(r => r.in === ringIn) ? ringIn : null, view: 0 };
+  fixPurity();
+  document.title = `${d.name || d.design_id} · Proceed to Buy · Design Finder`;
+  render();
+}
+
+function fail(title, text) {
+  $("#main").innerHTML = `<div class="state"><h2>${esc(title)}</h2><p>${esc(text)}</p><a class="ghost" href="/">Go to search</a></div>`;
+}
+
+function purityOptions() { return specs.purities.filter(p => (specs.purities_for[state.metal] || []).includes(p.key)); }
+function fixPurity() {
+  const ok = purityOptions().map(p => p.key);
+  if (!ok.includes(state.purity)) state.purity = ok.includes(specs.default_purity) ? specs.default_purity : ok[0];
+}
+
+function syncUrl() {
+  const u = new URL(location.href);
+  u.searchParams.set("metal", state.metal);
+  u.searchParams.set("purity", state.purity);
+  if (d.category === "ring" && state.size) u.searchParams.set("size", state.size); else u.searchParams.delete("size");
+  history.replaceState(null, "", u);
+}
+
+function sourceNote() {
+  if (specs.source === "ours") return `Our own specification for this design, based on “${d.brand.title}” by ${d.brand.brand}. The jeweler confirms the final price before your piece is made.`;
+  if (specs.source === "card") return "From this design's job card, the manufacturer's own specification. Gold weights are after polishing.";
+  if (specs.source === "cad") return "Measured from the 3D design file. Figures marked ≈ are estimates; the exact weight and stones are confirmed before your piece is made.";
+  return "Detailed specifications for this design aren't available yet. Weight, stones and size are confirmed when you order.";
+}
+
+function renderGallery() {
+  const views = d.views[state.metal] || [];
+  const video = d.videos[state.metal];
+  if (state.view !== "video") state.view = Math.min(state.view, Math.max(views.length - 1, 0));
+  const v = views[state.view];
+  const stage = state.view === "video" && video
+    ? `<video src="${video}" controls autoplay loop muted playsinline></video>`
+    : v ? `<img src="${v.thumb}" alt="${esc(d.design_id)} in ${esc(METAL[state.metal])}"><a class="full" href="${v.full}" target="_blank" rel="noopener">Full resolution ↗</a>` : "";
+  $("#gallery").innerHTML = `<div class="stage" id="stage">${stage}</div>
+    <div class="thumbs" role="group" aria-label="Pictures">${views.map((x, i) => `<button type="button" data-view="${i}" aria-pressed="${i === state.view}" aria-label="View ${i + 1}"><img src="${x.thumb}" alt=""></button>`).join("")}
+    ${video ? `<button type="button" data-view="video" aria-pressed="${state.view === "video"}" aria-label="3D video"><span class="vid">▶ 3D</span></button>` : ""}</div>`;
+  const st = $("#stage");
+  if (finePointer && state.view !== "video") {
+    st.addEventListener("pointermove", e => {
+      const r = st.getBoundingClientRect();
+      st.style.setProperty("--zx", ((e.clientX - r.left) / r.width * 100) + "%");
+      st.style.setProperty("--zy", ((e.clientY - r.top) / r.height * 100) + "%");
+      st.classList.toggle("zoom", !e.target.closest("a"));
+    });
+    st.addEventListener("pointerleave", () => st.classList.remove("zoom"));
+  }
+}
+
+function renderChoices() {
+  const est = specs.gold?.source === "cad";
+  const w = specs.gold ? specs.gold.by_purity[state.purity] : null;
+  const pur = specs.purities.find(p => p.key === state.purity);
+  const st = specs.stones;
+  const rs = RING_SIZES.find(r => r.in === state.size);
+  const sizeText = d.category === "ring" ? (rs ? ` · Size IN ${rs.in} (US ${rs.us})` : " · Size not chosen") : "";
+  $("#choices").innerHTML = `
+    <div><h3>Metal colour <span class="val">${esc(METAL[state.metal])}</span></h3>
+      <div class="opts" role="group" aria-label="Metal colour">${d.metals.map(m => `<button type="button" class="opt" data-metal="${m}" aria-pressed="${m === state.metal}"><span class="sw ${m}"></span>${METAL[m]}</button>`).join("")}</div></div>
+    <div><h3>Gold purity <span class="val">${esc(pur.label)} · ${esc(pur.fineness)}</span></h3>
+      <div class="opts" role="group" aria-label="Gold purity">${purityOptions().map(p => `<button type="button" class="opt" data-purity="${p.key}" aria-pressed="${p.key === state.purity}">${p.label}${specs.gold ? ` <small>${est ? "≈ " : ""}${g(specs.gold.by_purity[p.key])}</small>` : ""}</button>`).join("")}</div>
+      ${state.metal !== "yellow_gold" ? `<p class="hint">22K is available in yellow gold only.</p>` : ""}</div>
+    ${d.category === "ring" ? `<div><h3><label for="size">Ring size</label></h3>
+      <select id="size"><option value="">Choose your size</option>${RING_SIZES.map(r => `<option value="${r.in}" ${r.in === state.size ? "selected" : ""}>IN ${r.in} · US ${r.us} · ${r.d} mm inside</option>`).join("")}</select>
+      ${specs.ring_size ? `<p class="hint">Designed at size IN ${specs.ring_size.in} (US ${specs.ring_size.us})${specs.ring_size.estimated ? ", estimated from the 3D file" : ""}. The gold weight is for that size; another size changes it slightly.</p>` : ""}</div>` : ""}
+    <section class="summary" aria-live="polite">
+      <h3 style="margin:0">Your selection</h3>
+      <div class="sel">${esc(pur.label)} ${esc(METAL[state.metal])}${esc(sizeText)}</div>
+      <div class="stats">
+        <div class="stat"><div class="k">Gold weight</div>${w != null ? `<div class="v">${est ? "≈ " : ""}${g(w)}</div><div class="s">${est ? "Estimated from the 3D file" : specs.source === "ours" ? "Our specification" : "From the job card"}</div>` : `<div class="v na">Confirmed when you order</div>`}</div>
+        <div class="stat"><div class="k">Diamonds</div>${diamondStat(st)}</div>
+        ${d.prices && d.prices[state.purity] != null ? `<div class="stat"><div class="k">Our price</div><div class="v">${money(d.prices[state.purity])}</div><div class="s">One piece, incl. GST</div></div>` : ""}
+      </div>
+      <div class="source">${INFO}<span>${esc(sourceNote())}</span></div>
+    </section>`;
+}
+
+function diamondStat(st) {
+  if (!st) return `<div class="v na">Confirmed when you order</div>`;
+  if (st.counted && st.count === 0) return `<div class="v">None</div><div class="s">Plain metal design</div>`;
+  const est = st.source === "cad";
+  if (!st.counted) return `<div class="v na">${st.groups.length} stone size${st.groups.length === 1 ? "" : "s"}, count confirmed when you order</div>`;
+  return `<div class="v">${est ? "≈ " : ""}${ct(st.carat)}</div><div class="s">${st.count} stone${st.count === 1 ? "" : "s"}${est ? ", estimated" : ""}${specs.diamond_quality ? ` · ${esc(specs.diamond_quality)}` : ""}</div>`;
+}
+
+function renderDetails() {
+  const est = specs.gold?.source === "cad";
+  const rows = [
+    ["Design number", esc(d.design_id)],
+    d.brand ? ["Based on", `${esc(d.brand.title)} · ${esc(d.brand.brand)}`] : null,
+    ["Category", esc(CAT[d.category] || d.category)],
+    specs.design_type ? ["Design type", esc(specs.design_type)] : null,
+    ["Available in", d.metals.map(m => esc(METAL[m])).join(", ")],
+    ...specs.dimensions.map(x => [esc(x.label), esc(x.value)]),
+    specs.ring_size ? ["Designed ring size", `IN ${specs.ring_size.in} · US ${specs.ring_size.us}`] : null,
+    specs.stones?.counted && specs.stones.count ? ["Total stones", `${specs.stones.count}`] : null,
+    specs.stones?.counted && specs.stones.count ? ["Total diamond weight", `${specs.stones.source === "cad" ? "≈ " : ""}${ct(specs.stones.carat)}`] : null,
+  ].filter(Boolean);
+  const gold = specs.gold ? `<div class="table-scroll"><table>
+      <thead><tr><th>Purity</th><th>Gold</th><th class="num">${esc(METAL[state.metal])}</th></tr></thead>
+      <tbody>${specs.purities.map(p => {
+        const ok = (specs.purities_for[state.metal] || []).includes(p.key);
+        return `<tr class="${p.key === state.purity ? "on" : ""}"><td>${p.label}</td><td>${(+p.fineness / 10).toFixed(1)}%</td><td class="num">${ok ? (est ? "≈ " : "") + g(specs.gold.by_purity[p.key]) : "Not offered"}</td></tr>`;
+      }).join("")}</tbody></table></div>
+      <p class="note">${est ? "Estimated from the metal in the 3D design file, calibrated on this workshop's job cards. The exact weight is confirmed before production." : specs.source === "ours" ? "Weights of our version, entered by our team." : "Weights from the job card, after polishing."}</p>`
+    : `<p class="note" style="margin-top:0">The gold weight for this design is confirmed when you order.</p>`;
+  const st = specs.stones;
+  let stones = "";
+  if (st && st.groups.length) {
+    const est = st.source === "cad";
+    const hasSetting = st.groups.some(x => x.setting);
+    stones = `<section class="box wide"><h3>Diamond details ${est ? `<span class="badge est">Measured from the 3D file</span>` : `<span class="badge">${specs.source === "ours" ? "Our specification" : "Job card"}</span>`}</h3>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Shape</th><th>Size</th>${st.counted ? `<th class="num">Count</th><th class="num">Carats</th>` : ""}${hasSetting ? "<th>Setting</th>" : ""}</tr></thead>
+        <tbody>${st.groups.map(x => `<tr><td>${esc(x.shape)}</td><td class="nowrap">${esc(x.size)}</td>${st.counted ? `<td class="num">${x.count}</td><td class="num">${x.carat != null ? (est ? "≈ " : "") + carats(x.carat) : "–"}</td>` : ""}${hasSetting ? `<td>${esc(x.setting)}</td>` : ""}</tr>`).join("")}</tbody>
+        ${st.counted ? `<tfoot><tr><td colspan="2">Total</td><td class="num">${st.count}</td><td class="num">${est ? "≈ " : ""}${carats(st.carat)}</td>${hasSetting ? "<td></td>" : ""}</tr></tfoot>` : ""}
+      </table></div>
+      <p class="note">${est ? (st.counted ? "Carats of round stones follow the trade size chart; other cuts are weighed from their size in the 3D file." : "The 3D file doesn't tell whether it holds one earring or the pair, so counts and carats are confirmed when you order.") : specs.diamond_quality ? `Diamond quality: ${esc(specs.diamond_quality)}.` : "Diamond colour and clarity are chosen with your order."}</p>
+    </section>`;
+  }
+  $("#details").innerHTML = `
+    <section class="box"><h3>Product details</h3><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></section>
+    <section class="box"><h3>Gold weight by purity ${specs.gold ? (est ? `<span class="badge est">Estimate</span>` : `<span class="badge">${specs.source === "ours" ? "Our specification" : "Job card"}</span>`) : ""}</h3>${gold}</section>
+    ${stones}`;
+}
+
+function render() {
+  const tags = (d.tags || []).map(t => `<span>${esc(t)}</span>`).join("");
+  const cat = CAT[d.category] || d.category;
+  $("#main").innerHTML = `
+    <nav class="crumbs" aria-label="Breadcrumb">${brandId ? `<a href="/?browse=${esc(d.category)}">Catalogue</a><span>/</span><a href="/brand-design?id=${brandId}">${esc(d.name)}</a><span>/</span><span>Buy with us</span>`
+      : `<a href="/" id="crumbHome">Search</a><span>/</span><span>${esc(cat)}</span><span>/</span><span>${esc(d.design_id)}</span>`}</nav>
+    <div class="product">
+      <div class="gallery" id="gallery"></div>
+      <div class="panel">
+        <div><div class="eyebrow">Proceed to buy · ${esc(cat)}${d.stone_shape ? " · " + esc(d.stone_shape) + " cut" : ""}</div>
+          <h1>${esc(d.name || d.design_id)}</h1>${tags ? `<div class="tags">${tags}</div>` : ""}</div>
+        <div id="choices" style="display:contents"></div>
+        <section class="orderbox" id="orderBox" aria-label="Order this design"></section>
+      </div>
+    </div>
+    <div class="details" id="details"></div>`;
+  $("#crumbHome")?.addEventListener("click", goBack);
+  renderGallery(); renderChoices(); renderDetails(); renderOrderBox(); syncUrl();
+}
+
+// ---------- ordering: sent to the jeweler, who confirms the price before anything is made.
+// What is typed lives in the page only, never in browser storage.
+const MAX_QTY = 20;
+// A ring's size is preselected from the design's own size, which is rarely the
+// customer's: an order needs a size they picked or confirmed themselves.
+let order = { qty: 1, placed: null, sending: false, sizeOk: false };
+
+function renderOrderBox() {
+  const box = $("#orderBox");
+  if (order.placed) {
+    box.innerHTML = `<div class="placed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+      <div><b>Order ${esc(order.placed.order_no)} is with the jeweler</b>
+      <p>They will call you on ${esc(order.placed.phone)} to confirm the final price before your piece is made. No payment has been taken. Keep the order number for reference.</p>
+      <p><button type="button" class="link" id="orderAgain" style="border:0;background:none;padding:0;color:var(--accent);font-weight:700;text-decoration:underline">Order another</button></p></div></div>`;
+    $("#orderAgain").addEventListener("click", () => { order = { qty: 1, placed: null, sending: false, sizeOk: false }; renderOrderBox(); });
+    return;
+  }
+  box.innerHTML = `
+    <div><h3 style="margin:0 0 6px">Order this design</h3>
+      <p class="hint" style="margin:0">No payment now. The jeweler checks your order and calls you with the final price before anything is made.</p></div>
+    <div class="row2">
+      <label>Quantity<div class="qty"><button type="button" data-qty="-1" aria-label="One less">−</button><output id="qty" aria-live="polite">${order.qty}</output><button type="button" data-qty="1" aria-label="One more">+</button></div></label>
+      <label for="phone">Phone, with country code<input id="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="24" value="+91 " required></label>
+    </div>
+    <label class="sizeok" id="sizeOkRow" hidden><input type="checkbox" id="sizeOk"> <span id="sizeOkText"></span></label>
+    <label for="onote">Note for the jeweler (optional)<textarea id="onote" rows="2" maxlength="1000" placeholder="Engraving, a date you need it by, anything else"></textarea></label>
+    <div class="hint" id="orderSum" style="margin:0"></div>
+    <button type="button" class="order-go" id="placeOrder">Place order</button>
+    <p class="order-err" id="orderErr" role="alert"></p>`;
+  $("#placeOrder").addEventListener("click", placeOrder);
+  $("#sizeOk").addEventListener("change", e => { order.sizeOk = e.target.checked; updateOrderBox(); });
+  $("#phone").addEventListener("input", () => { $("#orderErr").textContent = ""; });
+  updateOrderBox();
+}
+
+function updateOrderBox() {
+  if (order.placed || !$("#placeOrder")) return;
+  const pur = specs.purities.find(p => p.key === state.purity);
+  const rs = RING_SIZES.find(r => r.in === state.size);
+  const ring = d.category === "ring";
+  const needSize = ring && (!rs || !order.sizeOk);
+  $("#sizeOkRow").hidden = !ring || !rs;
+  $("#sizeOk").checked = order.sizeOk;
+  if (rs) $("#sizeOkText").textContent = `IN ${rs.in} (US ${rs.us}) is my ring size`;
+  $("#qty").textContent = order.qty;
+  document.querySelector('[data-qty="-1"]').disabled = order.qty <= 1;
+  document.querySelector('[data-qty="1"]').disabled = order.qty >= MAX_QTY;
+  $("#orderSum").textContent = ring && !rs ? "Choose your ring size above to order."
+    : needSize ? "Tick to confirm your ring size, or choose another size above."
+    : `You are ordering: ${order.qty} × ${d.name || d.design_id}, ${pur.label} ${METAL[state.metal]}${rs ? `, size IN ${rs.in} (US ${rs.us})` : ""}.`;
+  $("#placeOrder").disabled = needSize || order.sending;
+  $("#placeOrder").textContent = order.sending ? "Sending your order…" : "Place order";
+}
+
+async function placeOrder() {
+  const err = $("#orderErr");
+  err.textContent = "";
+  const phone = $("#phone").value.trim();
+  if (!/^\+\s*\d[\d\s\-()]{6,}$/.test(phone)) { err.textContent = "Enter your phone number with the country code, for example +91 98765 43210."; $("#phone").focus(); return; }
+  order.sending = true; updateOrderBox();
+  try {
+    const choice = { metal: state.metal, purity: state.purity, ring_size: d.category === "ring" ? state.size : null,
+                     quantity: order.qty, phone, note: $("#onote").value };
+    const res = await fetch(brandId ? `/api/brand-designs/${brandId}/order` : "/api/orders", { method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(brandId ? choice : { uid: d.uid, design_id: d.design_id, ...choice }) });
+    if (res.status === 401) { location.replace("/login?next=" + encodeURIComponent(location.pathname + location.search)); return; }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || "The order couldn't be sent. Try again.");
+    order.placed = body;
+    renderOrderBox();
+    $("#orderBox").scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (e) {
+    err.textContent = e.message === "Failed to fetch" ? "No connection. Check the network and try again." : e.message;
+  } finally {
+    order.sending = false; updateOrderBox();
+  }
+}
+
+// Re-rendering replaces the buttons: put keyboard focus back on the one pressed
+function keepFocus(b, draw) {
+  const attr = ["metal", "purity", "view", "qty"].find(k => b.dataset[k] !== undefined);
+  const had = document.activeElement === b;
+  draw();
+  if (had && attr) document.querySelector(`[data-${attr}="${b.dataset[attr]}"]`)?.focus();
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b || !d) return;
+  keepFocus(b, () => act(b));
+});
+function act(b) {
+  if (b.dataset.metal) {
+    state.metal = b.dataset.metal; fixPurity();
+    renderGallery(); renderChoices(); renderDetails(); updateOrderBox(); syncUrl();
+  } else if (b.dataset.purity) {
+    state.purity = b.dataset.purity;
+    renderChoices(); renderDetails(); updateOrderBox(); syncUrl();
+  } else if (b.dataset.qty) {
+    order.qty = Math.min(MAX_QTY, Math.max(1, order.qty + +b.dataset.qty));
+    updateOrderBox();
+  } else if (b.dataset.view !== undefined) {
+    state.view = b.dataset.view === "video" ? "video" : +b.dataset.view;
+    renderGallery();
+  }
+}
+document.addEventListener("change", e => {
+  if (e.target.id === "size") {
+    state.size = +e.target.value || null;
+    order.sizeOk = !!state.size;   // picked by the customer
+    renderChoices(); updateOrderBox(); syncUrl();
+    $("#size").focus();
+  }
+});
+
+load();
+</script>
+</body>
+</html>

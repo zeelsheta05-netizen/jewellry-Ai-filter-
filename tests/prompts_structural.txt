@@ -1,0 +1,44 @@
+# Long prompts that describe the structure of a design (one per line)
+# --- rings
+I want a ring with a single round diamond in the center held by four prongs, a thin plain band with no stones on the sides, very minimal and elegant
+Looking for a three stone ring, one bigger diamond in the middle and two smaller diamonds on each side, set on a slim yellow gold band
+A ring with an oval center stone surrounded by a halo of small diamonds, and a split shank band that divides into two near the top
+Wide men's ring with a flat top, a square princess cut diamond set flush in the middle, and a brushed plain gold band without other stones
+Delicate crossover ring where two thin bands twist over each other, with a row of tiny diamonds on one band and the other band plain
+An open ring with a gap at the top, two ends finished with a small pear diamond on one side and a round diamond on the other
+Stackable eternity band with baguette diamonds set in a channel all the way around the ring, thin width for daily wear
+A bold cocktail ring with a big flower shaped top made of marquise diamonds as petals and a round diamond in the centre, on a thick band
+Vintage style ring with a large emerald cut center stone, milgrain edges and small diamonds on the shoulders
+A leaf design ring in rose gold, the leaves wrapping around the finger with small diamonds on the veins, no big center stone
+# --- earrings
+Small round stud earrings with one diamond each in a bezel setting, flat back, suitable for a child
+Huggie hoop earrings that sit close to the earlobe, fully covered with small diamonds on the front, white gold
+Long drop earrings with a stud at the top and a pear shaped diamond hanging at the bottom on a thin chain, elegant for evening
+Chandelier earrings for a bride, multiple layers of diamonds getting wider towards the bottom, very heavy and ornate
+Floral cluster earrings, a round center diamond surrounded by petal shaped diamonds, close to the ear, not dangling
+Geometric earrings with a triangle outline in gold and a single diamond inside, modern and lightweight for office
+# --- pendants & necklaces
+Small heart shaped pendant with an outline of tiny diamonds and an empty open center, on a thin chain
+Solitaire pendant with one round diamond in a four prong setting hanging from a fine chain, nothing else
+A round medallion pendant with a pave diamond center and an openwork gold frame with geometric cut-outs around it
+Initial or letter style pendant with diamonds, simple and personal, for daily wear
+Tennis necklace with a single row of equal size round diamonds all the way around, white gold, for a party
+Heavy bridal necklace with a V shaped front, multiple rows of diamonds and pear drops hanging along the bottom edge
+Choker necklace that sits close to the neck, made of flower motifs linked together with diamonds in each flower
+# --- bracelets
+Rigid bangle bracelet with a hinge opening, a single row of diamonds on the top half and plain polished gold underneath
+Tennis bracelet with a line of oval diamonds set east west, flexible, with a box clasp
+Open cuff bracelet with two ends that face each other, each end finished with a round diamond
+Thin chain bracelet with small evil eye charms and tiny diamonds between them
+# --- Hinglish
+ek patli ring chahiye jisme beech me ek bada round diamond ho aur side me koi stone na ho, bilkul simple
+aisi earrings chahiye jo kaan se latakti ho, upar chhota stud aur neeche pear shape diamond
+bangle chahiye jisme upar ek line me diamonds ho aur neeche plain gold ho, rose gold me
+# --- Hindi
+पतली अंगूठी चाहिए जिसमें बीच में एक बड़ा गोल हीरा हो और बाकी बैंड सादा हो
+लंबी लटकने वाली बाली चाहिए जिसके नीचे बूंद जैसा हीरा हो
+दुल्हन के लिए भारी हार चाहिए जिसमें कई लाइनों में हीरे हों और नीचे लटकन हो
+# --- Gujarati
+પાતળી વીંટી જોઈએ છે જેમાં વચ્ચે એક મોટો ગોળ હીરો હોય અને બાકીની વીંટી સાદી હોય
+કાનની લટકતી બુટ્ટી જોઈએ છે જેમાં ઉપર નાનું સ્ટડ અને નીચે ટીપા જેવો હીરો હોય
+ફૂલની ડિઝાઇનવાળું પેન્ડન્ટ જેમાં વચ્ચે ગોળ હીરો અને આજુબાજુ પાંખડી જેવા હીરા હોય

@@ -1,0 +1,13 @@
+boto3==1.43.106
+fastapi==0.141.1
+numpy==2.5.3
+open_clip_torch==3.3.0
+pillow==12.3.0
+qrcode==8.2
+sentencepiece==0.2.2
+torch==2.14.0
+torchvision==0.29.0
+transformers==5.17.0
+uvicorn==0.54.0
+# Video compression in scripts/migrate_to_s3.py (bundles ffmpeg; not needed to run the app)
+imageio-ffmpeg==0.6.0

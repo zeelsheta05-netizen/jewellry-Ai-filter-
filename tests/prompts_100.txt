@@ -1,0 +1,110 @@
+# 100 real-life prompts for Design Finder (one per line; lines starting with # are ignored)
+# --- English: rings
+A rose gold ring for my mother that she can wear every day
+Simple white gold solitaire engagement ring
+I want a thin ring with one diamond in the center, nothing else on the band
+Oval diamond engagement ring in yellow gold
+Heavy bridal ring with lots of diamonds for my wedding
+Minimal gold ring for office wear
+Gents ring without any stones
+Wide men's band with diamonds for my husband
+Anniversary ring for my wife, elegant and not too heavy
+Princess cut solitaire ring
+Pear shaped diamond ring in rose gold
+Stackable thin rings with small diamonds
+Ring with a halo around the center stone
+Eternity band with diamonds all around
+Cute small ring for my daughter
+Floral ring with small diamonds
+Heart shaped ring for my girlfriend
+Twisted band ring, no stones
+Cocktail ring for a party, big and bold
+Plain gold band for daily use
+# --- English: earrings
+Small diamond stud earrings for everyday
+Hoop earrings in white gold
+Bridal earrings, heavy and traditional
+Lightweight earrings for office
+Drop earrings with pear shaped diamonds
+Flower design earrings for my sister
+Simple gold earrings without diamonds
+Earrings for a wedding reception, sparkling
+Cluster earrings in rose gold
+Tiny studs for my baby girl
+# --- English: pendants & necklaces
+Small heart pendant as a birthday gift
+Floral pendant in yellow gold
+Solitaire pendant with one diamond
+Delicate pendant for daily wear
+Heavy diamond necklace for my wedding
+Tennis necklace in white gold
+Simple chain necklace, lightweight
+Statement necklace for a party
+Necklace set for bride, traditional look
+Minimal necklace for my mom's birthday
+# --- English: bracelets
+Tennis bracelet with diamonds
+Thin bracelet for everyday
+Bangle in rose gold for my wife
+Bracelet for a party, sparkling
+Men's bracelet, bold
+# --- English with typos (real customer spelling)
+dimond ring for engagment
+bracelate for party
+neckless for my wife
+earing for daily wear
+pendent with heart shape
+solitare ring in white gold
+rign with small dimonds
+braclet with no stones
+# --- Hinglish
+mummy ke liye rose gold ring chahiye, roz pehne wali
+shaadi ke liye heavy diamond necklace
+simple earrings chahiye office ke liye
+ek diamond wali ring chahiye, patli si
+gents ring bina stone
+wife ke liye anniversary gift, pendant
+halka bracelet chahiye daily wear ke liye
+bridal jhumka heavy wala
+floral pendant yellow gold me
+behen ke liye chhoti si earrings
+engagement ring oval diamond wali
+papa ke liye bold ring
+# --- Hindi
+मेरी माँ के लिए रोज़ पहनने वाली रोज़ गोल्ड अंगूठी चाहिए
+शादी के लिए भारी हीरे का हार
+हीरे के बिना पतली अंगूठी
+पत्नी के लिए दिल वाला पेंडेंट
+रोज़ पहनने के लिए छोटी बाली
+सगाई के लिए एक हीरे वाली अंगूठी
+दुल्हन के लिए भारी झुमके
+सफेद सोने का ब्रेसलेट
+पति के लिए अंगूठी
+पार्टी के लिए चमकदार हार
+बेटी के लिए छोटा पेंडेंट
+सिंपल सोने की चेन
+फूल वाली बाली
+# --- Gujarati
+મારી મમ્મી માટે રોજ પહેરી શકાય એવી રોઝ ગોલ્ડ વીંટી
+લગ્ન માટે ભારે હીરાનો હાર
+નાની અને સાદી કાનની બુટ્ટી
+હીરા વગરની પાતળી વીંટી
+વચ્ચે એક હીરો હોય એવી વીંટી
+હાર્ટ વાળું પેન્ડન્ટ
+પત્ની માટે સગાઈની વીંટી
+ઓફિસ માટે હળવી બુટ્ટી
+દુલ્હન માટે ભારે ઝુમખા
+પપ્પા માટે જેન્ટ્સ વીંટી
+બહેન માટે નાનું પેન્ડન્ટ
+સફેદ સોનાનું બ્રેસલેટ
+ફૂલવાળી કાનની બુટ્ટી
+પાર્ટી માટે ચમકદાર હાર
+દીકરી માટે નાની વીંટી
+રોઝ ગોલ્ડ બંગડી
+# --- Mixed / harder real-life requests
+ring for my mother, not yellow gold
+earrings without diamonds, only gold
+something simple for my wife's birthday
+gift for my sister, pendant or earrings
+wedding ring for him and her
+necklace with a single diamond pendant, very delicate

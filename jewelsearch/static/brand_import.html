@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand Designs · Team Panel · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #2f7a3f;
+  --rose: #e2a792; --white: #dfe2e6; --yellow: #e0b65a;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.top-links { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost.small { padding: 5px 12px; font-size: 12px; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 22px; border-radius: 999px;
+  border: 1px solid var(--tone2); background: var(--btn); color: var(--accent-ink); font-weight: 700; letter-spacing: .02em;
+  transition: transform .3s var(--ease), box-shadow .3s; white-space: nowrap; }
+.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px -14px var(--glow); }
+.primary:disabled { opacity: .5; cursor: not-allowed; }
+.linkish { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 700; font-size: 13px; text-decoration: underline; }
+.linkish.bad { color: var(--danger); }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 26px 28px 140px; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 36px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 6px; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 760px; }
+h2 { font: 500 20px/1.25 var(--serif); margin: 0 0 4px; }
+h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .22em; color: var(--tone2); margin: 0 0 10px; font-weight: 700; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.err { color: var(--danger); font-size: 13.5px; font-weight: 600; margin: 8px 0 0; }
+.err:empty { display: none; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--accent-ink);
+  background: var(--chip); border: 1px solid var(--line-strong); padding: 3px 10px; border-radius: 999px; vertical-align: middle; }
+
+.card { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.fetch { display: grid; gap: 10px; }
+.fetch-row { display: flex; gap: 10px; }
+.fetch-row input { flex: 1; min-width: 0; height: 50px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 0 20px; background: #fff; font-weight: 600; }
+.loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; }
+.dots i { display: inline-block; width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: var(--tone2); animation: bounce 1s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 50% { transform: translateY(-5px); opacity: .5; } }
+
+.work { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); gap: 22px; margin-top: 22px; align-items: start; }
+.work > * { animation: up .6s var(--ease) both; }
+.work > *:nth-child(2) { animation-delay: .08s; }
+@keyframes up { from { opacity: 0; transform: translateY(16px); } }
+
+/* original listing */
+.orig h2 { word-break: break-word; }
+.pics { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 14px 0 6px; }
+.pic { position: relative; padding: 0; aspect-ratio: 1; border-radius: 14px; border: 1px solid var(--line); background: #fff; overflow: hidden; }
+.pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pic[aria-pressed="false"] img { opacity: .35; filter: grayscale(.6); }
+.pic[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tone2); }
+.pic .n { position: absolute; top: 6px; left: 6px; min-width: 22px; height: 22px; border-radius: 11px; background: var(--tone2); color: #fff;
+  font-size: 11.5px; font-weight: 700; display: grid; place-items: center; padding: 0 6px; }
+.pic[aria-pressed="false"] .n { background: rgba(255, 255, 255, .9); color: var(--muted); border: 1px solid var(--line-strong); }
+.pic .sz { position: absolute; bottom: 4px; right: 6px; font-size: 10px; color: var(--muted); background: rgba(255, 255, 255, .85); padding: 0 4px; border-radius: 4px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 12px 0; }
+.fact { border: 1px solid var(--line); border-radius: 14px; padding: 9px 12px; background: var(--chip); }
+.fact .k { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.fact .v { font: 500 17px/1.25 var(--serif); margin-top: 2px; font-variant-numeric: lining-nums tabular-nums; word-break: break-word; }
+.fact .v.na { font: 600 12.5px/1.35 var(--sans); color: var(--muted); }
+.fact s { color: var(--muted); font-size: 13px; }
+dl { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 7px 16px; margin: 0; font-size: 13.5px; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; word-break: break-word; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: lining-nums tabular-nums; }
+th, td { text-align: left; padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+td.num, th.num { text-align: right; }
+tr.total td { font-weight: 700; border-top: 1px solid var(--line-strong); border-bottom: 0; }
+details { margin-top: 12px; font-size: 13.5px; }
+details summary { cursor: pointer; font-weight: 700; color: var(--accent-ink); }
+details p { white-space: pre-line; color: var(--muted); }
+.sec { margin-top: 16px; }
+
+/* our version: the highlighted side */
+.ours { border: 1.5px solid var(--tone2); background: linear-gradient(170deg, #fffaf0, #fff 40%); box-shadow: 0 18px 40px -26px var(--glow), var(--shadow); }
+.ours .head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 6px; }
+.group { border-top: 1px dashed var(--line-strong); padding-top: 16px; margin-top: 16px; display: grid; gap: 12px; }
+.f { display: grid; gap: 5px; font-size: 12.5px; font-weight: 700; color: var(--muted); min-width: 0; }
+.f input, .f select, .f textarea, .cell input { width: 100%; height: 42px; border: 1px solid var(--line-strong); border-radius: 12px; padding: 0 12px; background: #fff;
+  font-weight: 600; font-size: 14px; color: var(--ink); min-width: 0; }
+.f textarea { height: auto; padding: 10px 12px; font-weight: 500; resize: vertical; }
+.f2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.f3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: #fff; font-size: 13.5px; font-weight: 600; transition: all .25s var(--ease); }
+.chip[aria-pressed="true"] { border-color: var(--tone2); background: var(--chip); box-shadow: 0 0 0 1px var(--tone2); }
+.chip:disabled { opacity: .45; cursor: not-allowed; }
+.sw { width: 18px; height: 18px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--line-strong); }
+.sw.rose_gold { background: linear-gradient(135deg, #f6d0c2, var(--rose) 50%, #b87562); }
+.sw.white_gold { background: linear-gradient(135deg, #ffffff, var(--white) 50%, #9fa5ad); }
+.sw.yellow_gold { background: linear-gradient(135deg, #fbe7a6, var(--yellow) 50%, #a9792a); }
+.rows { display: grid; gap: 8px; }
+.row { display: grid; gap: 8px; align-items: end; }
+.row.stone { grid-template-columns: 1.2fr 1fr .8fr .9fr 1.2fr 34px; }
+.row.dim { grid-template-columns: 1fr 1fr 34px; }
+.cell { display: grid; gap: 4px; font-size: 11px; font-weight: 700; color: var(--muted); min-width: 0; }
+.cell input { height: 38px; font-size: 13.5px; padding: 0 10px; }
+.x { width: 34px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--muted); font-size: 18px; line-height: 1; }
+.x:hover { color: var(--danger); border-color: var(--danger); }
+.add { justify-self: start; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.prices { margin-top: 4px; }
+.prices th:not(:first-child), .prices td:not(:first-child) { text-align: right; padding-left: 8px; padding-right: 0; }
+.prices tr.total td { color: var(--accent-ink); font-size: 14px; }
+.compare { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+
+.submitbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: color-mix(in srgb, #fff 88%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line-strong); }
+.submitbar .in { max-width: 1240px; margin: 0 auto; padding: 12px 28px; display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.submitbar .sum { font-size: 13.5px; color: var(--muted); min-width: 0; }
+.submitbar .sum b { color: var(--ink); }
+.submitbar .err { margin: 0; flex-basis: 100%; }
+
+.listed { margin-top: 40px; }
+.list { display: grid; gap: 10px; margin-top: 12px; }
+.item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; background: #fff; }
+.item img { width: 56px; height: 56px; object-fit: contain; border-radius: 10px; background: #fff; border: 1px solid var(--line); }
+.item .t { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .s { font-size: 12.5px; color: var(--muted); }
+.item .a { display: flex; gap: 12px; align-items: center; }
+.empty { color: var(--muted); font-size: 13.5px; }
+
+.stored { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--muted); background: var(--chip);
+  border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; word-break: break-word; }
+.stored svg { width: 18px; height: 18px; flex: none; color: var(--ok); margin-top: 1px; }
+.stored b { color: var(--ink); }
+.coll-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.coll-head input { height: 40px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 0 16px; min-width: 240px; background: #fff; }
+.item .w { font-size: 12px; color: var(--muted); margin-top: 2px; word-break: break-all; }
+.pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--chip); color: var(--accent-ink); }
+.pill.wait { background: #fff; border-style: dashed; color: var(--muted); }
+.pill.ok { background: #eef7ef; border-color: #b9dcbf; color: var(--ok); }
+@media (max-width: 980px) { .work { grid-template-columns: 1fr; } }
+@media (max-width: 620px) {
+  .topbar { padding: 12px 16px; }
+  .brand small { display: none; }
+  .brand b { font-size: 14px; letter-spacing: .12em; }
+  .wrap { padding: 18px 16px 170px; }
+  h1 { font-size: 28px; }
+  .card { padding: 16px; }
+  .fetch-row { flex-direction: column; }
+  .f2, .f3 { grid-template-columns: 1fr; }
+  .row.stone { grid-template-columns: 1fr 1fr 34px; }
+  .row.stone .cell:nth-child(3), .row.stone .cell:nth-child(4) { grid-column: span 1; }
+  .submitbar .in { padding: 10px 16px; }
+  .item { grid-template-columns: 48px minmax(0, 1fr); }
+  .item .a { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Team panel</small></div>
+  </a>
+  <nav class="top-links"><a class="ghost" href="/?browse=all">Catalogue</a><a class="ghost" href="/jeweler">Orders</a></nav>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">Team panel · Brand designs</div>
+  <h1>List a design from another jeweller</h1>
+  <p class="lead">Paste the product link of a design from another jeweller's website. Its name, price, specification and pictures are read from the page. Then fill in our own version and our pricing. Customers see the original details next to ours, and can buy from us or from the seller.</p>
+
+  <section class="card fetch" aria-label="Product link">
+    <h3 style="margin:0">1 · The design's product page</h3>
+    <form class="fetch-row" id="fetchForm">
+      <input id="url" type="url" inputmode="url" placeholder="https://www.example-jeweller.com/products/…" aria-label="Product page link" required autocomplete="off">
+      <button class="primary" id="fetchBtn" type="submit">Fetch details</button>
+    </form>
+    <div class="loading" id="loading" hidden><span class="dots"><i></i><i></i><i></i></span><span>Reading the page and downloading its pictures. This takes up to half a minute.</span></div>
+    <p class="err" id="fetchErr" role="alert"></p>
+    <div class="stored" id="stored" hidden></div>
+  </section>
+
+  <div class="work" id="work" hidden>
+    <section class="card orig" id="orig" aria-label="Original listing"></section>
+    <section class="card ours" id="ours" aria-label="Our version"></section>
+  </div>
+
+  <section class="listed" aria-label="Listed brand designs">
+    <h3>Listed in the catalogue</h3>
+    <div class="list" id="list"><p class="empty">Loading…</p></div>
+  </section>
+
+  <section class="listed" aria-label="Scraped designs">
+    <div class="coll-head"><div><h3 style="margin:0 0 4px">Scraped designs · the collection</h3>
+      <p class="hint" style="margin:0">Every page fetched here, listed or not. Pictures at full size, the page and its details are kept in the dataset storage<span id="collWhere"></span>.</p></div>
+      <input type="search" id="collQ" placeholder="Search name, shop or link…" aria-label="Search the scraped designs"></div>
+    <div class="list" id="coll"><p class="empty">Loading…</p></div>
+  </section>
+</main>
+
+<div class="submitbar" id="submitbar" hidden>
+  <div class="in">
+    <div class="sum" id="sum"></div>
+    <button class="primary" type="button" id="submit">Submit and display in catalog</button>
+    <p class="err" id="submitErr" role="alert"></p>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const CAT = { ring: "Ring", earrings: "Earrings", pendant: "Pendant", necklace: "Necklace", bracelet: "Bracelet" };
+const METAL = { rose_gold: "Rose gold", white_gold: "White gold", yellow_gold: "Yellow gold" };
+const KEY_METAL = { ...METAL, silver: "Silver", platinum: "Platinum", "gold plated": "Gold plated / base metal" };
+const SHAPES = ["Round", "Oval", "Pear", "Marquise", "Emerald", "Princess", "Cushion", "Radiant", "Heart", "Baguette", "Asscher", "Trillion"];
+const money = (n, cur = "INR") => n == null ? "–" : (cur && cur !== "INR" ? cur + " " : "₹") + Number(n).toLocaleString("en-IN", Number.isInteger(+n) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = v => { const t = String(v ?? "").trim(); if (!t) return null; const n = Number(t); return Number.isFinite(n) ? n : NaN; };
+
+let F = null;      // the fetched page: token, original, pictures, options
+let form = null;   // our version, as typed
+let picks = [];    // chosen picture indices, in order
+let auto = {};     // gold weights filled from another purity (not typed)
+let sending = false;
+
+async function api(url, opts = {}) {
+  let r;
+  try { r = await fetch(url, { credentials: "same-origin", ...opts }); }
+  catch { throw new Error("No connection. Check the network and try again."); }
+  if (r.status === 401) { location.replace("/login?next=" + encodeURIComponent(location.pathname)); throw new Error("Signed out"); }
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof body.detail === "string" ? body.detail : `Something went wrong (error ${r.status}).`);
+  return body;
+}
+
+/* ---------- 1. fetch the page ---------- */
+$("#fetchForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const url = $("#url").value.trim();
+  if (!url) return;
+  $("#fetchErr").textContent = "";
+  $("#loading").hidden = false; $("#fetchBtn").disabled = true;
+  try {
+    startDraft(await api("/api/brand-designs/fetch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) }));
+    setTimeout(loadCollection, 4000);   // the files reach the dataset storage in the background
+  } catch (err) {
+    $("#fetchErr").textContent = err.message;
+  } finally {
+    $("#loading").hidden = true; $("#fetchBtn").disabled = false;
+  }
+});
+
+const STORED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v13c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-13M4 12c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5"/></svg>`;
+const mb = n => n == null ? "" : n >= 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+
+function startDraft(res) {
+  F = res;
+  const p = F.prefill;
+  form = { ...p, pricing: { ...p.pricing }, gold_g: { ...p.gold_g }, stones: p.stones.map(s => ({ ...s })), dimensions: p.dimensions.map(d => ({ ...d })) };
+  auto = {};
+  picks = F.pictures.slice(0, Math.min(4, F.pictures.length)).map(p => p.i);
+  const a = F.archive || {}, total = F.pictures.reduce((t, x) => t + (x.bytes || 0), 0);
+  $("#stored").hidden = !a.folder;
+  $("#stored").innerHTML = a.folder ? `${STORED}<span><b>Kept in the collection.</b> ${F.pictures.length} picture${F.pictures.length === 1 ? "" : "s"} at full size (${mb(total)}), the page and its details: ${esc(a.where)}.${a.recorded ? "" : " The scraped-designs list isn't set up yet (run supabase/web_designs.sql), so it won't appear below."}</span>` : "";
+  renderOriginal(); renderOurs();
+  $("#work").hidden = false; $("#submitbar").hidden = false;
+  $("#work").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---------- the original listing, as read ---------- */
+function renderOriginal() {
+  const o = F.original, k = o.key || {};
+  const facts = [
+    ["Seller's price", o.price != null ? `${money(o.price, o.currency)}${o.mrp ? ` <s>${money(o.mrp, o.currency)}</s>` : ""}` : null, "Not shown on the page"],
+    ["Metal", k.metal ? esc(KEY_METAL[k.metal] || k.metal) : null],
+    ["Purity", k.purity ? esc(k.purity) : null],
+    ["Gold weight", k.gold_g != null ? `${k.gold_g} g` : k.gross_g != null ? `${k.gross_g} g <small>(gross)</small>` : null],
+    ["Diamonds", k.diamond_ct != null ? `${k.diamond_ct} ct${k.diamond_count ? ` · ${k.diamond_count} pcs` : ""}` : null],
+    ["Diamond quality", k.diamond_quality ? esc(k.diamond_quality) : null],
+  ].filter(([, v, na]) => v != null || na);
+  $("#orig").innerHTML = `
+    <h3>Original listing · ${esc(o.site)}</h3>
+    <h2>${esc(o.title || "Untitled product")}</h2>
+    <div class="hint">${esc(o.brand || o.site)}${o.sku ? ` · SKU ${esc(o.sku)}` : ""} · <a href="${esc(o.url)}" target="_blank" rel="noopener noreferrer">Open the listing ↗</a></div>
+    <div class="facts">${facts.map(([kk, v, na]) => `<div class="fact"><div class="k">${kk}</div>${v != null ? `<div class="v">${v}</div>` : `<div class="v na">${na}</div>`}</div>`).join("")}</div>
+    <h3 class="sec">Pictures <span class="badge">${picks.length} of ${F.pictures.length} kept</span></h3>
+    ${F.pictures.length ? `<div class="pics" role="group" aria-label="Pictures to keep">${F.pictures.map(p => {
+      const at = picks.indexOf(p.i);
+      return `<button type="button" class="pic" data-pic="${p.i}" aria-pressed="${at >= 0}" aria-label="Picture ${p.i + 1}, ${at >= 0 ? "kept" : "not kept"}">
+        <img src="${p.preview}" alt=""><span class="n">${at >= 0 ? at + 1 : "+"}</span><span class="sz">${p.width}×${p.height}${p.bytes ? " · " + mb(p.bytes) : ""}</span></button>`;
+    }).join("")}</div><p class="hint">Tap pictures to show or hide them in the listing (up to ${F.max_listed || 8}). The first one is the catalogue picture. Every picture is kept in the collection either way, at the largest size the shop's server gives, exactly as downloaded.</p>`
+      : `<p class="err">No product pictures could be downloaded from this page, so the design can't be listed. Try the product page of another shop.</p>`}
+    ${o.specs.length ? `<h3 class="sec">Specification on the page</h3><dl>${o.specs.map(s => `<dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd>`).join("")}</dl>`
+      : `<p class="hint sec">The page shows no specification the reader could find (some shops build it in the browser).</p>`}
+    ${o.tables.map(t => `<div class="table-scroll sec"><table><thead><tr>${t.rows[0].map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+      <tbody>${t.rows.slice(1).map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`).join("")}
+    ${o.description ? `<details><summary>Description from the page</summary><p>${esc(o.description)}</p></details>` : ""}`;
+}
+
+$("#orig").addEventListener("click", e => {
+  const b = e.target.closest("[data-pic]");
+  if (!b) return;
+  const i = +b.dataset.pic, at = picks.indexOf(i);
+  if (at >= 0) picks.splice(at, 1); else if (picks.length < (F.max_listed || 8)) picks.push(i);
+  renderOriginal(); updateSummary();
+  document.querySelector(`[data-pic="${i}"]`)?.focus();
+});
+
+/* ---------- our version ---------- */
+function renderOurs() {
+  const o = F.original, k = o.key || {}, opt = F.options, f = form;
+  const pr = f.pricing;
+  const purs = opt.purities.filter(p => f.purities.includes(p.key));
+  const sellerGold = k.gold_g != null ? `The seller lists ${k.gold_g} g${k.purity ? ` at ${esc(k.purity)}` : ""}.` : "";
+  $("#ours").innerHTML = `
+    <div class="head"><div><h3 style="margin:0 0 4px">2 · Our version</h3><h2>Our details and pricing</h2></div><span class="badge">Shown highlighted to customers</span></div>
+    <p class="hint" style="margin-top:0">Start from the seller's figures below and change them to our own design. Every value is checked again when you submit.</p>
+
+    <div class="group">
+      <div class="f2">
+        <label class="f">Name in our catalogue<input data-k="name" maxlength="120" value="${esc(f.name)}" required></label>
+        <label class="f">Our design number (optional)<input data-k="design_no" maxlength="40" value="${esc(f.design_no)}" placeholder="e.g. DF-BR-0001"></label>
+      </div>
+      <label class="f">Category<select data-k="category"><option value="">Choose…</option>${opt.categories.map(c => `<option value="${c}" ${c === f.category ? "selected" : ""}>${CAT[c]}</option>`).join("")}</select></label>
+      <div class="f">Metal colours we make it in<div class="chips">${opt.metals.map(m => `<button type="button" class="chip" data-metal="${m}" aria-pressed="${f.metals.includes(m)}"><span class="sw ${m}"></span>${METAL[m]}</button>`).join("")}</div></div>
+      <div class="f">Gold purities we offer<div class="chips">${opt.purities.map(p => `<button type="button" class="chip" data-purity="${p.key}" aria-pressed="${f.purities.includes(p.key)}">${p.label} <small style="color:var(--muted)">${p.fineness}</small></button>`).join("")}</div>
+        <span class="hint" style="font-weight:500">22K is made in yellow gold only.</span></div>
+    </div>
+
+    <div class="group">
+      <h3 style="margin:0">Gold weight of one piece</h3>
+      ${purs.length ? `<div class="f3">${purs.map(p => `<label class="f">${p.label} (g)<input type="number" inputmode="decimal" step="any" min="0" data-gold="${p.key}" value="${f.gold_g[p.key] ?? ""}" placeholder="grams"></label>`).join("")}</div>
+      <p class="hint" style="margin:0">Type one purity's weight and the others follow by the workshop's job-card ratios (14K = 0.85, 22K = 1.14 × 18K). Change any of them by hand. ${sellerGold}</p>`
+        : `<p class="hint" style="margin:0">Choose a purity first.</p>`}
+    </div>
+
+    <div class="group">
+      <h3 style="margin:0">Diamonds</h3>
+      <div class="rows" id="stones">${f.stones.map((s, i) => `<div class="row stone">
+        <label class="cell">Shape<input data-stone="${i}" data-f="shape" list="shapes" value="${esc(s.shape)}"></label>
+        <label class="cell">Size<input data-stone="${i}" data-f="size" value="${esc(s.size)}" placeholder="1.2 mm"></label>
+        <label class="cell">Count<input data-stone="${i}" data-f="count" type="number" inputmode="numeric" min="1" step="1" value="${s.count ?? ""}"></label>
+        <label class="cell">Carats<input data-stone="${i}" data-f="carat" type="number" inputmode="decimal" min="0" step="any" value="${s.carat ?? ""}"></label>
+        <label class="cell">Setting<input data-stone="${i}" data-f="setting" value="${esc(s.setting)}" placeholder="Prong, pavé…"></label>
+        <button type="button" class="x" data-del-stone="${i}" aria-label="Remove this row">×</button></div>`).join("")}</div>
+      <datalist id="shapes">${SHAPES.map(s => `<option value="${s}">`).join("")}</datalist>
+      <button type="button" class="ghost small add" data-add-stone>+ Add stones</button>
+      ${!f.stones.length ? `<p class="hint" style="margin:0">No rows: listed as a plain metal design.</p>` : ""}
+      ${k.diamond_ct != null ? `<p class="hint" style="margin:0">The seller lists ${k.diamond_ct} ct${k.diamond_count ? ` in ${k.diamond_count} stones` : ""}.</p>` : ""}
+      <label class="f">Diamond quality<input data-k="diamond_quality" maxlength="60" value="${esc(f.diamond_quality)}" placeholder="e.g. EF VVS-VS, natural"></label>
+    </div>
+
+    <div class="group">
+      <h3 style="margin:0">Size</h3>
+      ${f.category === "ring" ? `<label class="f">Made at ring size<select data-k="ring_size_in"><option value="">Not set</option>${Array.from({ length: 21 }, (_, i) => i + 6).map(n => `<option value="${n}" ${n === f.ring_size_in ? "selected" : ""}>IN ${n}</option>`).join("")}</select></label>` : ""}
+      <div class="rows">${f.dimensions.map((d, i) => `<div class="row dim">
+        <label class="cell">Measure<input data-dim="${i}" data-f="label" maxlength="40" value="${esc(d.label)}" placeholder="Width"></label>
+        <label class="cell">Value<input data-dim="${i}" data-f="value" maxlength="40" value="${esc(d.value)}" placeholder="2.1 mm"></label>
+        <button type="button" class="x" data-del-dim="${i}" aria-label="Remove this measure">×</button></div>`).join("")}</div>
+      <button type="button" class="ghost small add" data-add-dim>+ Add a measure</button>
+    </div>
+
+    <div class="group">
+      <h3 style="margin:0">Our pricing</h3>
+      <div class="f2">
+        <label class="f">Gold rate, 24K (₹ per gram)<input type="number" inputmode="decimal" step="any" min="0" data-p="gold_rate_24k" value="${pr.gold_rate_24k ?? ""}" placeholder="Today's rate"></label>
+        <label class="f">GST (%)<input type="number" inputmode="decimal" step="any" min="0" max="28" data-p="gst_pct" value="${pr.gst_pct ?? ""}"></label>
+      </div>
+      <p class="hint" style="margin-top:-4px">Each purity is priced at its gold content: 18K at 75% of the 24K rate, 14K at 58.5%, 22K at 91.6%.</p>
+      <label class="f">Making charge<div class="pair"><select data-p="making_mode">${Object.entries(opt.making_modes).map(([kk, v]) => `<option value="${kk}" ${pr.making_mode === kk ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>
+        <input type="number" inputmode="decimal" step="any" min="0" data-p="making_value" value="${pr.making_value ?? ""}" aria-label="Making charge value"></div></label>
+      <div class="f2">
+        <label class="f">Diamond value (₹)<input type="number" inputmode="decimal" step="any" min="0" data-p="diamond_value" value="${pr.diamond_value ?? ""}"></label>
+        <label class="f">Other charges<div class="pair"><input data-p="other_label" maxlength="60" value="${esc(pr.other_label)}" placeholder="Hallmark, certificate…"><input type="number" inputmode="decimal" step="any" min="0" data-p="other_value" value="${pr.other_value ?? ""}" aria-label="Other charges in rupees"></div></label>
+      </div>
+      <div class="table-scroll prices" id="priceTable"></div>
+    </div>
+
+    <div class="group">
+      <label class="f">Description for customers (optional)<textarea data-k="note" rows="3" maxlength="1500" placeholder="What is different in our version">${esc(f.note)}</textarea></label>
+    </div>`;
+  renderPrices();
+}
+
+// the price of one piece per purity, the same sums as the jeweler panel and the server (orders.bill)
+function priceOf(pur) {
+  const pr = form.pricing, w = num(form.gold_g[pur]), r24 = num(pr.gold_rate_24k);
+  if (w == null || r24 == null || Number.isNaN(w) || Number.isNaN(r24)) return null;
+  const fine = +F.options.purities.find(p => p.key === pur).fineness;
+  const rate = Math.round(r24 * fine / 1000 * 100) / 100;
+  const mv = num(pr.making_value) || 0, gold = w * rate;
+  const making = pr.making_mode === "per_g" ? w * mv : pr.making_mode === "percent" ? gold * mv / 100 : mv;
+  const sub = gold + making + (num(pr.diamond_value) || 0) + (num(pr.other_value) || 0);
+  const gst = sub * (num(pr.gst_pct) || 0) / 100;
+  return { rate, gold, making, diamonds: num(pr.diamond_value) || 0, other: num(pr.other_value) || 0, gst, total: Math.round(sub + gst) };
+}
+
+function renderPrices() {
+  const purs = F.options.purities.filter(p => form.purities.includes(p.key));
+  const rows = purs.map(p => [p, priceOf(p.key)]);
+  const el = $("#priceTable");
+  if (!el) return;
+  if (!rows.length || rows.every(([, b]) => !b)) {
+    el.innerHTML = `<p class="hint" style="margin:0">Enter the gold weights and the 24K rate to see our price for each purity.</p>`;
+  } else {
+    const cell = (b, f) => b ? money(Math.round(f(b) * 100) / 100) : "–";
+    el.innerHTML = `<table><thead><tr><th>One piece</th>${rows.map(([p]) => `<th class="num">${p.label}</th>`).join("")}</tr></thead><tbody>
+      <tr><td>Gold rate / g</td>${rows.map(([, b]) => `<td>${cell(b, x => x.rate)}</td>`).join("")}</tr>
+      <tr><td>Gold</td>${rows.map(([, b]) => `<td>${cell(b, x => x.gold)}</td>`).join("")}</tr>
+      <tr><td>Making</td>${rows.map(([, b]) => `<td>${cell(b, x => x.making)}</td>`).join("")}</tr>
+      <tr><td>Diamonds</td>${rows.map(([, b]) => `<td>${cell(b, x => x.diamonds)}</td>`).join("")}</tr>
+      ${num(form.pricing.other_value) ? `<tr><td>${esc(form.pricing.other_label || "Other")}</td>${rows.map(([, b]) => `<td>${cell(b, x => x.other)}</td>`).join("")}</tr>` : ""}
+      <tr><td>GST</td>${rows.map(([, b]) => `<td>${cell(b, x => x.gst)}</td>`).join("")}</tr>
+      <tr class="total"><td>Our price</td>${rows.map(([, b]) => `<td>${b ? money(b.total) : "–"}</td>`).join("")}</tr></tbody></table>
+      ${F.original.price != null ? `<p class="compare">The seller's price is ${money(F.original.price, F.original.currency)}${F.original.key?.purity ? ` (${esc(F.original.key.purity)})` : ""}.</p>` : ""}`;
+  }
+  updateSummary();
+}
+
+function updateSummary() {
+  if (!F) return;
+  const totals = form.purities.map(priceOf).filter(Boolean).map(b => b.total);
+  $("#sum").innerHTML = `<b>${esc(form.name || "Unnamed design")}</b> · ${form.category ? CAT[form.category] : "no category"} · ${picks.length} picture${picks.length === 1 ? "" : "s"}`
+    + (totals.length ? ` · our price from <b>${money(Math.min(...totals))}</b>` : "");
+}
+
+// gold weights: typing one purity fills the others that weren't typed by hand
+function setGold(pur, value) {
+  form.gold_g[pur] = value;
+  delete auto[pur];
+  const w = num(value), ratio = F.options.ratio;
+  if (w == null || Number.isNaN(w)) return;
+  for (const p of form.purities) {
+    if (p === pur) continue;
+    const typed = form.gold_g[p] != null && form.gold_g[p] !== "" && !auto[p];
+    if (!typed) {
+      form.gold_g[p] = +(w / ratio[pur] * ratio[p]).toFixed(3);
+      auto[p] = true;
+      const el = document.querySelector(`[data-gold="${p}"]`);
+      if (el) el.value = form.gold_g[p];
+    }
+  }
+}
+
+$("#ours").addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.k) form[t.dataset.k] = t.dataset.k === "ring_size_in" ? (t.value ? +t.value : null) : t.value;
+  else if (t.dataset.gold) setGold(t.dataset.gold, t.value);
+  else if (t.dataset.p) form.pricing[t.dataset.p] = t.value;
+  else if (t.dataset.stone !== undefined) form.stones[+t.dataset.stone][t.dataset.f] = t.value;
+  else if (t.dataset.dim !== undefined) form.dimensions[+t.dataset.dim][t.dataset.f] = t.value;
+  if (t.dataset.k === "category") { renderOurs(); return; }
+  renderPrices();
+});
+
+$("#ours").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.metal) {
+    const m = b.dataset.metal;
+    form.metals = form.metals.includes(m) ? form.metals.filter(x => x !== m) : [...form.metals, m];
+  } else if (b.dataset.purity) {
+    const p = b.dataset.purity;
+    form.purities = form.purities.includes(p) ? form.purities.filter(x => x !== p) : [...form.purities, p];
+    const have = form.purities.find(x => x !== p && num(form.gold_g[x]));
+    if (form.purities.includes(p) && have && !num(form.gold_g[p])) {
+      form.gold_g[p] = +(num(form.gold_g[have]) / F.options.ratio[have] * F.options.ratio[p]).toFixed(3);
+      auto[p] = true;
+    }
+  } else if (b.dataset.addStone !== undefined) form.stones.push({ shape: "Round", size: "", count: null, carat: null, setting: "" });
+  else if (b.dataset.delStone !== undefined) form.stones.splice(+b.dataset.delStone, 1);
+  else if (b.dataset.addDim !== undefined) form.dimensions.push({ label: "", value: "" });
+  else if (b.dataset.delDim !== undefined) form.dimensions.splice(+b.dataset.delDim, 1);
+  else return;
+  const sel = b.dataset.metal ? `[data-metal="${b.dataset.metal}"]` : b.dataset.purity ? `[data-purity="${b.dataset.purity}"]` : null;
+  renderOurs();
+  if (sel) document.querySelector(sel)?.focus();
+});
+
+/* ---------- submit ---------- */
+function payload() {
+  const n = v => { const x = num(v); return x == null || Number.isNaN(x) ? null : x; };
+  return {
+    name: form.name, design_no: form.design_no, category: form.category, metals: form.metals, purities: form.purities,
+    gold_g: Object.fromEntries(form.purities.map(p => [p, n(form.gold_g[p])])),
+    stones: form.stones.filter(s => String(s.shape || "").trim()).map(s => ({ shape: s.shape, size: s.size, count: n(s.count) == null ? null : Math.round(n(s.count)), carat: n(s.carat), setting: s.setting })),
+    diamond_quality: form.diamond_quality, dimensions: form.dimensions, ring_size_in: form.category === "ring" ? form.ring_size_in : null, note: form.note,
+    pricing: { gold_rate_24k: n(form.pricing.gold_rate_24k), making_mode: form.pricing.making_mode, making_value: n(form.pricing.making_value),
+      diamond_value: n(form.pricing.diamond_value) || 0, other_label: form.pricing.other_label, other_value: n(form.pricing.other_value) || 0, gst_pct: n(form.pricing.gst_pct) },
+  };
+}
+
+$("#submit").addEventListener("click", async () => {
+  if (sending || !F) return;
+  $("#submitErr").textContent = "";
+  if (!picks.length) { $("#submitErr").textContent = "Keep at least one picture."; return; }
+  sending = true; $("#submit").disabled = true; $("#submit").textContent = "Listing the design…";
+  try {
+    const res = await api("/api/brand-designs", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: F.token, pictures: picks, ours: payload() }) });
+    location.href = res.redirect;
+  } catch (err) {
+    $("#submitErr").textContent = err.message;
+    sending = false; $("#submit").disabled = false; $("#submit").textContent = "Submit and display in catalog";
+  }
+});
+
+/* ---------- already listed ---------- */
+async function loadList() {
+  try {
+    const { items } = await api("/api/brand-designs");
+    $("#list").innerHTML = items.length ? items.map(d => `<div class="item">
+      ${d.thumb ? `<img src="${esc(d.thumb)}" alt="">` : `<span></span>`}
+      <div style="min-width:0"><div class="t">${esc(d.name)}</div><div class="s">${esc(CAT[d.category] || d.category)} · from ${esc(d.brand)} · seller ${money(d.seller_price, d.currency)} · ours from ${money(d.our_price_from)}</div></div>
+      <div class="a"><a class="ghost small" href="/brand-design?id=${d.id}">Open</a><button type="button" class="linkish bad" data-hide="${d.id}">Remove</button></div></div>`).join("")
+      : `<p class="empty">No brand designs listed yet.</p>`;
+  } catch (err) { $("#list").innerHTML = `<p class="err">${esc(err.message)}</p>`; }
+}
+$("#list").addEventListener("click", async e => {
+  const b = e.target.closest("[data-hide]");
+  if (!b || !confirm("Remove this design from the catalogue? Orders already placed keep their copy.")) return;
+  b.disabled = true;
+  try { await api(`/api/brand-designs/${b.dataset.hide}`, { method: "DELETE" }); loadList(); }
+  catch (err) { alert(err.message); b.disabled = false; }
+});
+loadList();
+
+/* ---------- the collection: every page fetched ---------- */
+let collTimer;
+async function loadCollection() {
+  try {
+    const res = await api("/api/web-designs?" + new URLSearchParams({ q: $("#collQ").value.trim() }));
+    $("#collWhere").textContent = res.storage ? ` (${res.storage}/Web Designs)` : "";
+    $("#coll").innerHTML = res.items.length ? res.items.map(d => `<div class="item">
+      <img src="${esc(d.preview)}" alt="" loading="lazy">
+      <div style="min-width:0"><div class="t">${esc(d.title || d.url)}</div>
+        <div class="s">${esc(d.brand || d.site)} · ${d.price != null ? money(d.price, d.currency) : "no price on the page"} · ${d.pictures} picture${d.pictures === 1 ? "" : "s"}${d.largest ? `, up to ${esc(d.largest)}` : ""} (${mb(d.bytes)}) · ${new Date(d.created_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}${d.scraped_by_name ? " · " + esc(d.scraped_by_name) : ""}</div>
+        <div class="w">${d.archive_status === "stored" ? `<span class="pill ok">Stored</span>` : `<span class="pill wait">Waiting to upload</span>`} ${esc(d.where)}</div></div>
+      <div class="a">${d.brand_design_id ? `<a class="ghost small" href="/brand-design?id=${d.brand_design_id}">Listed ✓</a>` : `<button type="button" class="ghost small" data-open="${d.id}">List it</button>`}
+        <a class="linkish" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">Shop ↗</a></div></div>`).join("")
+      : `<p class="empty">${$("#collQ").value.trim() ? "No scraped design matches." : "Nothing scraped yet. Every link fetched above is kept here."}</p>`;
+  } catch (err) { $("#coll").innerHTML = `<p class="err">${esc(err.message)}</p>`; }
+}
+$("#collQ").addEventListener("input", () => { clearTimeout(collTimer); collTimer = setTimeout(loadCollection, 300); });
+$("#coll").addEventListener("click", async e => {
+  const b = e.target.closest("[data-open]");
+  if (!b) return;
+  b.disabled = true; b.textContent = "Opening…";
+  $("#fetchErr").textContent = "";
+  try {
+    const res = await api(`/api/web-designs/${b.dataset.open}/open`, { method: "POST" });
+    $("#url").value = res.original.url;
+    startDraft(res);
+  } catch (err) { $("#fetchErr").textContent = err.message; window.scrollTo({ top: 0, behavior: "smooth" }); }
+  finally { b.disabled = false; b.textContent = "List it"; }
+});
+loadCollection();
+</script>
+</body>
+</html>

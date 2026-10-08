@@ -1,0 +1,122 @@
+[
+ {
+  "uid": 65,
+  "design_id": "00001L (36)",
+  "slug": "00001L_36-a720a1",
+  "label": "Round solitaire",
+  "kind": "ring",
+  "pose": {
+   "dir": [
+    -0.0198,
+    0.2034,
+    0.9789
+   ],
+   "up": [
+    -0.1372,
+    0.9693,
+    -0.2042
+   ],
+   "outline_match": 0.733
+  }
+ },
+ {
+  "uid": 526,
+  "design_id": "15 EM",
+  "slug": "15_EM-354168",
+  "label": "Emerald cut",
+  "kind": "ring",
+  "pose": {
+   "dir": [
+    -0.0336,
+    -0.2379,
+    0.9707
+   ],
+   "up": [
+    0.0082,
+    -0.9713,
+    -0.2377
+   ],
+   "outline_match": 0.719
+  }
+ },
+ {
+  "uid": 500,
+  "design_id": "67 MQ",
+  "slug": "67_MQ-0769ca",
+  "label": "Marquise + baguettes",
+  "kind": "ring",
+  "pose": {
+   "dir": [
+    0.0257,
+    0.0837,
+    0.9962
+   ],
+   "up": [
+    -0.0022,
+    0.9965,
+    -0.0836
+   ],
+   "outline_match": 0.675
+  }
+ },
+ {
+  "uid": 1181,
+  "design_id": "19#120017L",
+  "slug": "19_120017L-dab4ee",
+  "label": "Diamond clusters",
+  "kind": "ring",
+  "pose": {
+   "dir": [
+    0.1266,
+    0.3722,
+    0.9195
+   ],
+   "up": [
+    0.2483,
+    -0.9093,
+    0.3339
+   ],
+   "outline_match": 0.755
+  }
+ },
+ {
+  "uid": 1496,
+  "design_id": "AGDER-221",
+  "slug": "AGDER-221-e0dcd9",
+  "label": "Fancy-cut earrings",
+  "kind": "earring",
+  "pose": {
+   "dir": [
+    -0.3513,
+    0.1161,
+    0.929
+   ],
+   "up": [
+    0.0411,
+    0.9932,
+    -0.1086
+   ],
+   "outline_match": 0.616
+  }
+ },
+ {
+  "uid": 1229,
+  "design_id": "42#360012N",
+  "slug": "42_360012N-bc4d99",
+  "label": "Star pendant",
+  "kind": "other",
+  "pose": {
+   "dir": [
+    0.2434,
+    0.0529,
+    0.9685
+   ],
+   "up": [
+    -0.0129,
+    0.9986,
+    -0.0513
+   ],
+   "outline_match": 0.897
+  }
+ }
+]

@@ -1,0 +1,14 @@
+.env
+data/session_secret
+.venv/
+__pycache__/
+.venv-cad/
+data/bodyphotos/
+data/storage/cache/
+data/storage/tmp/
+.venv-imagegen/
+.tools/
+.claude/
+.pytest_cache/
+data/
+*.log

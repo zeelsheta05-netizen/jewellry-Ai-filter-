@@ -1,0 +1,7 @@
+# The app's requirements plus what they used to get from the Mac's venv by chance.
+-r requirements.txt
+certifi==2026.7.22
+httpx==0.28.1
+timm==1.0.30
+safetensors==0.8.0
+accelerate==1.15.0

@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sketch to Design · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #2f7a3f;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost.small { padding: 5px 12px; font-size: 12px; }
+.ghost:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 999px;
+  border: 1px solid var(--tone2); background: var(--btn); color: var(--accent-ink); font-weight: 700; letter-spacing: .02em;
+  transition: transform .3s var(--ease), box-shadow .3s; white-space: nowrap; }
+.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px -14px var(--glow); }
+.primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 26px 28px 120px; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 36px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 6px; }
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 780px; }
+h2 { font: 500 20px/1.25 var(--serif); margin: 0 0 10px; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.err { color: var(--danger); font-size: 13.5px; font-weight: 600; margin: 10px 0 0; }
+.err:empty { display: none; }
+.card { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+
+.mode { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line-strong); background: var(--chip); border-radius: 16px;
+  padding: 12px 16px; margin: 0 0 20px; font-size: 13.5px; }
+.mode b { color: var(--accent-ink); }
+.mode .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--tone1); margin-top: 6px; flex: none; }
+.mode.live .dot { background: var(--ok); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 22px; align-items: start; }
+
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.tab { border: 1px solid var(--line-strong); background: #fff; border-radius: 14px; padding: 11px 8px; font-weight: 600; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .25s, transform .3s var(--ease); }
+.tab svg { width: 18px; height: 18px; }
+.tab[aria-selected="true"] { background: var(--btn); border-color: var(--tone2); color: var(--accent-ink); }
+.tab:hover { transform: translateY(-1px); }
+
+.stage { position: relative; border: 1.5px dashed var(--line-strong); border-radius: 18px; background: #fffdf8; aspect-ratio: 1 / 1;
+  overflow: hidden; display: grid; place-items: center; }
+.stage.drag { border-color: var(--tone2); background: var(--chip); }
+.drop { text-align: center; padding: 20px; }
+.drop .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.picked { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.stage .remove { position: absolute; top: 10px; right: 10px; z-index: 3; }
+video.cam { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #111; }
+.cam-bar { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; z-index: 2; }
+
+canvas.pad { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; background: #fff; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.tool { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line-strong); background: #fff; display: grid; place-items: center; }
+.tool svg { width: 18px; height: 18px; }
+.tool[aria-pressed="true"] { background: var(--btn); border-color: var(--tone2); }
+.swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line-strong); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tone2); }
+.tools input[type=range] { width: 110px; accent-color: var(--tone2); }
+.sep { width: 1px; height: 26px; background: var(--line); margin: 0 2px; }
+
+label.f { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
+label.f span { font-weight: 500; color: var(--muted); }
+select, textarea, input[type=text] { width: 100%; border: 1px solid var(--line-strong); border-radius: 12px; padding: 11px 14px; background: #fff; }
+textarea { resize: vertical; min-height: 84px; }
+.check { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--tone2); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+
+.result .frame { position: relative; border-radius: 18px; border: 1px solid var(--line); background: #faf8f3; aspect-ratio: 1 / 1; overflow: hidden;
+  display: grid; place-items: center; }
+.result .frame img { width: 100%; height: 100%; object-fit: contain; }
+.empty { color: var(--muted); text-align: center; padding: 30px; font-size: 14px; }
+.making { display: grid; place-items: center; gap: 14px; color: var(--muted); font-size: 14px; }
+.shine { width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--tone2); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.tag { font-size: 11px; font-weight: 700; color: var(--accent-ink); background: var(--chip); border: 1px solid var(--line-strong); padding: 2px 9px; border-radius: 999px; }
+.refine { display: flex; gap: 8px; margin-top: 12px; }
+.refine input { flex: 1; min-width: 0; }
+
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+.mini { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; text-decoration: none; color: var(--ink); position: relative;
+  transition: transform .3s var(--ease), box-shadow .3s; }
+.mini:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.mini img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #faf8f3; }
+.mini .cap { padding: 7px 10px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
+.mini button.x { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-strong);
+  background: rgba(255,255,255,.92); font-size: 14px; line-height: 1; }
+section.block { margin-top: 26px; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .wrap { padding: 18px 16px 100px; }
+  h1 { font-size: 28px; }
+  .topbar { padding: 10px 16px; }
+  .brand small { display: none; }
+  .tab { font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Sketch to design</small></div>
+  </a>
+  <div style="display:flex;gap:8px"><a class="ghost" href="/variation">Variations</a><a class="ghost" href="/">← Catalogue</a></div>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">AI design studio</div>
+  <h1>Sketch to Design</h1>
+  <p class="lead">Draw, photograph or upload a jewellery sketch. The AI turns it into a realistic design photo, then shows the closest designs we already make. Everything happens here.</p>
+
+  <div class="mode" id="mode"><span class="dot"></span><div id="modeText">Loading…</div></div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab" role="tab" data-tab="camera" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Camera</button>
+        <button type="button" class="tab" role="tab" data-tab="upload" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 15v4h16v-4"/></svg>Upload</button>
+        <button type="button" class="tab" role="tab" data-tab="pad" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 20 4-1 11-11-3-3L5 16z"/></svg>Sketchpad</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <!-- camera -->
+        <video class="cam" id="cam" playsinline muted hidden></video>
+        <div class="cam-bar" id="camBar" hidden><button type="button" class="primary" id="snap">Take photo</button></div>
+        <!-- upload / camera fallback -->
+        <div class="drop" id="drop" hidden>
+          <div class="row">
+            <button type="button" class="ghost" id="camBtn">Use camera</button>
+            <button type="button" class="ghost" id="fileBtn">Upload image</button>
+          </div>
+          <p class="hint">…or paste an image (Ctrl + V) / drag &amp; drop it anywhere on this page</p>
+        </div>
+        <img class="picked" id="picked" alt="Your picture" hidden>
+        <button type="button" class="ghost small remove" id="removePic" hidden>Remove</button>
+        <!-- sketchpad -->
+        <canvas class="pad" id="pad" width="1024" height="1024" aria-label="Sketchpad"></canvas>
+      </div>
+      <input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden>
+      <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+
+      <div class="tools" id="tools">
+        <button type="button" class="tool" id="penT" aria-pressed="true" title="Pen" aria-label="Pen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 20 4-1 11-11-3-3L5 16z"/></svg></button>
+        <button type="button" class="tool" id="eraseT" aria-pressed="false" title="Eraser" aria-label="Eraser">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m7 21-4-4 10-10 6 6-7 8zM21 21H7"/></svg></button>
+        <span class="sep"></span>
+        <button type="button" class="swatch" data-color="#1d1a16" style="background:#1d1a16" aria-pressed="true" aria-label="Black"></button>
+        <button type="button" class="swatch" data-color="#8a8a8a" style="background:#8a8a8a" aria-pressed="false" aria-label="Grey"></button>
+        <button type="button" class="swatch" data-color="#b8862b" style="background:#b8862b" aria-pressed="false" aria-label="Gold"></button>
+        <button type="button" class="swatch" data-color="#2a6fd6" style="background:#2a6fd6" aria-pressed="false" aria-label="Blue (stones)"></button>
+        <span class="sep"></span>
+        <input type="range" id="size" min="2" max="40" value="6" aria-label="Brush size">
+        <span class="sep"></span>
+        <button type="button" class="tool" id="undo" title="Undo" aria-label="Undo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+        <button type="button" class="tool" id="redo" title="Redo" aria-label="Redo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 14 5-5-5-5M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+        <button type="button" class="ghost small" id="clear">Clear</button>
+      </div>
+
+      <label class="f" for="kind">Jewellery type <span>(optional)</span></label>
+      <select id="kind"></select>
+
+      <label class="f" for="bg">Background</label>
+      <select id="bg"></select>
+      <input type="text" id="customBg" maxlength="120" placeholder="e.g. on a marble table with rose petals" hidden style="margin-top:8px">
+
+      <label class="f" for="model">Model / quality</label>
+      <select id="model"></select>
+
+      <label class="f" for="notes">Description / prompt <span>(optional, any language)</span></label>
+      <textarea id="notes" maxlength="300" placeholder="Optional: metal, stones, style or details… e.g. rose gold, small round diamonds on the band"></textarea>
+
+      <label class="check"><input type="checkbox" id="sparkle" checked> Extra sparkle enhancement</label>
+
+      <div class="actions">
+        <button type="button" class="primary" id="go">Generate design</button>
+      </div>
+      <p class="err" id="err" role="alert"></p>
+    </div>
+
+    <div>
+      <div class="card result">
+        <h2>Your design</h2>
+        <div class="frame" id="frame"><div class="empty">Your design appears here.</div></div>
+        <div class="meta" id="meta" hidden></div>
+        <div id="after" hidden>
+          <div class="refine">
+            <input type="text" id="change" maxlength="200" placeholder="Change this… e.g. make the band thinner, add a halo">
+            <button type="button" class="ghost" id="applyChange">Apply</button>
+          </div>
+          <p class="hint">Write a short change and the AI edits this picture.</p>
+          <div class="actions">
+            <a class="ghost" id="dl" href="#">Download</a>
+            <button type="button" class="ghost" id="similarBtn">Find similar in our collection</button>
+            <button type="button" class="ghost" id="toVariation">Make variations</button>
+          </div>
+          <p class="err" id="err2" role="alert"></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <section class="block" id="similarBlock" hidden>
+    <h2>Closest in our collection</h2>
+    <p class="hint" style="margin-top:0">Designs we already have that look like this one. Open one to see it and order.</p>
+    <div class="cards" id="similar"></div>
+  </section>
+
+  <section class="block">
+    <h2>My designs</h2>
+    <p class="hint" style="margin-top:0" id="budget"></p>
+    <div class="cards" id="mine"></div>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let opts = null, tab = "pad", picture = null, current = null, stream = null, busy = false;
+
+async function api(url, init = {}) {
+  const r = await fetch(url, { credentials: "same-origin", ...init });
+  if (r.status === 401) { location.href = "/login?next=/sketch"; throw new Error("Sign in required"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `Something went wrong (${r.status})`);
+  return data;
+}
+const post = (url, body) => api(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+// pictures are made in the background (on our server they take a few minutes): wait for the job
+async function waitJob(job, onTick) {
+  const t0 = Date.now();
+  while (job.status === "running") {
+    if (onTick) onTick(Math.round((Date.now() - t0) / 1000));
+    await new Promise(r => setTimeout(r, 3000));
+    job = await api(`/api/sketch/job/${job.id}`);
+  }
+  if (job.status === "error") throw new Error(job.error);
+  return job.result;
+}
+function slowNote(key) { return (opts?.models.find(m => m.key === key)?.provider === "local") ? " on our server · usually 3-7 minutes" : ""; }
+function tick(sec) { const el = document.querySelector("#frame .making span"); if (el) el.textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`; }
+
+/* ---------- sketchpad ---------- */
+const pad = $("#pad"), ctx = pad.getContext("2d");
+let drawing = false, erase = false, color = "#1d1a16", last = null, undoStack = [], redoStack = [], dirty = false;
+function blankPad() { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, pad.width, pad.height); }
+blankPad();
+function snapshot() { undoStack.push(ctx.getImageData(0, 0, pad.width, pad.height)); if (undoStack.length > 30) undoStack.shift(); redoStack = []; }
+function pos(e) { const r = pad.getBoundingClientRect(); return { x: (e.clientX - r.left) * pad.width / r.width, y: (e.clientY - r.top) * pad.height / r.height }; }
+pad.addEventListener("pointerdown", e => {
+  drawing = true; pad.setPointerCapture(e.pointerId); snapshot(); last = pos(e);
+  ctx.beginPath(); ctx.arc(last.x, last.y, lineWidth(e) / 2, 0, Math.PI * 2); ctx.fillStyle = erase ? "#fff" : color; ctx.fill(); dirty = true;
+});
+pad.addEventListener("pointermove", e => {
+  if (!drawing) return;
+  const p = pos(e);
+  ctx.strokeStyle = erase ? "#fff" : color; ctx.lineWidth = lineWidth(e); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
+});
+["pointerup", "pointercancel"].forEach(t => pad.addEventListener(t, () => { drawing = false; }));
+function lineWidth(e) { const base = +$("#size").value * (erase ? 3 : 1); return e.pressure && e.pointerType === "pen" ? base * (0.4 + e.pressure) : base; }
+$("#undo").onclick = () => { if (!undoStack.length) return; redoStack.push(ctx.getImageData(0, 0, pad.width, pad.height)); ctx.putImageData(undoStack.pop(), 0, 0); };
+$("#redo").onclick = () => { if (!redoStack.length) return; undoStack.push(ctx.getImageData(0, 0, pad.width, pad.height)); ctx.putImageData(redoStack.pop(), 0, 0); };
+$("#clear").onclick = () => { snapshot(); blankPad(); dirty = false; };
+$("#penT").onclick = () => { erase = false; $("#penT").setAttribute("aria-pressed", "true"); $("#eraseT").setAttribute("aria-pressed", "false"); };
+$("#eraseT").onclick = () => { erase = true; $("#eraseT").setAttribute("aria-pressed", "true"); $("#penT").setAttribute("aria-pressed", "false"); };
+document.querySelectorAll(".swatch").forEach(b => b.onclick = () => {
+  color = b.dataset.color; erase = false; $("#penT").click();
+  document.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+});
+
+/* ---------- tabs, camera, upload ---------- */
+function showTab(t) {
+  tab = t;
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+  const isPad = t === "pad";
+  pad.hidden = !isPad; $("#tools").hidden = !isPad;
+  if (t !== "camera") stopCam();
+  renderStage();
+  if (t === "camera" && !picture) startCam();
+}
+function renderStage() {
+  const isPad = tab === "pad";
+  $("#picked").hidden = isPad || !picture;
+  $("#removePic").hidden = isPad || !picture;
+  $("#drop").hidden = isPad || !!picture || (tab === "camera" && !!stream);
+  $("#camBtn").hidden = tab !== "camera";   // Upload tab: upload only; Camera tab: fallback when the live camera can't start
+  $("#cam").hidden = !(tab === "camera" && stream && !picture);
+  $("#camBar").hidden = $("#cam").hidden;
+  if (picture && !isPad) $("#picked").src = picture;
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+async function startCam() {
+  if (!navigator.mediaDevices?.getUserMedia) { renderStage(); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1600 } }, audio: false });
+    $("#cam").srcObject = stream; await $("#cam").play();
+  } catch { stream = null; }   // no camera or not allowed: the buttons below still work
+  renderStage();
+}
+function stopCam() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+$("#snap").onclick = () => {
+  const v = $("#cam"), c = document.createElement("canvas");
+  c.width = v.videoWidth; c.height = v.videoHeight; c.getContext("2d").drawImage(v, 0, 0);
+  setPicture(shrink(c)); stopCam();
+};
+$("#camBtn").onclick = () => { if (navigator.mediaDevices?.getUserMedia && !/Mobi/.test(navigator.userAgent)) { showTab("camera"); startCam(); } else $("#fileCam").click(); };
+$("#fileBtn").onclick = () => $("#file").click();
+$("#removePic").onclick = () => { picture = null; renderStage(); if (tab === "camera") startCam(); };
+$("#file").onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ""; };
+$("#fileCam").onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); e.target.value = ""; };
+
+// longest side 1024, JPEG: the smallest picture that still keeps a sketch's detail (fewer bytes, cheaper upload)
+function shrink(src) {
+  const w = src.naturalWidth || src.videoWidth || src.width, h = src.naturalHeight || src.videoHeight || src.height;
+  const k = Math.min(1, 1024 / Math.max(w, h)), c = document.createElement("canvas");
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(src, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.88);
+}
+function loadFile(f) {
+  if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { showErr("Use a JPG, PNG or WebP image."); return; }
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => { setPicture(shrink(img)); URL.revokeObjectURL(url); };
+  img.onerror = () => { showErr("This image could not be opened."); URL.revokeObjectURL(url); };
+  img.src = url;
+}
+function setPicture(d) { picture = d; if (tab === "pad") showTab("upload"); else renderStage(); showErr(""); }
+document.addEventListener("paste", e => {
+  const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith("image/"));
+  if (f) { e.preventDefault(); loadFile(f); }
+});
+let dragDepth = 0;
+document.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; $("#stage").classList.add("drag"); });
+document.addEventListener("dragleave", () => { if (--dragDepth <= 0) { dragDepth = 0; $("#stage").classList.remove("drag"); } });
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => {
+  e.preventDefault(); dragDepth = 0; $("#stage").classList.remove("drag");
+  const f = [...(e.dataTransfer?.files || [])].find(x => x.type.startsWith("image/"));
+  if (f) loadFile(f);
+});
+
+/* ---------- options ---------- */
+function fill(sel, items, val) { sel.innerHTML = items.map(i => `<option value="${esc(i.key)}">${esc(i.label)}</option>`).join(""); if (val) sel.value = val; }
+async function loadOptions() {
+  opts = await api("/api/sketch/options");
+  fill($("#kind"), opts.types, "auto");
+  fill($("#bg"), opts.backgrounds, "luxury");
+  $("#model").innerHTML = opts.models.map(m => `<option value="${m.key}">${esc(m.label)} · ${esc(m.note)}</option>`).join("");
+  if (opts.default_model) $("#model").value = opts.default_model;
+  const live = opts.live;
+  $("#mode").classList.toggle("live", live);
+  $("#modeText").innerHTML = live
+    ? `<b>AI is on</b> (${esc(opts.providers.join(" + "))}). Pictures are made on our server.`
+    : "<b>AI is not connected yet.</b> An admin adds the AI key on the server, then <b>Generate design</b> works here.";
+  $("#model").disabled = !live;
+  $("#go").disabled = !live;
+  showBudget(opts.budget);
+}
+function showBudget(b) {
+  if (!b) return;
+  $("#budget").textContent = `${b.left_today} of ${b.per_user_day} designs left for you today`;
+}
+$("#bg").onchange = () => { $("#customBg").hidden = $("#bg").value !== "custom"; };
+
+/* ---------- making designs ---------- */
+function showErr(t, where = "#err") { $(where).textContent = t; }
+function currentImage() {
+  if (tab === "pad") return dirty ? pad.toDataURL("image/jpeg", 0.9) : null;
+  return picture;
+}
+function request() {
+  return { image: currentImage(), kind: $("#kind").value, background: $("#bg").value, custom_bg: $("#customBg").value,
+           notes: $("#notes").value, sparkle: $("#sparkle").checked, model: $("#model").value };
+}
+function making(on) {
+  busy = on; $("#go").disabled = on || !opts?.live; $("#applyChange").disabled = on;
+  if (on) $("#frame").innerHTML = `<div class="making"><div class="shine"></div><div>Making your design${slowNote($("#model").value)}…</div><span>0:00</span></div>`;
+}
+function showResult(r, reload = true) {
+  current = r;
+  $("#frame").innerHTML = `<img src="${r.image}" alt="Generated design">`;
+  $("#meta").innerHTML = `<span>${esc(r.model_label)}</span><span>${new Date(r.ts * 1000).toLocaleString()}</span>`; $("#meta").hidden = false;
+  $("#after").hidden = false; $("#dl").href = r.image + "?download=1";
+  $("#similarBlock").hidden = true; showErr("", "#err2");
+  if (r.budget) showBudget(r.budget);
+  if (reload) loadMine();
+}
+$("#go").onclick = async () => {
+  if (busy) return;
+  const body = request();
+  if (!body.image && body.notes.trim().length < 3) { showErr("Draw a sketch, add a picture, or describe the design."); return; }
+  showErr(""); making(true);
+  try { showResult(await waitJob(await post("/api/sketch/generate", body), tick)); }
+  catch (e) { showErr(e.message); $("#frame").innerHTML = current ? `<img src="${current.image}" alt="">` : `<div class="empty">Your design appears here.</div>`; }
+  finally { making(false); }
+};
+$("#applyChange").onclick = async () => {
+  if (!current || busy) return;
+  const change = $("#change").value.trim();
+  if (!change) { showErr("Write what to change.", "#err2"); return; }
+  if (!opts.live) { showErr("AI is not connected on this server yet.", "#err2"); return; }
+  const keep = current; making(true);
+  try { showResult(await waitJob(await post(`/api/sketch/${current.id}/refine`, { change, model: $("#model").value }), tick)); $("#change").value = ""; }
+  catch (e) { showErr(e.message, "#err2"); $("#frame").innerHTML = `<img src="${keep.image}" alt="">`; }
+  finally { making(false); }
+};
+$("#similarBtn").onclick = async () => {
+  if (!current) return;
+  $("#similarBtn").disabled = true;
+  try {
+    const res = await api(`/api/sketch/${current.id}/similar`);
+    const items = (res.results || []).slice(0, 8);
+    $("#similar").innerHTML = items.length ? items.map(d => `<a class="mini" href="/buy?${new URLSearchParams({ uid: d.uid, id: d.design_id, metal: d.metal_shown || "" })}">
+        <img loading="lazy" src="${esc(d.thumb)}" alt="${esc(d.design_id)}"><div class="cap"><span>${esc(d.design_id)}</span><span>${esc(d.category || "")}</span></div></a>`).join("")
+      : `<p class="hint">No close designs found.</p>`;
+    $("#similarBlock").hidden = false; $("#similarBlock").scrollIntoView({ behavior: "smooth" });
+  } catch (e) { showErr(e.message, "#err2"); }
+  finally { $("#similarBtn").disabled = false; }
+};
+
+
+/* ---------- gallery ---------- */
+async function loadMine() {
+  try {
+    const r = await api("/api/sketch/mine?panel=sketch");
+    showBudget(r.budget);
+    $("#mine").innerHTML = r.items.length ? r.items.map(d => `<div class="mini" data-id="${esc(d.id)}" role="button" tabindex="0">
+        <button type="button" class="x" data-del="${esc(d.id)}" aria-label="Remove">×</button>
+        <img loading="lazy" src="${esc(d.image)}" alt=""><div class="cap"><span>${esc(d.model_label)}</span><span>${new Date(d.ts * 1000).toLocaleDateString()}</span></div></div>`).join("")
+      : `<p class="hint">Designs you make are kept here.</p>`;
+    $("#mine").querySelectorAll(".mini").forEach(el => el.onclick = e => {
+      if (e.target.dataset.del) return;
+      const d = r.items.find(x => x.id === el.dataset.id); if (d) { showResult(d, false); window.scrollTo({ top: 0, behavior: "smooth" }); }
+    });
+    $("#mine").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+      try { await api(`/api/sketch/${b.dataset.del}`, { method: "DELETE" }); loadMine(); } catch (e) { showErr(e.message); }
+    });
+  } catch { /* gallery is optional */ }
+}
+
+$("#toVariation").onclick = () => { if (current) location.href = `/variation?from=${encodeURIComponent(current.id)}`; };
+
+// a design handed over from the variations page: it becomes the uploaded picture
+async function loadFrom(gid) {
+  const blob = await (await fetch(`/api/sketch/img/${encodeURIComponent(gid)}`, { credentials: "same-origin" })).blob();
+  if (!blob.type.startsWith("image/")) throw new Error("That design is no longer available.");
+  const url = URL.createObjectURL(blob), img = new Image();
+  await new Promise((ok, bad) => { img.onload = ok; img.onerror = bad; img.src = url; });
+  showTab("upload"); setPicture(shrink(img)); URL.revokeObjectURL(url);
+}
+
+showTab("pad");
+loadOptions().catch(e => showErr(e.message));
+const fromId = new URLSearchParams(location.search).get("from");
+if (fromId) loadFrom(fromId).catch(e => showErr(e.message));
+loadMine();
+</script>
+</body>
+</html>

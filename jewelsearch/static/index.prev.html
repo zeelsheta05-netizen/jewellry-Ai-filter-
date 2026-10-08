@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Finder</title>
+<style>
+:root {
+  --bg: #faf8f4; --surface: #ffffff; --tile: #f3efe8; --ink: #1f1b16; --muted: #6f675c;
+  --line: #e6dfd3; --accent: #9a6b2f; --accent-ink: #ffffff; --chip: #f1eadf; --focus: #c48a3f;
+  --rose: #d9a08f; --white: #d8dadd; --yellow: #d8b35a; --danger: #a33a2a;
+  --shadow: 0 1px 2px rgba(40,30,15,.06), 0 6px 20px rgba(40,30,15,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15130f; --surface: #1d1a16; --tile: #f3efe8; --ink: #f0ebe3; --muted: #a79e91;
+    --line: #34302a; --accent: #d1a060; --accent-ink: #1a140c; --chip: #2a261f; --focus: #e0b070;
+    --danger: #e0806f; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15130f; --surface: #1d1a16; --tile: #f3efe8; --ink: #f0ebe3; --muted: #a79e91;
+  --line: #34302a; --accent: #d1a060; --accent-ink: #1a140c; --chip: #2a261f; --focus: #e0b070;
+  --danger: #e0806f; --shadow: none;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Gujarati", "Noto Sans Devanagari", sans-serif;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 16px 60px; }
+header h1 { font: 500 30px/1.15 Georgia, "Times New Roman", serif; margin: 0 0 4px; letter-spacing: .2px; }
+header p { margin: 0 0 22px; color: var(--muted); }
+
+.search { display: flex; gap: 10px; align-items: stretch; }
+.search textarea {
+  flex: 1; resize: none; min-height: 58px; max-height: 160px; padding: 15px 16px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px;
+  box-shadow: var(--shadow);
+}
+.search textarea:focus, button:focus-visible, select:focus-visible, .card:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+button {
+  font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); padding: 8px 14px;
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); padding: 0 26px; font-weight: 600; }
+button:disabled { opacity: .55; cursor: default; }
+
+.examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.examples button { background: var(--chip); border-color: transparent; font-size: 13.5px; padding: 6px 12px; border-radius: 999px; color: var(--ink); }
+
+.understood {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 22px 0 6px;
+  font-size: 13.5px; color: var(--muted); min-height: 32px;
+}
+.understood .tag { background: var(--chip); color: var(--ink); padding: 4px 10px; border-radius: 999px; }
+.understood select {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 4px 6px;
+}
+.understood label { display: inline-flex; align-items: center; gap: 6px; }
+.notice { font-size: 13.5px; color: var(--muted); margin: 4px 0 0; }
+.notice.error { color: var(--danger); }
+
+.banner { display: flex; align-items: center; gap: 12px; margin: 18px 0 4px; }
+.banner img { width: 52px; height: 52px; border-radius: 8px; background: var(--tile); object-fit: contain; }
+.banner strong { font-weight: 600; }
+
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 16px; }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 420px) { .grid { gap: 10px; } }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: var(--shadow); cursor: pointer; min-width: 0;
+}
+.card .img { aspect-ratio: 1; background: var(--tile); display: grid; place-items: center; position: relative; }
+.card .img img { width: 88%; height: 88%; object-fit: contain; transition: transform .25s; }
+.card img, .stage img, .strip img { user-select: none; -webkit-user-drag: none; }
+.card .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.card .tags span { font-size: 11.5px; background: var(--chip); color: var(--muted); padding: 1px 7px; border-radius: 999px; }
+.understood .tag.neg { text-decoration: line-through; opacity: .85; }
+.understood .fix { font-style: italic; }
+.stage a { position: absolute; right: 10px; bottom: 10px; font-size: 12px; color: #3a3128; background: rgba(255,255,255,.85); padding: 2px 8px; border-radius: 999px; text-decoration: none; }
+.stage { position: relative; }
+.card:hover .img img { transform: scale(1.04); }
+.card .rank { position: absolute; top: 8px; left: 8px; font-size: 12px; background: rgba(255,255,255,.85); color: #3a3128; padding: 1px 8px; border-radius: 999px; }
+.card .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.card .id { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .sub { font-size: 12.5px; color: var(--muted); text-transform: capitalize; }
+.card .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.card .row button { font-size: 12.5px; padding: 5px 10px; }
+
+.swatches { display: flex; gap: 6px; }
+.sw { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); padding: 0; }
+.sw.on { box-shadow: 0 0 0 2px var(--accent); }
+.sw.rose_gold { background: var(--rose); } .sw.white_gold { background: var(--white); } .sw.yellow_gold { background: var(--yellow); }
+
+.skeleton .img { background: linear-gradient(90deg, var(--tile), var(--line), var(--tile)); background-size: 200% 100%; animation: sh 1.2s infinite; }
+.skeleton .body div { height: 12px; border-radius: 6px; background: var(--chip); }
+@keyframes sh { to { background-position: -200% 0; } }
+.more { display: flex; justify-content: center; margin-top: 20px; }
+.more button { padding: 10px 22px; }
+.empty { text-align: center; color: var(--muted); padding: 60px 10px; grid-column: 1 / -1; }
+
+dialog {
+  width: min(980px, calc(100vw - 32px)); max-height: calc(100vh - 40px); padding: 0; border: 1px solid var(--line);
+  border-radius: 16px; background: var(--surface); color: var(--ink);
+}
+dialog::backdrop { background: rgba(20,15,10,.55); }
+.detail { display: grid; grid-template-columns: 1.2fr 1fr; }
+@media (max-width: 760px) { .detail { grid-template-columns: 1fr; } }
+.stage { background: var(--tile); aspect-ratio: 1; display: grid; place-items: center; }
+.stage img, .stage video { width: 100%; height: 100%; object-fit: contain; }
+.info { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; overflow: auto; max-height: calc(100vh - 40px); }
+.info h2 { font: 500 24px/1.2 Georgia, serif; margin: 0; }
+.info .close { align-self: flex-end; margin-bottom: -8px; }
+.info h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+.strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.strip button { padding: 0; width: 62px; height: 62px; border-radius: 8px; background: var(--tile); overflow: hidden; }
+.strip button.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+.strip img { width: 100%; height: 100%; object-fit: contain; }
+.strip .vid { font-size: 12px; color: #3a3128; }
+.metals { display: flex; gap: 8px; flex-wrap: wrap; }
+.metals button { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; padding: 5px 10px; }
+.metals button.on { border-color: var(--accent); }
+.metals .dot { width: 12px; height: 12px; border-radius: 50%; }
+.facts { font-size: 13px; color: var(--muted); display: grid; gap: 3px; word-break: break-word; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Design Finder</h1>
+    <p>Describe what you're looking for in English, हिन्दी or ગુજરાતી, and see the 8 closest designs.</p>
+  </header>
+
+  <form class="search" id="form">
+    <textarea id="q" rows="1" placeholder="e.g. a rose gold ring for my mother that she can wear every day" aria-label="Describe the design"></textarea>
+    <button class="primary" id="go" type="submit">Find</button>
+  </form>
+  <div class="examples" id="examples"></div>
+
+  <div class="understood" id="understood" hidden></div>
+  <div class="notice" id="notice"></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="grid" id="grid"></div>
+  <div class="more"><button type="button" id="more" hidden>Show 8 more</button></div>
+</div>
+
+<dialog id="dlg" aria-label="Design details"></dialog>
+
+<script>
+const EXAMPLES = [
+  "A rose gold ring for my mother, wearable every day",
+  "મારી બહેન માટે નાની અને સાદી કાનની બુટ્ટી",
+  "शादी के लिए भारी हीरे का हार",
+  "floral pendant in yellow gold as a gift",
+  "gents ring bina stone",
+  "oval diamond engagement ring",
+];
+const CAT = { ring: "Ring", earrings: "Earrings", pendant: "Pendant", necklace: "Necklace", bracelet: "Bracelet" };
+const METAL = { rose_gold: "Rose gold", white_gold: "White gold", yellow_gold: "Yellow gold" };
+const INTENT = {
+  everyday: "everyday wear", bridal: "bridal", engagement: "engagement", party: "party / festive",
+  minimal: "simple & light", statement: "heavy / statement", floral: "floral", heart: "heart",
+  solitaire: "solitaire", diamond: "diamonds", coloured_stone: "coloured stones", traditional: "traditional",
+  modern: "modern", men: "for men", women: "for women", kids: "for kids", gift: "gift", plain: "no stones",
+  tennis: "tennis style", solitaire: "solitaire", halo: "halo", side_stones: "side stones", thin: "thin band",
+  wide: "wide band", stud: "stud", hoop: "hoop", drop: "drop", jhumka: "jhumka", bangle: "bangle",
+  cuff: "cuff", flexible: "flexible", choker: "choker", pendant_chain: "chain with pendant", cluster: "many diamonds",
+  infinity: "infinity", leaf: "leaf", twisted: "twisted", geometric: "geometric",
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const media = p => "/media?path=" + encodeURIComponent(p);
+let lastQuery = "", overrides = { category: "", metal: "" };
+
+$("#examples").innerHTML = EXAMPLES.map(e => `<button type="button">${esc(e)}</button>`).join("");
+$("#examples").addEventListener("click", e => {
+  if (e.target.tagName !== "BUTTON") return;
+  $("#q").value = e.target.textContent; overrides = { category: "", metal: "" }; run();
+});
+$("#form").addEventListener("submit", e => { e.preventDefault(); overrides = { category: "", metal: "" }; run(); });
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#form").requestSubmit(); } });
+
+function skeleton() {
+  $("#grid").innerHTML = Array.from({ length: 8 }, () =>
+    `<div class="card skeleton"><div class="img"></div><div class="body"><div style="width:60%"></div><div style="width:40%"></div></div></div>`).join("");
+}
+
+async function api(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r.json();
+}
+
+async function run(query) {
+  const q = (typeof query === "string" ? query : $("#q").value).trim();
+  if (!q) return;
+  lastQuery = q;
+  $("#go").disabled = true; $("#banner").hidden = true; $("#notice").textContent = ""; $("#notice").className = "notice";
+  skeleton();
+  const p = new URLSearchParams({ q });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  try {
+    const res = await api("/api/search?" + p);
+    showUnderstood(res.query);
+    $("#notice").textContent = [...res.notes, `${res.matches_in_filter.toLocaleString()} designs matched the filters · ${res.ms} ms`].join(" ");
+    renderGrid(res.results);
+    page = 0; $("#more").hidden = !res.has_more;
+  } catch (err) {
+    $("#grid").innerHTML = ""; $("#notice").className = "notice error"; $("#notice").textContent = "Search failed: " + err.message;
+  } finally { $("#go").disabled = false; }
+}
+
+// next 8 for the same search, appended below
+let page = 0;
+$("#more").addEventListener("click", async () => {
+  const p = new URLSearchParams({ q: lastQuery, page: page + 1 });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  $("#more").disabled = true;
+  try {
+    const res = await api("/api/search?" + p);
+    page = res.page;
+    const start = current.length;
+    current = current.concat(res.results);
+    $("#grid").insertAdjacentHTML("beforeend", res.results.map((d, i) => card(d, start + i)).join(""));
+    $("#more").hidden = !res.has_more;
+  } catch (err) {
+    $("#notice").className = "notice error"; $("#notice").textContent = "Could not load more: " + err.message;
+  } finally { $("#more").disabled = false; }
+});
+
+function select(name, options, value, anyLabel) {
+  return `<select data-k="${name}"><option value="">${anyLabel}</option>${Object.entries(options)
+    .map(([k, v]) => `<option value="${k}" ${k === value ? "selected" : ""}>${v}</option>`).join("")}</select>`;
+}
+
+function showUnderstood(u) {
+  const el = $("#understood");
+  el.hidden = false;
+  el.innerHTML = `<span>Understood as</span>
+    <label>${select("category", CAT, u.category || "", "Any type")}</label>
+    ${u.categories.slice(1).map(c => `<span class="tag">+ ${esc(CAT[c])}</span>`).join("")}
+    <label>${select("metal", METAL, u.metal || "", "Any metal")}</label>
+    ${u.shape ? `<span class="tag">${esc(u.shape)} cut</span>` : ""}
+    ${u.intents.map(i => `<span class="tag">${esc(INTENT[i] || i)}</span>`).join("")}
+    ${u.not_intents.map(i => `<span class="tag neg" title="Not wanted">${esc(INTENT[i] || i)}</span>`).join("")}
+    ${u.exclude_metals.map(m => `<span class="tag neg" title="Not wanted">${esc(METAL[m])}</span>`).join("")}
+    ${u.exclude_categories.map(c => `<span class="tag neg" title="Not wanted">${esc(CAT[c])}</span>`).join("")}
+    ${Object.entries(u.corrections).map(([a, b]) => `<span class="fix">read “${esc(a)}” as “${esc(b)}”</span>`).join(" ")}
+    ${u.free_text ? `<span class="tag" title="Words passed to the image model as-is">“${esc(u.free_text)}”</span>` : ""}`;
+  // A manual choice pins both filters; "any" drops a filter even if the prompt set it.
+  el.querySelectorAll("select").forEach(s => s.addEventListener("change", () => {
+    el.querySelectorAll("select").forEach(o => overrides[o.dataset.k] = o.value || "any");
+    run(lastQuery);
+  }));
+}
+
+function card(d, i) {
+  const sw = d.metals.map(m => `<button class="sw ${m} ${m === d.metal_shown ? "on" : ""}" data-metal="${m}" title="${METAL[m]}" aria-label="${METAL[m]}"></button>`).join("");
+  return `<article class="card" tabindex="0" data-uid="${d.uid}">
+    <div class="img"><span class="rank">${i + 1}</span><img loading="lazy" src="${d.thumb}" alt="${esc(d.design_id)}"></div>
+    <div class="body">
+      <div><div class="id" title="${esc(d.design_id)}">${esc(d.design_id)}</div>
+      <div class="sub">${esc(CAT[d.category] || d.category)}${d.stone_shape ? " · " + esc(d.stone_shape) + " cut" : ""}${d.variant_count ? ` · ${d.variant_count} other stone shape${d.variant_count > 1 ? "s" : ""}` : ""}</div></div>
+      ${d.tags.length ? `<div class="tags">${d.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
+      <div class="row"><div class="swatches">${sw}</div><button type="button" data-similar="${d.uid}">More like this</button></div>
+    </div></article>`;
+}
+
+let current = [];
+function renderGrid(items) {
+  current = items;
+  $("#grid").innerHTML = items.length ? items.map(card).join("")
+    : `<div class="empty">No designs match. Try removing the type or metal filter above.</div>`;
+}
+
+$("#grid").addEventListener("click", e => {
+  const sw = e.target.closest(".sw");
+  const cardEl = e.target.closest(".card");
+  if (!cardEl || cardEl.classList.contains("skeleton")) return;
+  const uid = +cardEl.dataset.uid;
+  const d = current.find(x => x.uid === uid);
+  if (sw) {
+    e.stopPropagation();
+    cardEl.querySelector(".img img").src = d.thumbs_by_metal[sw.dataset.metal];
+    cardEl.querySelectorAll(".sw").forEach(s => s.classList.toggle("on", s === sw));
+    return;
+  }
+  if (e.target.dataset.similar) { similar(uid); return; }
+  openDetail(uid);
+});
+$("#grid").addEventListener("keydown", e => {
+  const c = e.target.closest?.(".card");
+  if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openDetail(+c.dataset.uid); }
+});
+
+async function similar(uid) {
+  skeleton(); $("#notice").textContent = ""; window.scrollTo({ top: 0, behavior: "smooth" });
+  try {
+    const res = await api(`/api/similar/${uid}`);
+    const s = res.source;
+    $("#banner").hidden = false;
+    $("#banner").innerHTML = `<img src="${s.thumb}" alt=""><div>Designs similar to <strong>${esc(s.design_id)}</strong><br>
+      <span class="notice">Same type, closest in shape and style</span></div>
+      ${lastQuery ? `<button type="button" id="back">Back to results</button>` : ""}`;
+    $("#back")?.addEventListener("click", () => run(lastQuery));
+    renderGrid(res.results);
+    $("#more").hidden = true;
+  } catch (err) { $("#notice").className = "notice error"; $("#notice").textContent = err.message; }
+}
+
+async function openDetail(uid) {
+  const dlg = $("#dlg");
+  dlg.innerHTML = `<div class="detail"><div class="stage"></div><div class="info"><p class="notice">Loading…</p></div></div>`;
+  dlg.showModal();
+  let d;
+  try { d = await api(`/api/design/${uid}`); }
+  catch (err) { dlg.querySelector(".info").innerHTML = `<p class="notice error">${esc(err.message)}</p>`; return; }
+  let metal = d.metal_shown, view = 0;
+
+  const draw = () => {
+    const views = d.views[metal] || [];
+    const video = d.videos[metal];
+    const stage = view === "video" && video
+      ? `<video src="${media(video)}" controls autoplay loop muted playsinline></video>`
+      : `<img src="${views[view]?.thumb}" alt="${esc(d.design_id)}"><a href="${media(views[view]?.full)}" target="_blank" rel="noopener">Full resolution ↗</a>`;
+    dlg.innerHTML = `<div class="detail"><div class="stage">${stage}</div>
+      <div class="info">
+        <button class="close" type="button" aria-label="Close">Close</button>
+        <div><h2>${esc(d.design_id)}</h2><div class="notice">${esc(CAT[d.category] || d.category)}${d.stone_shape ? " · " + esc(d.stone_shape) + " cut" : ""}</div></div>
+        <div><h3>Metal</h3><div class="metals">${d.metals.map(m => `<button type="button" data-m="${m}" class="${m === metal ? "on" : ""}"><span class="dot sw ${m}"></span>${METAL[m]}</button>`).join("")}</div></div>
+        <div><h3>Angles</h3><div class="strip">${views.map((v, i) => `<button type="button" data-v="${i}" class="${i === view ? "on" : ""}"><img src="${v.thumb}" alt="View ${i + 1}"></button>`).join("")}
+          ${video ? `<button type="button" data-v="video" class="${view === "video" ? "on" : ""}"><span class="vid">▶ 3D</span></button>` : ""}</div></div>
+        ${d.variants.length ? `<div><h3>Other stone shapes</h3><div class="strip">${d.variants.map(v => `<button type="button" data-open="${v.uid}" title="${esc(v.design_id)}"><img src="${v.thumb}" alt="${esc(v.design_id)}"></button>`).join("")}</div></div>` : ""}
+        <div><button type="button" data-similar-d="${d.uid}">More like this</button></div>
+        <div class="facts"><div>Folder: ${d.folders.map(esc).join("<br>")}</div>${d.has_cad ? "<div>CAD file available (3dm / stl)</div>" : ""}</div>
+      </div></div>`;
+  };
+  draw();
+  dlg.onclick = e => {
+    if (e.target === dlg || e.target.closest(".close")) { dlg.close(); return; }
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.m) { metal = b.dataset.m; if (view !== "video") view = Math.min(view, (d.views[metal] || []).length - 1); draw(); }
+    else if (b.dataset.v !== undefined) { view = b.dataset.v === "video" ? "video" : +b.dataset.v; draw(); }
+    else if (b.dataset.open) { openDetail(+b.dataset.open); }
+    else if (b.dataset.similarD) { dlg.close(); similar(+b.dataset.similarD); }
+  };
+}
+$("#dlg").addEventListener("close", () => { $("#dlg").innerHTML = ""; });
+</script>
+</body>
+</html>

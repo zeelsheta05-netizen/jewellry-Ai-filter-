@@ -1,0 +1,196 @@
+# Searches that are NOT about jewellery designs: the search must refuse them (scripts/eval_domain.py).
+# One per line; lines starting with # are ignored. Sections: the tuning set the judge's instructions were
+# written against, then three sets written later, each before it was first run. The picture threshold
+# (domain.PICTURE_MIN) was chosen after seeing all of them, with a margin on the jewellery side.
+# --- tuning
+pizza
+pizza near me
+weather today
+what is the weather in surat
+cricket score
+india vs australia live score
+iphone 15 price
+samsung mobile
+laptop under 50000
+best headphones
+python tutorial
+how to learn java
+flight tickets to dubai
+train ticket booking
+hotel in goa
+movie tickets
+latest bollywood movies
+netflix series
+news today
+stock market
+bitcoin price
+how to make tea
+paneer butter masala recipe
+chocolate cake
+birthday cake
+wedding dress
+red saree
+lehenga for wedding
+mens shoes
+sports shoes
+t shirt
+jeans for men
+handbag for women
+car
+bike
+honda city
+royal enfield
+doctor near me
+headache medicine
+heart attack symptoms
+kidney stone
+boxing ring
+onion rings
+ring doorbell
+key chain
+bike chain
+chain saw
+star wars
+moon landing
+shooting star
+diamond painting
+baseball diamond
+minecraft diamond sword
+gold price today
+gold rate in surat
+silver price
+silver rate today
+how to clean silver
+how to clean a diamond ring
+sell my gold
+gold loan
+jewellery shop near me
+hello
+hi
+asdfgh
+qwerty
+test
+123456
+who are you
+tell me a joke
+write an essay
+translate to hindi
+dog
+cat
+flower bouquet
+rose flowers
+red roses for valentine
+leaf blower
+butterfly garden
+evil eye meaning
+heart shaped cake
+star hotel
+party hall booking
+wedding photographer
+engagement invitation card
+birthday gift ideas
+anniversary cake
+office chair
+simple living
+modern furniture
+traditional dress
+આજનું હવામાન
+ક્રિકેટ સ્કોર
+પિઝા
+મોબાઇલ ફોન
+मौसम कैसा है
+पिज़्ज़ा
+मोबाइल फोन की कीमत
+शादी का जोड़ा
+sone ka bhav
+aaj ka mausam
+chai kaise banaye
+# --- held out 1
+sherwani for groom wedding
+kurta for men
+silk saree for party
+bridal makeup artist
+mehndi design for bride
+ring light for youtube
+boxing gloves
+ring road traffic
+phone with diamond cut glass
+diamond league results
+gold medal winners
+black diamond movie
+star sports live
+moon cake
+heart transplant hospital
+flower delivery in surat
+leaf vegetables price
+butterfly knife
+evil eye emoji
+infinity war movie
+rose water benefits
+white gold vs platinum price
+gold etf
+silver coins online
+jewellery insurance
+wedding venue in ahmedabad
+engagement ceremony decoration
+party dresses for girls
+gift card amazon
+birthday party games
+kids toys
+baby shoes
+men's watch
+perfume for women
+sunglasses
+school bag
+lipstick shades
+hair clip
+bangle box organiser
+necklace hanger stand
+ring size chart pdf
+# --- held out 2
+wedding card printing
+ring finger pain
+chain of hotels in mumbai
+diamond cut haircut
+gold fish tank
+silver screen awards
+rose day quotes
+heart shaped balloons
+star fruit benefits
+bridal lehenga red
+groom sherwani
+anniversary dinner restaurant
+birthday wishes for wife
+engagement songs
+party wear shoes
+office bag for women
+ring box packaging
+earphones under 1000
+necklace pain after sleeping
+pendrive 64gb
+bangalore weather
+gold rate tomorrow
+how to propose a girl
+diwali crackers
+karva chauth thali
+navratri dress
+rakhi for brother
+flower vase
+jewellery business ideas
+gst on gold
+# --- held out 3
+haldi ceremony decoration
+reception hall in surat
+kangan movie songs
+gym membership
+om namah shivay
+college admission
+job interview tips
+garba pass booking
+green lehenga
+best friend quotes
+chain stores in india
+ring cake design
+diamond shape kite
+gold plated watch
+bracelet watch for women

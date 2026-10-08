@@ -1,0 +1,99 @@
+# Short or unusual jewellery searches the search must NOT refuse (scripts/eval_domain.py), on top of
+# prompts_100.txt and prompts_structural.txt. Sections as in prompts_out_of_domain.txt.
+# --- tuning
+beautiful ring
+elegant pendant
+latest earrings design
+ring under 50000
+pretty ring for my girlfriend
+nice bracelet
+something sparkly for my wife
+classy necklace
+stunning engagement ring
+best rings
+snake ring
+butterfly pendant
+key pendant
+cross pendant
+star pendant
+evil eye pendant
+crown ring
+ganesh pendant
+feather pendant
+peacock pendant
+heart pendant
+floral earrings
+leaf ring
+ring with a big stone
+minimal studs
+jhumka
+kada for men
+mangalsutra
+toe ring
+rose gold
+diamond
+solitaire
+halo
+for my mother
+gift for my wife
+wedding
+party wear
+gift for my dad
+# --- held out 1
+peacock earrings
+ring shaped like a crown
+pendant with my initial A
+earrings for my sister's wedding
+heavy haar for reception
+minimal ring for office
+diamond bracelet for my wife's anniversary
+chunky gold ring for my brother
+cute studs for my daughter
+temple style necklace
+ring with a ruby
+infinity bracelet
+evil eye pendant on a thin chain
+flower shaped earrings with small diamonds
+solitaire ring with a twisted band
+bangles for daily wear
+something elegant for an evening party
+pear diamond pendant
+hoops that are not too big
+a necklace that goes with a red saree
+# --- held out 2
+anguthi for engagement with oval stone
+kangan for my mother
+jhumki for navratri
+bali for daily use
+haar with green stones
+mangalsutra with small pendant
+kada for my husband
+ring like a sunflower
+pendant with a tiny moon and star
+earrings that look like leaves
+a ring my wife can wear to work
+chain bracelet with a heart charm
+necklace for a cocktail party
+statement ring with many diamonds
+rose gold bracelet with an infinity sign
+studs for a newborn baby girl
+earrings for a farewell party
+pendant for raksha bandhan gift
+ring for karva chauth
+something for our 25th anniversary
+# --- held out 3
+necklace for my sister's haldi
+earrings for a reception look
+heavy kangan for the wedding day
+ring for a gym lover
+pendant with an om symbol
+kids bracelet with a small heart
+rose gold anguthi under 30000
+white gold chain for men
+a pair of jhumkas for garba
+ring to match a green lehenga
+earrings for a job interview
+simple pendant for college
+heavy choker for a sangeet
+bracelet for my best friend's birthday
+ring for a doctor who washes hands a lot

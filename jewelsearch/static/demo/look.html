@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Look Demo</title>
+<script type="importmap">
+{ "imports": { "three": "/vendor/three/three.module.js", "three/addons/": "/vendor/three/addons/" } }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: #ffffff; --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --tone2: #b8862b; --accent-ink: #5f400c; --chip: #fcf7ec;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c);
+  --serif: Outfit, Manrope, system-ui, sans-serif; --sans: Manrope, system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+header a { color: var(--accent-ink); font-weight: 600; text-decoration: none; font-size: 13px; }
+.brand { font: 500 15px var(--serif); letter-spacing: .18em; text-transform: uppercase; }
+main { max-width: 1320px; margin: 0 auto; padding: 18px 24px 40px; }
+h1 { font: 400 clamp(24px, 3vw, 34px)/1.2 var(--serif); margin: 4px 0 4px; }
+.lead { color: var(--muted); margin: 0 0 16px; max-width: 760px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0; }
+.bar button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 7px 14px; font: 500 13px var(--sans); color: var(--ink); cursor: pointer; }
+.bar button[aria-pressed="true"] { background: var(--btn); border-color: var(--line-strong); color: var(--accent-ink); font-weight: 600; }
+.sw { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+.sw.white_gold { background: #e6e6e8; } .sw.yellow_gold { background: #e3b75c; } .sw.rose_gold { background: #e7a993; }
+.title { font: 500 18px var(--serif); margin: 14px 0 2px; }
+.panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
+.panel { border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: #fff; }
+.panel h2 { margin: 0; padding: 10px 14px; font: 600 11.5px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); }
+.panel h2 em { font-style: normal; color: var(--tone2); }
+.stage { position: relative; aspect-ratio: 1; }
+.stage img, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.stage img { object-fit: contain; }
+.stage canvas { touch-action: none; cursor: grab; }
+.note { font-size: 12px; color: var(--muted); padding: 8px 14px; border-top: 1px solid var(--line); min-height: 34px; }
+#busy { position: absolute; inset: auto 0 12px; text-align: center; font-size: 12.5px; color: var(--muted); }
+#show { display: none; }
+@media (max-width: 760px) {
+  header, main { padding-left: 16px; padding-right: 16px; }
+  .panels { grid-template-columns: minmax(0, 1fr); }
+  #show { display: flex; }
+  body[data-show="photo"] .panel:not(.photo), body[data-show="today"] .panel:not(.today), body[data-show="new"] .panel:not(.new) { display: none; }
+}
+</style>
+</head>
+<body>
+<header><span class="brand">Design Finder</span><a href="/">Back to the search</a></header>
+<main>
+  <h1>3D look demo</h1>
+  <p class="lead">6 designs drawn three ways: the catalogue photo, the 3D look used by today's try-on, and the new look (real diamond optics, polished gold, jewellery studio light). Drag a 3D view to turn the piece. A demo only: the live pages are unchanged.</p>
+  <div class="bar" id="designs" role="group" aria-label="Design"></div>
+  <div class="bar">
+    <span id="metals" class="bar" role="group" aria-label="Metal" style="margin:0"></span>
+    <button type="button" id="turn" aria-pressed="false">Turn</button>
+    <button type="button" id="reset">Photo angle</button>
+  </div>
+  <div class="bar" id="show" role="group" aria-label="View"><button type="button" data-show="photo" aria-pressed="false">Photo</button><button type="button" data-show="today" aria-pressed="false">Today's 3D</button><button type="button" data-show="new" aria-pressed="true">New 3D</button></div>
+  <div class="title" id="title"></div>
+  <div class="panels">
+    <section class="panel photo"><h2>Catalogue photo</h2><div class="stage"><img id="photo" alt="Catalogue photo"></div><div class="note">The original render, unchanged.</div></section>
+    <section class="panel today"><h2>Today's 3D</h2><div class="stage"><canvas id="today"></canvas></div><div class="note">As the live try-on draws it now.</div></section>
+    <section class="panel new"><h2><em>New</em> 3D look</h2><div class="stage"><canvas id="new"></canvas><div id="busy">Loading…</div></div><div class="note"><span id="facets"></span></div></section>
+  </div>
+</main>
+<script type="module" src="/demo-app/look-demo.js"></script>
+</body>
+</html>

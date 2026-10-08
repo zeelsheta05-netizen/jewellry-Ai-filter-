@@ -1,0 +1,2859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Finder</title>
+<!-- the instant try-on preview loads three.js on demand -->
+<script type="importmap">
+{ "imports": { "three": "/vendor/three/three.module.js", "three/addons/": "/vendor/three/addons/" } }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Gujarati:wght@400;600&display=swap" rel="stylesheet">
+<style>
+@property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+:root {
+  --bg: #ffffff; --bg2: #fdfaf3; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318;
+  --tile-a: #ffffff; --tile-b: #fbf6ec; --aurora1: rgba(230, 190, 110, .17); --aurora2: rgba(245, 215, 150, .15);
+  --rose: #e2a792; --white: #dfe2e6; --yellow: #e0b65a;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", "Noto Sans Gujarati", "Noto Sans Devanagari", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 var(--sans); overflow-x: hidden; transition: background .6s var(--ease), color .6s var(--ease);
+}
+::selection { background: #f2d990; color: var(--ink); }
+
+/* ---------- ambient background ---------- */
+.aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); }
+.aurora i:nth-child(1) { width: 60vw; height: 60vw; left: -18vw; top: -26vw; background: var(--aurora1); animation: drift1 26s ease-in-out infinite alternate; }
+.aurora i:nth-child(2) { width: 50vw; height: 50vw; right: -20vw; top: 8vh; background: var(--aurora2); animation: drift2 32s ease-in-out infinite alternate; }
+.aurora i:nth-child(3) { width: 40vw; height: 40vw; left: 30vw; bottom: -30vw; background: var(--aurora1); animation: drift1 38s ease-in-out infinite alternate-reverse; }
+@keyframes drift1 { to { transform: translate(12vw, 10vh) scale(1.15); } }
+@keyframes drift2 { to { transform: translate(-14vw, 16vh) scale(.9); } }
+#sparkles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 50; transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--tone3), var(--tone1), var(--tone2)); box-shadow: 0 0 12px var(--glow); }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; transition: background .4s, backdrop-filter .4s, border-color .4s;
+  border-bottom: 1px solid transparent;
+}
+.topbar.scrolled { background: color-mix(in srgb, var(--bg) 72%, transparent); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); border-color: var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); display: grid; place-items: center; cursor: pointer; backdrop-filter: blur(10px);
+  transition: transform .4s var(--ease), border-color .3s;
+}
+.icon-btn:hover { transform: rotate(25deg) scale(1.06); border-color: var(--line-strong); }
+.top-actions { display: flex; align-items: center; gap: 10px; }
+.user { position: relative; }
+.user-btn {
+  display: flex; align-items: center; gap: 9px; height: 40px; padding: 0 14px 0 4px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); backdrop-filter: blur(10px); font: 600 13px var(--sans); transition: border-color .3s, transform .35s var(--ease);
+}
+.user-btn:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--serif); letter-spacing: .04em;
+  color: var(--accent-ink); background: var(--btn); border: 1px solid var(--line-strong); }
+.uname { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; padding: 8px; border-radius: 16px; z-index: 40;
+  background: var(--surface-solid); border: 1px solid var(--line-strong); box-shadow: var(--shadow); animation: pop .35s var(--ease);
+}
+.menu-email { font-size: 12px; color: var(--muted); padding: 6px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 6px; word-break: break-all; }
+.menu button { width: 100%; text-align: left; border: 0; background: none; padding: 9px 10px; border-radius: 10px; font: 600 13px var(--sans); }
+.menu button:hover { background: var(--chip); color: var(--tone2); }
+@media (max-width: 560px) { .uname { display: none; } .user-btn { padding: 0 4px; } }
+.icon-btn svg { width: 18px; height: 18px; }
+
+/* ---------- layout ---------- */
+.wrap { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 0 28px 80px; }
+@media (max-width: 560px) { .wrap { padding: 0 16px 80px; } }
+.hero { text-align: center; padding: 64px 0 34px; transition: padding .8s var(--ease); }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 10px; font-size: 11.5px; letter-spacing: .34em; text-transform: uppercase;
+  color: var(--tone2); opacity: 0; animation: up .9s var(--ease) .1s forwards;
+}
+.eyebrow::before, .eyebrow::after { content: ""; width: 34px; height: 1px; background: linear-gradient(90deg, transparent, var(--tone2)); }
+.eyebrow::after { transform: scaleX(-1); }
+.hero h1 {
+  font: 300 clamp(38px, 6vw, 72px)/1.05 var(--serif); margin: 18px auto 14px; max-width: 900px; letter-spacing: -.03em;
+  opacity: 0; animation: up 1s var(--ease) .2s forwards; transition: font-size .8s var(--ease), margin .8s var(--ease);
+}
+.hero h1 em {
+  font-style: normal; font-weight: 500; background: linear-gradient(100deg, var(--tone3) 0%, var(--tone1) 25%, var(--tone2) 45%, var(--tone1) 60%, var(--tone3) 80%, var(--tone1) 100%);
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 7s linear infinite;
+}
+@keyframes shimmer { to { background-position: -250% 0; } }
+.hero p.lead { margin: 0 auto; max-width: 620px; color: var(--muted); font-size: 16.5px; opacity: 0; animation: up 1s var(--ease) .35s forwards; transition: opacity .5s, max-height .8s var(--ease), margin .8s; max-height: 80px; }
+.langs { display: inline-flex; gap: 6px; }
+.langs span { color: var(--ink); font-weight: 600; }
+@keyframes up { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+
+body.searched .hero { padding: 18px 0 18px; }
+body.searched .hero h1 { font-size: clamp(28px, 3.4vw, 40px); margin: 8px auto 0; }
+body.searched .hero p.lead, body.searched .eyebrow { max-height: 0; opacity: 0 !important; margin: 0; overflow: hidden; animation: none; }
+body.searched .eyebrow { display: none; }
+
+/* ---------- search ---------- */
+.search {
+  position: relative; display: flex; gap: 10px; align-items: flex-end; max-width: 860px; margin: 0 auto;
+  padding: 8px 8px 8px 22px; border-radius: 22px; background: var(--surface); backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3); border: 1px solid var(--line); box-shadow: var(--shadow);
+  opacity: 0; animation: up 1s var(--ease) .5s forwards; transition: box-shadow .5s, transform .5s var(--ease);
+}
+.search::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--ang), transparent 0 55%, var(--tone3) 68%, var(--tone1) 76%, var(--tone2) 82%, transparent 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: rot 7s linear infinite; opacity: .55; transition: opacity .4s;
+}
+.search:focus-within { box-shadow: var(--shadow), 0 0 0 6px var(--chip), 0 0 60px -10px var(--glow); transform: translateY(-2px); }
+.search:focus-within::before, .search.busy::before { opacity: 1; }
+.search.busy::before { animation-duration: 1.1s; }
+.search.shake { opacity: 1; animation: shake .5s; }
+@keyframes rot { to { --ang: 360deg; } }
+@keyframes shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+.search .spark { align-self: center; width: 20px; height: 20px; color: var(--tone2); flex: none; animation: twinkle 3.2s ease-in-out infinite; }
+@keyframes twinkle { 50% { transform: rotate(45deg) scale(.8); opacity: .6; } }
+.search textarea {
+  flex: 1; resize: none; min-height: 50px; max-height: 160px; padding: 13px 4px; border: 0; outline: 0;
+  background: transparent; color: var(--ink); font: 500 17px/1.45 var(--sans);
+}
+.search textarea::placeholder { color: var(--muted); opacity: .85; }
+
+/* suggestions while typing, like a search engine's: the collection's words + your own history */
+.search { z-index: 25; }   /* the list drops over the content below: above the type / metal picks (20), under the top bar (30) */
+.suggest {
+  position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 20; margin: 0; padding: 6px 0; list-style: none;
+  background: var(--surface-solid); border: 1px solid var(--line); border-radius: 20px; text-align: left;
+  box-shadow: 0 26px 50px -26px rgba(90, 65, 20, .38); animation: pop .22s var(--ease);
+}
+.sg {
+  position: relative; display: flex; align-items: center; gap: 14px; min-height: 44px; padding: 6px 14px 6px 20px;
+  cursor: pointer; font: 400 15px/1.35 var(--sans); color: var(--ink);
+}
+.sg::before { content: ""; position: absolute; left: 0; top: 5px; bottom: 5px; width: 3px; border-radius: 0 3px 3px 0; background: var(--tone2); opacity: 0; }
+.sg:hover, .sg[aria-selected="true"] { background: var(--chip); }
+.sg[aria-selected="true"]::before { opacity: 1; }
+.sg > svg { width: 17px; height: 17px; flex: none; color: var(--muted); }
+.sg .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sg .t b { font-weight: 700; }
+.sg .n { flex: none; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sg .del { flex: none; border: 0; background: none; padding: 4px 8px; border-radius: 8px; font: 600 12px var(--sans); color: var(--muted); }
+.sg .del:hover { color: var(--danger); background: var(--surface-solid); }
+@media (hover: hover) { .sg .del { opacity: 0; } .sg:hover .del, .sg[aria-selected="true"] .del { opacity: 1; } }
+.sg-label { padding: 8px 20px 4px; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 560px) { .suggest { border-radius: 16px; } .sg { gap: 12px; padding-left: 16px; font-size: 14.5px; } }
+button { font: inherit; cursor: pointer; color: var(--ink); }
+button:focus-visible, select:focus-visible, .card:focus-visible, a:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+.primary {
+  position: relative; overflow: hidden; border: 0; border-radius: 16px; padding: 0 28px; height: 50px; flex: none;
+  font-weight: 700; letter-spacing: .06em; color: var(--accent-ink);
+  background: var(--btn); background-size: 180% 180%; border: 1px solid var(--line-strong);
+  box-shadow: 0 10px 24px -14px var(--glow), inset 0 1px 0 rgba(255, 255, 255, .8);
+  transition: transform .35s var(--ease), box-shadow .35s, background-position .6s;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.primary::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 45%; left: -60%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .6), transparent); animation: sheen 4.5s ease-in-out infinite;
+}
+@keyframes sheen { 0%, 60% { left: -60%; } 100% { left: 140%; } }
+.primary:hover { transform: translateY(-2px); background: var(--btn-hover); box-shadow: 0 14px 28px -14px var(--glow), inset 0 1px 0 rgba(255, 255, 255, .8); }
+.primary:active { transform: translateY(0) scale(.97); }
+.primary:disabled { cursor: progress; }
+.primary svg { width: 16px; height: 16px; transition: transform .4s var(--ease); }
+.primary:hover svg { transform: translateX(3px); }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .55); transform: scale(0); animation: ripple .7s ease-out forwards; pointer-events: none; }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+.examples { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px auto 0; max-width: 900px; transition: opacity .5s, max-height .7s var(--ease), margin .7s; max-height: 200px; }
+.examples button {
+  border: 1px solid var(--line); background: var(--surface); backdrop-filter: blur(8px); font-size: 13px; padding: 7px 14px;
+  border-radius: 999px; color: var(--ink); opacity: 0; animation: up .7s var(--ease) forwards; animation-delay: calc(.65s + var(--i) * 70ms);
+  transition: transform .35s var(--ease), border-color .3s, background .3s, color .3s;
+}
+.examples button:hover { transform: translateY(-3px); border-color: var(--line-strong); background: var(--chip); color: var(--tone2); }
+.examples button { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; }
+.examples button .ex-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.examples button svg { width: 14px; height: 14px; flex: none; color: var(--tone2); }
+.examples .ex-label { flex-basis: 100%; text-align: center; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--muted); opacity: 0; animation: up .7s var(--ease) .6s forwards; }
+body.searched .examples { max-height: 0; opacity: 0; margin: 0; overflow: hidden; pointer-events: none; }
+
+.offline-note { max-width: 860px; margin: 14px auto 0; padding: 10px 16px; border-radius: 14px; border: 1px solid var(--line-strong);
+  background: var(--chip); color: var(--accent-ink); font-size: 13px; text-align: center; }
+
+/* ---------- AI search / Manual search ---------- */
+.modes { display: flex; justify-content: center; margin: 0 auto 14px; }
+.modes .seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+  box-shadow: var(--shadow); backdrop-filter: blur(12px); opacity: 0; animation: up 1s var(--ease) .45s forwards; }
+.modes button { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; border-radius: 999px;
+  padding: 8px 16px; font: 600 13px var(--sans); color: var(--muted); cursor: pointer; transition: background .3s, color .3s; }
+.modes button svg { width: 15px; height: 15px; flex: none; }
+.modes button:hover { color: var(--accent-ink); }
+.modes button[aria-selected="true"] { background: var(--btn); color: var(--accent-ink); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8); }
+body.manual #form, body.manual .browse-row, body.manual #examples { display: none !important; }
+.manual-panel { max-width: 860px; margin: 0 auto; border: 1px solid var(--line); border-radius: 22px; background: var(--surface);
+  backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3); box-shadow: var(--shadow); animation: up .6s var(--ease) both; }
+.m-groups { padding: 6px 22px 2px; min-height: 120px; }
+.m-group { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.m-group:last-child { border-bottom: 0; }
+.m-title { font: 600 11.5px var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding-top: 8px; }
+.m-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.m-hint { grid-column: 2; font-size: 12px; color: var(--muted); }
+.m-opt { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface-solid); border-radius: 999px;
+  padding: 6px 12px; font: 500 13px var(--sans); color: var(--ink); cursor: pointer; transition: border-color .25s, background .25s, color .25s, transform .3s var(--ease); }
+.m-opt:hover:not(:disabled) { border-color: var(--line-strong); background: var(--chip); transform: translateY(-1px); }
+.m-opt .n { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.m-opt .ai { width: 11px; height: 11px; color: var(--tone2); flex: none; }
+.m-opt[aria-pressed="true"] { background: var(--btn); border-color: var(--line-strong); color: var(--accent-ink); font-weight: 600; }
+.m-opt[aria-pressed="true"] .n { color: var(--accent-ink); }
+.m-opt:disabled { opacity: .4; cursor: not-allowed; }
+.m-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 0 22px 12px; font-size: 11.5px; color: var(--muted); }
+.m-legend .ai { width: 10px; height: 10px; color: var(--tone2); vertical-align: -1px; }
+.m-foot { position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 14px 22px;
+  border-top: 1px solid var(--line); border-radius: 0 0 22px 22px; background: color-mix(in srgb, var(--surface-solid) 94%, transparent); backdrop-filter: blur(12px); }
+.m-read { flex: 1 1 260px; min-width: 0; font-size: 13px; color: var(--muted); }
+.m-read q { color: var(--ink); font-weight: 600; }
+.m-read .linkish { color: var(--tone2); padding: 2px 4px; }
+.m-read .linkish:hover { color: var(--accent-ink); }
+.m-warn { display: block; margin-top: 4px; color: var(--danger); font-size: 12.5px; }
+.m-foot .primary { flex: none; }
+.m-foot .primary .m-n { font-style: normal; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .6); }
+.m-foot .primary:disabled { cursor: not-allowed; opacity: .55; transform: none; }
+@media (max-width: 560px) {
+  .m-group { grid-template-columns: minmax(0, 1fr); } .m-hint { grid-column: 1; } .m-title { padding-top: 0; }
+  .m-groups { padding: 4px 16px 2px; } .m-legend { padding: 0 16px 12px; }
+  .m-foot { gap: 6px 10px; padding: 10px 16px; }
+  .m-read { flex-basis: 100%; font-size: 12px; line-height: 1.4; }
+  .m-foot .primary { flex: 1; justify-content: center; height: 44px; }
+}
+
+/* ---------- "Browse all categories": the collection without a prompt ---------- */
+.browse-row { display: flex; justify-content: center; margin-top: 14px; }
+.browse-btn { background: var(--surface); backdrop-filter: blur(8px); }
+.cat-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 0 18px; min-width: 0;
+  border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow);
+  overflow: hidden; text-align: center; animation: rise .8s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms);
+  transition: transform .45s var(--ease), border-color .3s, box-shadow .45s;
+}
+.cat-tile:hover { transform: translateY(-5px); border-color: var(--line-strong); box-shadow: var(--shadow), 0 30px 60px -30px var(--glow); }
+.cat-tile .img { width: 100%; aspect-ratio: 1; display: grid; place-items: center; margin-bottom: 10px; background: #fff; }
+.cat-tile img { width: 100%; height: 100%; object-fit: contain; transition: transform .8s var(--ease), opacity .35s; pointer-events: none; }
+.cat-tile:hover img { transform: scale(1.07); }
+.cat-tile .name { font: 500 21px/1.2 var(--serif); letter-spacing: -.01em; }
+.cat-tile .count { font-size: 12.5px; color: var(--muted); }
+.cat-tile .go { margin-top: 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--accent-ink); }
+
+/* ---------- designs from other brands (listed by the team at /brand-import) ---------- */
+.bcard .img .from-badge { position: absolute; z-index: 2; left: 10px; top: 10px; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: var(--accent-ink); background: rgba(255, 255, 255, .92); border: 1px solid var(--line-strong);
+  padding: 3px 9px; border-radius: 999px; }
+.bcard .img .new-badge { position: absolute; z-index: 2; right: 10px; bottom: 10px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: #fff;
+  background: var(--tone2); padding: 3px 10px; border-radius: 999px; box-shadow: 0 6px 14px -6px var(--glow); }
+.bcard.is-new .tilt { border-color: var(--tone2); box-shadow: 0 0 0 2px var(--tone2), 0 24px 50px -24px var(--glow); }
+.bprices { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.bprices div { border: 1px solid var(--line); border-radius: 12px; padding: 6px 9px; min-width: 0; }
+.bprices span { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bprices b { font: 500 15px/1.3 var(--serif); font-variant-numeric: lining-nums tabular-nums; }
+.bprices .ours { border-color: var(--tone2); background: linear-gradient(160deg, #fffaf0, var(--chip)); }
+.bprices .ours b { color: var(--accent-ink); }
+.bbtns { display: grid; gap: 6px; margin-top: auto; }
+.seller-btn { display: flex; align-items: center; justify-content: center; gap: 6px; height: 36px; border-radius: 12px; border: 1px solid var(--line);
+  background: #fff; color: var(--ink); text-decoration: none; font: 700 12.5px var(--sans); letter-spacing: .03em; white-space: nowrap; transition: background .3s, border-color .3s; }
+.seller-btn:hover { background: var(--chip); border-color: var(--line-strong); }
+.cat-tile.brands .name::after { content: " ↗"; font-size: .7em; color: var(--tone2); }
+
+/* ---------- interpretation ---------- */
+.understood {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 8px; margin: 26px 0 4px; font-size: 13.5px; color: var(--muted); min-height: 36px;
+}
+.understood > * { animation: pop .55s var(--ease) both; animation-delay: calc(var(--i, 0) * 55ms); }
+@keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.9); } }
+.ai-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--tone2); margin-right: 4px; }
+.ai-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--tone2); box-shadow: 0 0 0 0 var(--glow); animation: ping 2s infinite; }
+@keyframes ping { 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.ai-label.smart {
+  font-weight: 700; background: linear-gradient(100deg, var(--tone3), var(--tone1) 40%, var(--tone2) 60%, var(--tone3));
+  background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 5s linear infinite;
+}
+.understood .tag { background: var(--chip); border: 1px solid var(--line); color: var(--ink); padding: 5px 12px; border-radius: 999px; }
+.understood .tag.neg { text-decoration: line-through; text-decoration-color: var(--danger); opacity: .8; }
+.understood .fix { font-style: italic; }
+.pick { position: relative; z-index: 20; }
+.pick.open { z-index: 60; }
+.pick-btn {
+  display: inline-flex; align-items: center; gap: 10px; font: 600 13.5px var(--sans); color: var(--ink); cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px 12px 6px 14px;
+  transition: border-color .3s, box-shadow .3s, background .3s;
+}
+.pick-btn:hover, .pick.open .pick-btn { box-shadow: 0 0 0 4px var(--chip); background: var(--surface-solid); }
+.pick-btn svg { width: 10px; height: 6px; color: var(--tone2); transition: transform .35s var(--ease); }
+.pick.open .pick-btn svg { transform: rotate(180deg); }
+.pick-list {
+  position: absolute; top: calc(100% + 8px); left: 0; min-width: 190px; margin: 0; padding: 6px; list-style: none;
+  background: var(--surface-solid); border: 1px solid var(--line-strong); border-radius: 16px;
+  box-shadow: 0 24px 50px -20px rgba(90, 65, 20, .35); transform-origin: 20% 0; animation: pickIn .28s var(--ease);
+}
+@keyframes pickIn { from { opacity: 0; transform: translateY(-6px) scale(.96); } }
+.pick-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border-radius: 10px;
+  font: 500 13.5px var(--sans); color: var(--ink); cursor: pointer; outline: none; transition: background .2s, color .2s;
+}
+.pick-list li:hover, .pick-list li:focus { background: var(--chip); color: var(--accent-ink); }
+.pick-list li[aria-selected="true"] { font-weight: 700; color: var(--accent-ink); background: var(--btn); }
+.pick-list li .tick { width: 14px; height: 14px; color: var(--tone2); opacity: 0; }
+.pick-list li[aria-selected="true"] .tick { opacity: 1; }
+.pick-list li.any { color: var(--muted); }
+.pick-list li.any + li { margin-top: 5px; position: relative; }
+.pick-list li.any + li::before { content: ""; position: absolute; left: 10px; right: 10px; top: -3px; height: 1px; background: var(--line); }
+.understood.thinking { color: var(--muted); }
+.dots i { display: inline-block; width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: var(--tone2); animation: bounce 1s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; } .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 40% { transform: translateY(-6px); opacity: .5; } }
+
+.statline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; font-size: 13.5px; color: var(--muted); margin: 6px 0 0; min-height: 22px; }
+.statline b { font: 500 20px/1 var(--serif); color: var(--tone2); font-variant-numeric: tabular-nums; }
+.statline.error { color: var(--danger); }
+.statline .note { color: var(--ink); opacity: .85; }
+
+.banner {
+  display: flex; align-items: center; gap: 16px; margin: 20px 0 4px; padding: 12px 16px 12px 12px; border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(12px); animation: pop .6s var(--ease);
+}
+.banner img { width: 60px; height: 60px; border-radius: 14px; background: radial-gradient(circle at 50% 40%, var(--tile-a), var(--tile-b)); object-fit: contain; padding: 4px; box-shadow: 0 0 0 2px var(--tone2); }
+.banner strong { font: 500 18px var(--serif); color: var(--tone2); }
+.banner .sub { font-size: 13px; color: var(--muted); }
+.banner .grow { flex: 1; }
+.ghost {
+  border: 1px solid var(--line-strong); background: transparent; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+  transition: background .3s, color .3s, transform .35s var(--ease);
+}
+.ghost svg { width: 16px; height: 16px; flex: none; color: var(--tone2); }
+button.ghost:has(svg) { display: inline-flex; align-items: center; gap: 7px; color: var(--accent-ink); }
+.info .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ghost:hover { background: var(--btn-hover); color: var(--accent-ink); transform: translateY(-2px); }
+
+/* ---------- grid & cards ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 20px; margin-top: 22px; }
+@media (max-width: 560px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+.card { min-width: 0; cursor: pointer; outline: none; border-radius: 22px; animation: rise .8s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(34px) scale(.96); filter: blur(8px); } }
+.tilt {
+  position: relative; height: 100%; display: flex; flex-direction: column; border-radius: 22px; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow); transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .6s var(--ease), border-color .4s, box-shadow .5s; will-change: transform;
+}
+.card:hover .tilt { transition: transform .12s linear, border-color .4s, box-shadow .5s; border-color: var(--line-strong); box-shadow: var(--shadow), 0 30px 60px -30px var(--glow); }
+.card:focus-visible .tilt { border-color: var(--tone2); }
+.tilt::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .4s; 
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), rgba(253, 240, 205, .5), transparent 45%);
+}
+.card:hover .tilt::after { opacity: 1; }
+/* catalogue pictures are the dataset's own renders, unchanged (2600 px PNG): shown whole on white,
+   scaled only by the browser to fit, and faded in once fully loaded instead of painting top to bottom */
+.card .img {
+  position: relative; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; background: #fff;
+}
+.card .img img {
+  position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none;
+  transition: transform .8s var(--ease), opacity .35s, filter .35s;
+}
+.card .img img:not(.ready), .cat-tile img:not(.ready) { opacity: 0; }
+.card:hover .img img { transform: scale(1.04); }
+.card .img img.swap { opacity: 0; filter: blur(6px); transform: scale(.94); }
+.card .body { position: relative; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card .id { font: 500 17px/1.2 var(--serif); letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.card .tags span { font-size: 11px; background: var(--chip); color: var(--muted); padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); }
+.card .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: auto; }
+.more-like {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: transparent; border-radius: 999px;
+  padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--ink); transition: all .35s var(--ease); white-space: nowrap;
+}
+.more-like svg { width: 13px; height: 13px; transition: transform .5s var(--ease); pointer-events: none; }
+.more-like:hover { border-color: var(--tone2); color: var(--tone2); }
+.more-like:hover svg { transform: rotate(180deg); }
+.card .row-btns { display: flex; gap: 5px; }
+.more-like.web-like { padding: 6px 10px; }
+.more-like.web-like:hover svg { transform: none; }
+
+/* "Proceed to buy": opens the design's buy page (gold weight, stones, size) */
+.buy-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border-radius: 12px;
+  border: 1px solid var(--line-strong); background: var(--btn); color: var(--accent-ink); text-decoration: none;
+  font: 700 13px var(--sans); letter-spacing: .04em; white-space: nowrap;
+  box-shadow: 0 8px 18px -12px var(--glow), inset 0 1px 0 rgba(255, 255, 255, .8);
+  transition: transform .35s var(--ease), box-shadow .35s, background .3s;
+}
+.buy-btn:hover { transform: translateY(-2px); background: var(--btn-hover); box-shadow: 0 14px 26px -12px var(--glow), inset 0 1px 0 rgba(255, 255, 255, .8); }
+.buy-btn svg, a.primary svg { width: 16px; height: 16px; flex: none; pointer-events: none; }
+a.primary { text-decoration: none; }
+
+/* "Try on" (on the user's own saved photo) and "Live" (camera) chips on the card image */
+.chips { position: absolute; z-index: 3; left: 10px; bottom: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.tryon-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .92); color: var(--accent-ink); border-radius: 999px;
+  padding: 6px 12px 6px 10px; font: 700 12px var(--sans); box-shadow: 0 6px 16px -8px rgba(90, 65, 20, .45);
+  backdrop-filter: blur(6px); transition: transform .35s var(--ease), background .3s;
+}
+.tryon-chip:hover { transform: translateY(-2px); background: var(--btn-hover); }
+.tryon-chip svg { width: 14px; height: 14px; pointer-events: none; }
+.try .stage { aspect-ratio: var(--ar, 3 / 4); max-height: calc(100vh - 34px); }
+.try a.ghost { color: var(--accent-ink); display: inline-flex; align-items: center; }
+.try .info a:not(.ghost):not(.primary) { color: var(--accent); }
+.try .stage img, .try .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; animation: none; cursor: default; }
+.try .stage .busy { position: absolute; inset: 0; display: grid; place-items: center; color: #f2d990; font-weight: 600; background: rgba(0, 0, 0, .35); }
+.try .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* "On phone": QR code of this page or of the design being tried on */
+dialog.phone { width: min(400px, calc(100vw - 24px)); }
+.phone-card { position: relative; padding: 26px 24px 22px; display: grid; gap: 10px; justify-items: center; text-align: center; }
+.phone-card h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0; font-weight: 700; }
+.phone-card h2 { font: 400 24px/1.15 var(--serif); margin: 0; padding: 0 30px; font-variant-numeric: lining-nums; }
+.phone-card .qr { width: 250px; height: 250px; display: grid; place-items: center; background: #fff; padding: 8px; border-radius: 18px; border: 1px solid var(--line); }
+.phone-card .qr svg { width: 100%; height: 100%; display: block; }
+.phone-card .url { font-size: 12px; color: var(--muted); word-break: break-all; }
+.phone-card .close { position: absolute; top: 14px; right: 14px; }
+/* already on a phone: nothing to scan */
+@media (pointer: coarse) and (max-width: 760px) { #phoneBtn, #tryPhone { display: none; } }
+/* wide result frame: the photo fills the screen, controls in one slim bar below */
+dialog.try.wide { width: min(1440px, calc(100vw - 24px)); height: min(940px, calc(100dvh - 24px)); max-height: none; max-width: none; }
+.tryw { display: flex; flex-direction: column; height: 100%; }
+.tstage { position: relative; flex: 1; min-height: 0; overflow: hidden; background: radial-gradient(120% 100% at 50% 40%, #2b251d, #14110d); }
+.tframe { position: absolute; left: 0; top: 0; transition: left .5s var(--ease), top .5s var(--ease), width .5s var(--ease), height .5s var(--ease); }
+.tframe.instant { transition: none; }
+.tframe img, .tframe canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+/* right-click / long-press "save image" would save only the transparent jewellery layer */
+.tframe canvas { pointer-events: none; }
+.tstage .busy { position: absolute; inset: 0; display: grid; place-items: center; color: #f2d990; font-weight: 600; background: rgba(0, 0, 0, .35); z-index: 2; }
+.tstage .close { position: absolute; top: 14px; right: 14px; z-index: 5; background: rgba(255, 255, 255, .92); }
+.tview { position: absolute; left: 14px; bottom: 14px; z-index: 4; display: flex; padding: 3px; gap: 2px; border-radius: 999px;
+  background: rgba(20, 17, 13, .55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.tview button { border: 0; border-radius: 999px; padding: 7px 14px; font: 700 12.5px var(--sans); color: rgba(255, 255, 255, .8); background: transparent; transition: background .3s, color .3s; }
+.tview button.on { background: rgba(255, 255, 255, .95); color: #2a2116; }
+.tview.tlook { left: auto; right: 14px; }
+.tbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px; padding: 14px 22px; border-top: 1px solid var(--line); }
+.tbar h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0 0 4px; font-weight: 700; }
+.tbar h2 { font: 400 24px/1.1 var(--serif); letter-spacing: -.02em; margin: 0; font-variant-numeric: lining-nums; }
+.tbar .actions { margin-left: auto; }
+.tbar .muted { flex-basis: 100%; margin: 0; font-size: 12.5px; }
+.tbar a:not(.ghost):not(.primary) { color: var(--accent); }
+@media (max-width: 760px) {
+  dialog.try.wide { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; margin: 0; }
+  .tbar { padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)); gap: 10px 14px; }
+  .tbar h2 { font-size: 20px; }
+  .tbar .actions { margin-left: 0; }
+}
+.try .need { text-align: center; padding: 30px 20px; color: var(--muted); display: grid; gap: 12px; place-items: center; }
+.try .need .big { font-size: 56px; }
+
+.swatches { display: flex; gap: 7px; }
+.sw {
+  width: 20px; height: 20px; border-radius: 50%; padding: 0; border: 2px solid var(--surface-solid); box-shadow: 0 0 0 1px var(--line-strong);
+  transition: transform .35s var(--ease), box-shadow .3s; position: relative;
+}
+.sw:hover { transform: scale(1.2); }
+.sw.on { box-shadow: 0 0 0 2px var(--tone2), 0 0 12px var(--glow); }
+.sw.rose_gold { background: linear-gradient(135deg, #f6d0c2, var(--rose) 50%, #b87562); }
+.sw.white_gold { background: linear-gradient(135deg, #ffffff, var(--white) 50%, #9fa5ad); }
+.sw.yellow_gold { background: linear-gradient(135deg, #fbe7a6, var(--yellow) 50%, #a9792a); }
+
+.skeleton { pointer-events: none; }
+.skeleton .img { background: linear-gradient(100deg, var(--chip) 30%, color-mix(in srgb, var(--tone2) 22%, transparent) 50%, var(--chip) 70%); background-size: 300% 100%; animation: sh 1.6s infinite linear; }
+.skeleton .img::after { display: none; }
+.skeleton .img svg { width: 42px; height: 42px; color: var(--tone2); opacity: .7; animation: float 2s ease-in-out infinite; }
+.skeleton .body div { height: 12px; border-radius: 6px; background: var(--chip); }
+@keyframes sh { to { background-position: -300% 0; } }
+@keyframes float { 50% { transform: translateY(-8px) rotate(8deg); opacity: 1; } }
+
+.more { display: flex; justify-content: center; margin-top: 34px; }
+.more button { position: relative; overflow: hidden; }
+.empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 60px 10px; }
+.empty svg { width: 70px; height: 70px; color: var(--tone2); margin-bottom: 10px; }
+.empty svg path { stroke-dasharray: 200; stroke-dashoffset: 200; animation: draw 1.8s var(--ease) forwards; }
+.empty h3 { font: 400 24px var(--serif); color: var(--ink); margin: 0 0 4px; }
+/* a search that isn't about jewellery: say so, and offer real searches instead */
+.empty.refused { padding: 48px 16px 56px; }
+.empty.refused h3 { overflow-wrap: anywhere; }
+.empty.refused p { max-width: 520px; margin: 8px auto 18px; line-height: 1.5; }
+.empty.refused .try { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.empty.refused .ghost svg { width: 18px; height: 18px; margin: 0; }   /* not the panel's big icon size */
+.empty.refused .try button {
+  border: 1px solid var(--line); background: var(--surface); font-size: 13px; padding: 7px 14px; border-radius: 999px; color: var(--ink);
+  transition: transform .35s var(--ease), border-color .3s, background .3s, color .3s;
+}
+.empty.refused .try button:hover { transform: translateY(-2px); border-color: var(--line-strong); background: var(--chip); color: var(--tone2); }
+
+.to-top {
+  position: fixed; right: 20px; bottom: 20px; z-index: 20; opacity: 0; transform: translateY(20px) scale(.8); pointer-events: none;
+  transition: opacity .4s, transform .5s var(--ease);
+}
+.to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+
+/* ---------- detail dialog ---------- */
+dialog {
+  width: min(1060px, calc(100vw - 24px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--line-strong);
+  border-radius: 26px; background: var(--surface-solid); color: var(--ink); overflow: hidden; box-shadow: 0 40px 100px -30px rgba(90, 65, 20, .3);
+}
+dialog[open] { animation: dlgIn .6s var(--ease); }
+dialog.closing { animation: dlgOut .28s ease-in forwards; }
+dialog::backdrop { background: rgba(252, 247, 236, .74); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+dialog[open]::backdrop { animation: fade .5s ease; }
+dialog.closing::backdrop { animation: fade .28s reverse forwards; }
+@keyframes dlgIn { from { opacity: 0; transform: translateY(30px) scale(.94); } }
+@keyframes dlgOut { to { opacity: 0; transform: translateY(16px) scale(.96); } }
+@keyframes fade { from { opacity: 0; } }
+.detail { display: grid; grid-template-columns: 1.2fr 1fr; }
+@media (max-width: 760px) { .detail { grid-template-columns: 1fr; } dialog { overflow: auto; } }
+.stage {
+  position: relative; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden;
+  background: radial-gradient(110% 90% at 50% 35%, var(--tile-a), var(--tile-b));
+}
+.stage img, .stage video { width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; animation: stageIn .6s var(--ease); }
+.stage img { transition: transform .35s var(--ease); transform-origin: var(--zx, 50%) var(--zy, 50%); cursor: zoom-in; }
+.stage.zoom img { transform: scale(2.1); }
+@keyframes stageIn { from { opacity: 0; transform: scale(.94); filter: blur(10px); } }
+.stage a {
+  position: absolute; right: 14px; bottom: 14px; font-size: 12px; font-weight: 600; color: var(--accent-ink); background: rgba(255, 255, 255, .9); border: 1px solid var(--line-strong);
+  padding: 5px 12px; border-radius: 999px; text-decoration: none; backdrop-filter: blur(6px); transition: transform .3s var(--ease);
+}
+.stage a:hover { transform: translateY(-2px); }
+.stage .zoom-hint { position: absolute; left: 14px; bottom: 14px; font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.info { position: relative; padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 18px; overflow: auto; max-height: calc(100vh - 32px); }
+.info.first > * { animation: up .6s var(--ease) both; }
+.info.first > *:nth-child(2) { animation-delay: .06s; } .info.first > *:nth-child(3) { animation-delay: .12s; }
+.info.first > *:nth-child(4) { animation-delay: .18s; } .info.first > *:nth-child(5) { animation-delay: .24s; }
+.info.first > *:nth-child(6) { animation-delay: .3s; } .info.first > *:nth-child(7) { animation-delay: .36s; }
+.info h2 { font: 400 30px/1.1 var(--serif); letter-spacing: -.02em; margin: 0; padding-right: 44px; }
+.info .close { position: absolute; top: 16px; right: 16px; z-index: 5; }
+.info h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0 0 8px; font-weight: 700; }
+.muted { color: var(--muted); font-size: 13.5px; }
+.strip { display: flex; gap: 8px; flex-wrap: wrap; }
+.strip button {
+  padding: 0; width: 66px; height: 66px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, var(--tile-a), var(--tile-b)); transition: transform .35s var(--ease), box-shadow .3s;
+}
+.strip button:hover { transform: translateY(-3px); }
+.strip button.on { box-shadow: 0 0 0 2px var(--tone2), 0 8px 20px -8px var(--glow); }
+.strip img { width: 100%; height: 100%; object-fit: contain; }
+.strip .vid { font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+.metals { display: flex; gap: 8px; flex-wrap: wrap; }
+.metals button {
+  display: inline-flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; padding: 7px 14px 7px 8px;
+  border: 1px solid var(--line); border-radius: 999px; background: transparent; transition: all .35s var(--ease);
+}
+.metals button:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+.metals button.on { border-color: var(--tone2); background: var(--chip); }
+.metals .sw { width: 18px; height: 18px; pointer-events: none; }
+.facts { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; word-break: break-word; border-top: 1px solid var(--line); padding-top: 14px; }
+
+/* the font shorthand resets this, so set it after */
+.card .id, .info h2, .banner strong, .statline b { font-variant-numeric: lining-nums; }
+
+
+/* ---------- animated logo: cycles through every category (ring, earrings, pendant, necklace, bracelet) ---------- */
+.logo { width: 44px; height: 44px; overflow: visible; flex: none; }
+.logo .lg-items { transform-box: view-box; transform-origin: 24px 26px; }
+.logo .lg-item { opacity: 0; transform-box: view-box; transform-origin: 24px 26px; animation: lgCycle 15s infinite; }
+.logo .i1 { animation-delay: 3s; } .logo .i2 { animation-delay: 6s; } .logo .i3 { animation-delay: 9s; } .logo .i4 { animation-delay: 12s; }
+.logo .lg-item .d { stroke-dasharray: 100; stroke-dashoffset: 100; animation: lgTrace 15s infinite; animation-delay: inherit; }
+.logo .lg-item .g { transform-box: fill-box; transform-origin: center; animation: lgGem 15s infinite; animation-delay: inherit; }
+.logo .lg-spark { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: lgSpark 3s ease-in-out 1.2s infinite; }
+.logo .lg-spark.s2 { animation-delay: 2s; }
+@keyframes lgCycle { 0% { opacity: 0; transform: scale(.7) rotate(-10deg); } 3% { opacity: 1; transform: none; } 17% { opacity: 1; transform: none; } 20% { opacity: 0; transform: scale(1.15) rotate(8deg); } 100% { opacity: 0; } }
+@keyframes lgTrace { 0% { stroke-dashoffset: 100; } 9% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 0; } }
+@keyframes lgGem { 0%, 5% { opacity: 0; transform: scale(.2); } 10% { opacity: 1; transform: scale(1.12); } 12%, 100% { opacity: 1; transform: none; } }
+@keyframes lgSpark { 0%, 50%, 100% { transform: scale(0) rotate(0deg); opacity: 0; } 70% { transform: scale(1.15) rotate(90deg); opacity: 1; } 85% { transform: scale(.6) rotate(140deg); opacity: .6; } }
+@keyframes lgFlip { 50% { transform: scaleX(.12); } }
+.brand:hover .logo .lg-items, .logo-wrap:hover .logo .lg-items { animation: lgFlip 1s cubic-bezier(.4, 0, .2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .logo .lg-item, .logo .lg-item .d, .logo .lg-item .g { animation: none !important; }
+  .logo .lg-item .d { stroke-dashoffset: 0; }
+  .logo .i0 { opacity: 1; }
+}
+
+/* ---------- layout: sidebar + main ---------- */
+.shell { position: relative; z-index: 1; display: flex; align-items: flex-start; }
+.shell > .wrap { flex: 1; min-width: 0; }
+
+/* ---------- search history sidebar ---------- */
+.history {
+  position: sticky; top: 69px; height: calc(100vh - 69px); width: 320px; flex: none; overflow: hidden;
+  background: color-mix(in srgb, var(--surface-solid) 80%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-right: 1px solid var(--line); transition: width .55s var(--ease);
+}
+.history.collapsed { width: 68px; }
+.h-inner { width: 320px; height: 100%; display: flex; flex-direction: column; transition: opacity .3s, transform .5s var(--ease); }
+.history.collapsed .h-inner { opacity: 0; transform: translateX(-30px); pointer-events: none; visibility: hidden; }
+.h-rail {
+  position: absolute; inset: 0 auto 0 0; width: 68px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 18px;
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.history.collapsed .h-rail { opacity: 1; pointer-events: auto; transition-delay: .25s; }
+.h-rail .count { font-size: 11px; font-weight: 700; color: var(--tone2); }
+.h-rail .vlabel { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10.5px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.fold svg { transition: transform .5s var(--ease); }
+.history.collapsed .fold svg { transform: rotate(180deg); }
+.h-head { padding: 20px 20px 14px; border-bottom: 1px solid var(--line); }
+.h-head .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.h-head h2 { font: 400 22px/1.1 var(--serif); margin: 0; letter-spacing: -.01em; }
+.h-head h2 em { font-style: normal; font-weight: 500; color: var(--tone2); }
+.h-head .sub { font-size: 12px; color: var(--muted); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+.h-head .sub svg { width: 12px; height: 12px; color: var(--tone2); }
+.h-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+.h-filter { flex: 1; min-width: 0; height: 36px; border-radius: 12px; border: 1px solid var(--line); padding: 0 12px; font: 500 13px var(--sans); color: var(--ink); background: var(--bg2); outline: none; transition: border-color .3s, box-shadow .3s; }
+.h-filter:focus { border-color: var(--tone2); box-shadow: 0 0 0 4px var(--chip); }
+.linkish { border: 0; background: none; font: 600 12.5px var(--sans); color: var(--muted); padding: 6px 4px; border-radius: 8px; white-space: nowrap; }
+.linkish:hover { color: var(--danger); }
+.h-list { flex: 1; overflow: auto; padding: 6px 10px 24px; overscroll-behavior: contain; }
+.h-group { font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--tone2); font-weight: 700; margin: 16px 10px 6px; }
+.h-item {
+  position: relative; display: grid; grid-template-columns: 48px 1fr auto; gap: 11px; align-items: center; width: 100%; text-align: left;
+  padding: 9px; border-radius: 16px; border: 1px solid transparent; cursor: pointer; outline: none;
+  animation: hIn .5s var(--ease) both; animation-delay: calc(var(--i, 0) * 35ms); transition: background .3s, border-color .3s, transform .35s var(--ease);
+}
+@keyframes hIn { from { opacity: 0; transform: translateX(-20px); } }
+.h-item:hover, .h-item:focus-visible { background: var(--chip); border-color: var(--line); transform: translateX(3px); }
+.h-item.active { background: var(--chip); border-color: var(--line-strong); }
+.h-item.active::before { content: ""; position: absolute; left: -10px; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--tone2); }
+.h-item.gone { animation: hOut .35s ease-in forwards; }
+@keyframes hOut { to { opacity: 0; transform: translateX(-40px); } }
+.h-thumb { width: 48px; height: 48px; border-radius: 12px; background: radial-gradient(circle at 50% 40%, var(--tile-a), var(--tile-b)); border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; }
+.h-thumb img { width: 88%; height: 88%; object-fit: contain; }
+.h-thumb svg { width: 22px; height: 22px; color: var(--tone2); opacity: .6; }
+.h-q { font: 600 13px/1.35 var(--sans); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.h-meta { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
+.h-meta b { color: var(--tone2); font-weight: 600; }
+.h-del { width: 28px; height: 28px; border-radius: 50%; border: 0; background: none; color: var(--muted); display: grid; place-items: center; opacity: 0; transition: opacity .25s, background .25s, color .25s; }
+.h-del svg { width: 13px; height: 13px; pointer-events: none; }
+.h-item:hover .h-del, .h-del:focus-visible { opacity: 1; }
+.h-del:hover { background: var(--bg); color: var(--danger); }
+@media (hover: none) { .h-del { opacity: .7; } }
+.h-empty { text-align: center; color: var(--muted); padding: 50px 22px; font-size: 13px; animation: pop .5s var(--ease); }
+.h-empty svg { width: 50px; height: 50px; color: var(--tone2); opacity: .55; margin-bottom: 10px; animation: float 3s ease-in-out infinite; }
+.h-empty h3 { font: 400 19px var(--serif); color: var(--ink); margin: 0 0 6px; }
+.h-skel { height: 66px; border-radius: 16px; margin: 6px 0; background: linear-gradient(100deg, var(--chip) 30%, color-mix(in srgb, var(--tone2) 14%, transparent) 50%, var(--chip) 70%); background-size: 300% 100%; animation: sh 1.6s infinite linear; }
+.saved-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent-ink); background: var(--chip); border: 1px solid var(--line-strong); padding: 3px 10px; border-radius: 999px; }
+.saved-pill svg { width: 12px; height: 12px; }
+
+.top-btn {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px 0 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); font: 600 13px var(--sans); color: var(--ink);
+  transition: border-color .3s, transform .35s var(--ease), background .3s;
+}
+.top-btn:hover, .top-btn[aria-pressed="true"] { border-color: var(--line-strong); background: var(--chip); transform: translateY(-1px); }
+.top-btn svg { width: 17px; height: 17px; color: var(--tone2); }
+.top-btn .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11px; display: grid; place-items: center; background: var(--btn); border: 1px solid var(--line-strong); color: var(--accent-ink); }
+.top-btn .badge.bump { animation: bump .5s var(--ease); }
+@keyframes bump { 40% { transform: scale(1.35); } }
+#histBtn { display: none; }
+.scrim { position: fixed; inset: 0; z-index: 44; background: rgba(90, 65, 20, .14); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .4s; }
+
+/* ---------- search by photo ---------- */
+.photo-btn {
+  align-self: center; flex: none; width: 46px; height: 46px; border-radius: 14px; padding: 0; display: grid; place-items: center;
+  border: 1px solid var(--line); background: var(--surface-solid); color: var(--tone2);
+  transition: transform .35s var(--ease), border-color .3s, background .3s;
+}
+.photo-btn:hover { transform: translateY(-2px); border-color: var(--line-strong); background: var(--chip); }
+.photo-btn svg { width: 22px; height: 22px; pointer-events: none; }
+.photo-chip { position: relative; align-self: center; flex: none; width: 50px; height: 50px; animation: pop .45s var(--ease); }
+.photo-chip img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 0 0 2px var(--tone2); display: block; background: var(--tile-b); }
+.photo-chip .x {
+  position: absolute; top: -7px; right: -7px; width: 22px; height: 22px; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--line-strong); background: var(--surface-solid); color: var(--ink);
+}
+.photo-chip .x svg { width: 11px; height: 11px; pointer-events: none; }
+.search.has-photo .spark { display: none; }
+.search.has-photo { padding-left: 12px; }
+.drop-hint {
+  position: absolute; inset: 0; z-index: 2; border-radius: inherit; display: none; place-items: center; pointer-events: none;
+  background: color-mix(in srgb, var(--surface-solid) 94%, transparent); border: 2px dashed var(--tone2);
+  font-weight: 700; color: var(--accent-ink);
+}
+.search.dropping .drop-hint { display: grid; }
+.browse-row { gap: 10px; flex-wrap: wrap; }
+
+/* Design DNA: what the AI read from the photo */
+.dna {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 22px; align-items: start; margin: 22px 0 0; padding: 16px;
+  border-radius: 22px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); animation: pop .6s var(--ease);
+}
+.dna-photo { position: relative; display: inline-block; line-height: 0; border-radius: 16px; overflow: hidden; background: var(--tile-b); box-shadow: 0 0 0 1px var(--line); }
+.dna-photo img { display: block; max-width: 220px; max-height: 220px; width: auto; height: auto; }
+.dna-box { position: absolute; border: 2px solid var(--tone1); border-radius: 8px; box-shadow: 0 0 0 999px rgba(42, 33, 22, .3); animation: pop .6s var(--ease) .1s both; }
+.dna-photo .scan {
+  position: absolute; left: 0; right: 0; top: -35%; height: 35%; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(240, 205, 120, .6), transparent); animation: scan 1.5s ease-in-out infinite;
+}
+@keyframes scan { to { top: 100%; } }
+.dna-info { min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.dna-info > * { animation: pop .55s var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.dna-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.dna-head strong { font: 500 24px/1.2 var(--serif); letter-spacing: -.01em; }
+.dna-head .sub { font-size: 13px; color: var(--muted); }
+.dna-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; }
+.dna-row > .k { width: 104px; flex: none; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.trait {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font: 600 12.5px var(--sans);
+  border: 1px solid var(--line); background: var(--chip); color: var(--ink); transition: transform .3s var(--ease), border-color .3s, background .3s;
+}
+button.trait:hover { transform: translateY(-1px); border-color: var(--tone2); color: var(--accent-ink); }
+.trait .plus { font-weight: 800; color: var(--tone2); }
+.trait.on { background: var(--btn); border-color: var(--line-strong); color: var(--accent-ink); }
+.trait .dot { width: 11px; height: 11px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12); }
+.dna-hint { font-size: 12px; color: var(--muted); }
+.same {
+  display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 14px;
+  background: var(--btn); border: 1px solid var(--line-strong); max-width: 520px;
+}
+.same img { width: 46px; height: 46px; object-fit: contain; border-radius: 10px; background: #fff; flex: none; }
+.same .grow { flex: 1; min-width: 0; }
+.same strong { font: 500 16px var(--serif); color: var(--accent-ink); }
+.same .sub { font-size: 12px; color: var(--accent-ink); opacity: .8; }
+.same .ghost { background: var(--surface-solid); }
+@media (max-width: 640px) {
+  .dna { grid-template-columns: 1fr; }
+  .dna-photo { justify-self: center; }
+  .dna-photo img { max-width: 100%; max-height: 240px; }
+  .dna-row > .k { width: 100%; }
+  .photo-btn { width: 42px; height: 42px; }
+}
+/* how close a photo-search result is */
+.match {
+  position: absolute; z-index: 3; top: 10px; left: 10px; padding: 4px 10px; border-radius: 999px; pointer-events: none;
+  font: 700 11px var(--sans); letter-spacing: .03em; background: rgba(255, 255, 255, .92); border: 1px solid var(--line); color: var(--muted);
+}
+.match.m-same { background: var(--btn); border-color: var(--line-strong); color: var(--accent-ink); }
+.match.m-very_close { border-color: var(--line-strong); color: var(--accent-ink); }
+.card .shares { font-size: 11.5px; color: var(--accent-ink); margin: -2px 0 8px; }
+
+/* ---------- hearts ---------- */
+.heart {
+  position: absolute; z-index: 3; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center; border: 1px solid var(--line); background: rgba(255, 255, 255, .88); color: var(--muted);
+  backdrop-filter: blur(6px); transition: transform .35s var(--ease), color .3s, border-color .3s, opacity .3s;
+}
+.heart svg { width: 18px; height: 18px; pointer-events: none; transition: transform .35s var(--ease); }
+.heart svg path { fill: transparent; transition: fill .3s; }
+.heart:hover { transform: scale(1.1); color: var(--tone2); border-color: var(--line-strong); }
+.heart.on { color: var(--tone2); border-color: var(--line-strong); }
+.heart.on svg path { fill: currentColor; }
+.heart.pop svg { animation: heartPop .6s var(--ease); }
+@keyframes heartPop { 30% { transform: scale(1.45); } 60% { transform: scale(.9); } }
+.heart .burst { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--tone1); animation: burst .6s ease-out forwards; pointer-events: none; }
+@keyframes burst { from { transform: scale(.5); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+.card .heart { opacity: 0; }
+.card:hover .heart, .card .heart.on, .card .heart:focus-visible { opacity: 1; }
+@media (hover: none) { .card .heart { opacity: 1; } }
+.fav-toggle { display: inline-flex; align-items: center; gap: 8px; }
+.fav-toggle .heart { position: static; }
+
+/* ---------- favourites gallery ---------- */
+.favs { padding-top: 10px; animation: pop .6s var(--ease); }
+.favs-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 18px 0 16px; }
+.favs-head h2 { font: 300 36px/1.05 var(--serif); letter-spacing: -.02em; margin: 6px 0 0; }
+.favs-head h2 em { font-style: normal; font-weight: 500; color: var(--tone2); }
+.favs-head p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); grid-auto-rows: 190px; grid-auto-flow: dense; gap: 14px; }
+.tile {
+  position: relative; border-radius: 22px; overflow: hidden; cursor: pointer; outline: none; border: 1px solid var(--line);
+  background: radial-gradient(110% 90% at 50% 35%, var(--tile-a), var(--tile-b)); box-shadow: var(--shadow);
+  animation: rise .7s var(--ease) both; animation-delay: calc(var(--i, 0) * 45ms); transition: transform .5s var(--ease), box-shadow .5s, border-color .4s;
+}
+.tile.big { grid-column: span 2; grid-row: span 2; }
+.tile.tall { grid-row: span 2; }
+.tile.wide { grid-column: span 2; }
+.tile img { position: absolute; inset: 8%; width: 84%; height: 84%; object-fit: contain; transition: transform .9s var(--ease); }
+.tile:hover, .tile:focus-visible { transform: translateY(-4px); border-color: var(--line-strong); box-shadow: var(--shadow), 0 26px 50px -26px var(--glow); }
+.tile:hover img { transform: scale(1.07); }
+.tile .cap {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 9px 12px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: rgba(255, 255, 255, .86); backdrop-filter: blur(8px); border: 1px solid var(--line);
+  transform: translateY(14px); opacity: 0; transition: transform .45s var(--ease), opacity .35s;
+}
+.tile:hover .cap, .tile:focus-visible .cap { transform: none; opacity: 1; }
+.tile .cap b { font: 500 14px var(--serif); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile .cap span { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.tile .heart { opacity: 1; }
+.tile.gone { animation: tileOut .4s ease-in forwards; }
+@keyframes tileOut { to { opacity: 0; transform: scale(.85); } }
+@media (hover: none) { .tile .cap { transform: none; opacity: 1; } }
+@media (max-width: 560px) { .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 160px; gap: 10px; } .tile.wide, .tile.big { grid-column: span 2; } }
+
+@media (max-width: 900px) {
+  .history { position: fixed; z-index: 45; top: 0; left: 0; height: 100vh; width: min(340px, 90vw) !important; transform: translateX(-105%); transition: transform .5s var(--ease); box-shadow: 30px 0 80px -40px rgba(90, 65, 20, .35); }
+  .history.mobile-open { transform: none; }
+  .shell { z-index: auto; }   /* let the drawer stack above the page backdrop */
+  .history .h-inner { width: 100%; opacity: 1 !important; transform: none !important; visibility: visible !important; pointer-events: auto !important; }
+  .h-rail { display: none; }
+  #histBtn { display: inline-flex; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+}
+@media (max-width: 560px) { .top-btn span:not(.badge) { display: none; } .top-btn { padding: 0 11px; } }
+@media (max-width: 560px) { .topbar { padding: 12px 16px; } .brand small { display: none; } .brand b { font-size: 14px; letter-spacing: .12em; white-space: nowrap; } .top-actions { gap: 6px; } }
+
+@media (max-width: 560px) {
+  .hero { padding-top: 34px; }
+  .search { padding-left: 14px; border-radius: 18px; }
+  .search .spark { display: none; }
+  #go { padding: 0 18px; }
+  #go span { display: none; }   /* the search button only: dialog buttons keep their words */
+  .card .id { font-size: 16px; }
+  .card .body { padding: 10px 11px 12px; }
+  .more-like span { display: none; }
+  .more-like, .more-like.web-like { padding: 6px 8px; }   /* Similar + Web + three swatches fit a phone card */
+  .card .row-btns { gap: 4px; }
+  .card .swatches { gap: 5px; }
+  .buy-btn { height: 38px; font-size: 12px; gap: 6px; letter-spacing: .02em; }
+  .banner { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  #sparkles { display: none; }
+}
+
+/* ---------- "From the web" panel (demo): other shops' products, like Google's product view ---------- */
+.webpanel {
+  position: sticky; top: 69px; height: calc(100vh - 69px); width: 0; flex: none; overflow: hidden;
+  background: color-mix(in srgb, var(--surface-solid) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-left: 1px solid transparent; transition: width .5s var(--ease), border-color .3s;
+}
+body.web-open .webpanel { width: 400px; border-color: var(--line); }
+.wp-inner { width: 400px; height: 100%; display: flex; flex-direction: column; }
+.wp-head { display: flex; align-items: flex-start; gap: 10px; padding: 18px 18px 12px; border-bottom: 1px solid var(--line); }
+.wp-head .grow { flex: 1; min-width: 0; }
+.wp-kicker { font: 700 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--tone2); display: flex; align-items: center; gap: 6px; }
+.wp-kicker svg { width: 14px; height: 14px; }
+.wp-title { font: 400 18px/1.3 var(--serif); color: var(--ink); margin-top: 3px; overflow-wrap: anywhere; }
+.wp-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.wp-body { flex: 1; overflow-y: auto; padding: 14px 18px 30px; overscroll-behavior: contain; }
+.wp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+.wp-note { font-size: 13px; color: var(--muted); padding: 30px 6px; text-align: center; }
+.wp-btn { width: 34px; height: 34px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-solid); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.wp-btn:hover { border-color: var(--line-strong); background: var(--chip); }
+.wp-btn:disabled { opacity: .35; cursor: default; }
+.wp-btn svg { width: 16px; height: 16px; }
+
+/* every picture in the same square frame: shown whole (contain), never cropped or squashed;
+   a soft blurred copy of the same picture fills the space around it */
+.wframe { position: relative; display: block; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 14px; border: 1px solid var(--line); background: #f8f5ee; padding: 0; cursor: pointer; isolation: isolate; }
+.wframe::before { content: ""; position: absolute; inset: -14%; z-index: -1; background: var(--src) center / cover no-repeat; filter: blur(22px) saturate(1.1); opacity: .55; }
+.wframe img { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform .5s var(--ease); }
+.wcard:hover .wframe img { transform: scale(1.03); }
+.wcard .wframe:focus-visible { outline: 2px solid var(--tone2); outline-offset: 2px; }
+.wmeta { padding: 8px 2px 0; display: grid; gap: 2px; min-width: 0; }
+.wshop { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+.wshop span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wfav { width: 18px; height: 18px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 700 10px var(--sans); color: #fff; }
+.wnew { flex: none; font: 700 10px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); background: var(--btn); border: 1px solid var(--line-strong); border-radius: 999px; padding: 0 6px; }
+.wname { font-size: 13.5px; line-height: 1.35; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wprice { font-weight: 700; font-size: 14px; color: var(--ink); }
+.wmat { font-size: 11.5px; color: var(--muted); }
+.wurl { font-size: 12px; color: var(--accent); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wurl:hover { text-decoration: underline; }
+
+.wprev .wp-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.wprev .wp-nav .grow { flex: 1; }
+.wprev h3 { font: 500 17px/1.35 var(--serif); margin: 4px 0 10px; color: var(--ink); }
+.wprev .wframe { border-radius: 16px; cursor: default; }
+.wprev .wfacts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 12px 0; }
+.wprev .wfacts .wprice { font-size: 18px; }
+.wprev .wactions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wprev .wactions a, .wprev .wactions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: 999px; font: 600 14px var(--sans); text-decoration: none; cursor: pointer; }
+.wprev .wactions a { background: var(--btn); border: 1px solid var(--line-strong); color: var(--accent-ink); }
+.wprev .wactions button { background: var(--surface-solid); border: 1px solid var(--line); color: var(--ink); }
+.wprev .wactions svg { width: 16px; height: 16px; }
+.wprev .wurl { display: block; margin: 10px 2px 0; }
+.wprev h4 { font: 700 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 24px 0 12px; }
+
+.web-fab { position: fixed; right: 18px; bottom: 76px; z-index: 35; display: none; align-items: center; gap: 8px; height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-solid); box-shadow: var(--shadow); font: 600 13px var(--sans); color: var(--ink); cursor: pointer; }
+.web-fab svg { width: 17px; height: 17px; color: var(--tone2); }
+.web-fab.show { display: inline-flex; }
+body.web-open .web-fab { display: none; }
+
+@media (max-width: 1199px) {
+  .webpanel { position: fixed; z-index: 46; top: 0; right: 0; height: 100vh; width: min(420px, 100vw) !important; transform: translateX(105%); transition: transform .45s var(--ease); box-shadow: -30px 0 80px -40px rgba(90, 65, 20, .35); border-color: var(--line); }
+  body.web-open .webpanel { transform: none; }
+  .wp-inner { width: 100%; }
+}
+@media (max-width: 760px) { #webBtn { display: none; } }   /* phones use the floating button; the top bar has no room */
+@media (max-width: 560px) { .wp-head { padding: 14px 16px 10px; } .wp-body { padding: 12px 16px 30px; } }
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<canvas id="sparkles" aria-hidden="true"></canvas>
+<div class="progress" id="progress"></div>
+
+<header class="topbar" id="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg class="logo" viewBox="0 0 48 48" fill="none" role="img" aria-label="Rings, earrings, pendants, necklaces and bracelets">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:#f7e6b0"/><stop offset=".45" style="stop-color:var(--tone2)"/><stop offset="1" style="stop-color:var(--tone3)"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <g class="lg-items" stroke-linecap="round">
+        <g class="lg-item i0"><!-- ring -->
+          <ellipse class="d" pathLength="100" cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+          <g class="g"><path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/></g>
+        </g>
+        <g class="lg-item i1"><!-- earrings -->
+          <path class="d" pathLength="100" d="M15 9c-2.5 0-4 1.6-4 3.8V17M33 9c2.5 0 4 1.6 4 3.8V17" stroke="url(#lgGold)" stroke-width="1.8"/>
+          <g class="g"><circle cx="11" cy="19.5" r="2" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="37" cy="19.5" r="2" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+            <path d="M11 23l-5 9.5a5 5 0 0 0 10 0zM37 23l-5 9.5a5 5 0 0 0 10 0z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        </g>
+        <g class="lg-item i2"><!-- pendant -->
+          <path class="d" pathLength="100" d="M7 5c5 14 11 19 17 20 6-1 12-6 17-20" stroke="url(#lgGold)" stroke-width="1.6"/>
+          <g class="g"><circle cx="24" cy="27.6" r="1.8" stroke="url(#lgGold)" stroke-width="1.3"/>
+            <path d="M24 30.5l-7 6 7 9.5 7-9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><path d="M17 36.5h14M24 30.5v15.5" stroke="url(#lgGold)" stroke-width=".7"/></g>
+        </g>
+        <g class="lg-item i3"><!-- necklace -->
+          <path class="d" pathLength="100" d="M6 6c2 18 10 27 18 27s16-9 18-27" stroke="url(#lgGold)" stroke-width="1.5"/>
+          <g class="g" fill="url(#lgGold)"><circle cx="8.6" cy="19" r="1.7"/><circle cx="12.4" cy="26" r="1.7"/><circle cx="17.6" cy="30.8" r="1.7"/>
+            <circle cx="30.4" cy="30.8" r="1.7"/><circle cx="35.6" cy="26" r="1.7"/><circle cx="39.4" cy="19" r="1.7"/>
+            <path d="M24 33.5l-4.2 4.2 4.2 6.3 4.2-6.3z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        </g>
+        <g class="lg-item i4"><!-- bracelet -->
+          <ellipse class="d" pathLength="100" cx="24" cy="26" rx="17.5" ry="9" transform="rotate(-10 24 26)" stroke="url(#lgGold)" stroke-width="3"/>
+          <g class="g"><circle cx="11.5" cy="31.6" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="17" cy="34.1" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="23" cy="34.9" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+            <circle cx="29" cy="34.2" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/><circle cx="34.6" cy="31.9" r="1.8" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/></g>
+        </g>
+      </g>
+      <path class="lg-spark" d="M40 4.5l1.1 2.9 2.9 1.1-2.9 1.1-1.1 2.9-1.1-2.9-2.9-1.1 2.9-1.1z" fill="var(--tone1)"/>
+      <path class="lg-spark s2" d="M6.5 5.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="var(--tone2)"/>
+    </svg>
+    <div><b>Design Finder</b><small>Fine jewellery atelier</small></div>
+  </a>
+  <div class="top-actions">
+    <button type="button" class="top-btn" id="phoneBtn" title="Open on your phone: scan a QR code to use the phone camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg><span>On phone</span></button>
+    <button type="button" class="top-btn" id="webBtn" aria-controls="webPanel" aria-pressed="false" title="Similar products on other shops' websites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg><span>From the web</span></button>
+    <button type="button" class="top-btn" id="favBtn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.9 3.6 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.4 0 5.6 3.4 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg><span>Favourites</span><span class="badge" id="favCount">0</span></button>
+    <button type="button" class="top-btn" id="histBtn" aria-controls="history" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span>History</span></button>
+    <div class="user" id="user" hidden>
+      <button type="button" class="user-btn" id="userBtn" aria-haspopup="true" aria-expanded="false"><span class="avatar" id="avatar"></span><span class="uname" id="uname"></span></button>
+      <div class="menu" id="menu" hidden><div class="menu-email" id="uemail"></div><button type="button" id="liveTry">Live ring try-on</button><button type="button" id="myPhotos">My try-on photos</button><button type="button" id="sketchLink">Sketch to design · AI</button><button type="button" id="variationLink">Design variations · AI</button><button type="button" id="jewelerLink" hidden>Jeweler panel · Orders</button><button type="button" id="brandLink" hidden>Brand designs · List from other sites</button><button type="button" id="adminLink" hidden>Admin panel · Upload designs</button><button type="button" id="logout">Sign out</button></div>
+    </div>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+<aside class="history" id="history" aria-label="Your search history">
+  <div class="h-rail">
+    <button type="button" class="icon-btn fold" data-fold aria-label="Show search history" title="Show search history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <span style="color:var(--tone2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="20" height="20"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></span>
+    <span class="count" id="railCount"></span>
+    <span class="vlabel">Search history</span>
+  </div>
+  <div class="h-inner">
+    <div class="h-head">
+      <div class="row">
+        <h2>Your search <em>history</em></h2>
+        <button type="button" class="icon-btn fold" data-fold aria-label="Hide search history" title="Hide search history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      </div>
+      <div class="h-tools" id="histTools"><input class="h-filter" id="histFilter" type="search" placeholder="Filter your searches…" aria-label="Filter your searches"><button type="button" class="linkish" id="histClear">Clear all</button></div>
+    </div>
+    <div class="h-list" id="histList"></div>
+  </div>
+</aside>
+<main class="wrap">
+  <p class="offline-note" id="offlineNote" hidden>The original photos are offline (the dataset drive isn't connected), so smaller previews are shown for now.</p>
+  <section class="hero">
+    <div class="eyebrow">AI design search</div>
+    <h1>Find the piece, <em>in your own words</em></h1>
+    <p class="lead">Describe it in <span class="langs"><span>English</span>·<span>हिन्दी</span>·<span>ગુજરાતી</span></span>, paste a product link, or add a photo, and see the closest designs from the collection.</p>
+  </section>
+
+  <div class="modes"><div class="seg" role="tablist" aria-label="How to search">
+    <button type="button" role="tab" data-mode="ai" aria-selected="true" aria-controls="form"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1l2.2 7.8L22 11l-7.8 2.2L12 21l-2.2-7.8L2 11l7.8-2.2z"/></svg>AI search</button>
+    <button type="button" role="tab" data-mode="manual" aria-selected="false" aria-controls="manual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Manual search</button>
+  </div></div>
+
+  <form class="search" id="form">
+    <svg class="spark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1l2.2 7.8L22 11l-7.8 2.2L12 21l-2.2-7.8L2 11l7.8-2.2z"/></svg>
+    <div class="photo-chip" id="photoChip" hidden><img id="photoThumb" alt="Your photo"><button type="button" class="x" id="photoClear" aria-label="Remove the photo" title="Remove the photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <textarea id="q" rows="1" aria-label="Describe the design" aria-autocomplete="list" aria-controls="suggest" autocomplete="off" spellcheck="false"></textarea>
+    <button type="button" class="photo-btn" id="photoBtn" title="Search with a photo (or drop / paste one)" aria-label="Search with a photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 15.5l-4.5-4.5L8 19.5"/></svg></button>
+    <input type="file" id="photoFile" accept="image/*" hidden>
+    <div class="drop-hint">Drop the photo to find designs like it</div>
+    <ul class="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></ul>
+    <button class="primary" id="go" type="submit"><span>Find</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </form>
+  <section class="manual-panel" id="manual" role="tabpanel" aria-label="Manual search" hidden>
+    <div class="m-groups" id="mGroups"></div>
+    <div class="m-legend"><span>Numbers: designs that have it, with your other picks.</span><span><svg class="ai" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1l2.2 7.8L22 11l-7.8 2.2L12 21l-2.2-7.8L2 11l7.8-2.2z"/></svg> The AI ranks designs by how much they show it.</span></div>
+    <div class="m-foot">
+      <div class="m-read" id="mRead" aria-live="polite"></div>
+      <button type="button" class="linkish" id="mClear" hidden>Clear</button>
+      <button type="button" class="primary" id="mGo" disabled><span>Find designs</span><em class="m-n" id="mN" hidden></em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </section>
+  <div class="browse-row"><button type="button" class="ghost browse-btn" id="browseBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg><span>Browse all categories</span></button><button type="button" class="ghost browse-btn" id="photoBtn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 15.5l-4.5-4.5L8 19.5"/></svg><span>Search with a photo</span></button></div>
+  <div class="examples" id="examples"></div>
+
+  <section class="dna" id="dna" hidden aria-label="Design DNA of your photo"></section>
+  <div class="understood" id="understood" hidden></div>
+  <div class="statline" id="notice"></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="grid" id="grid"></div>
+  <div class="more"><button type="button" class="ghost" id="more" hidden>Show 8 more</button></div>
+
+  <section class="favs" id="favs" hidden aria-label="Your favourites">
+    <div class="favs-head">
+      <div><h2>Your <em>favourites</em></h2><p id="favSub"></p></div>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </section>
+</main>
+<aside class="webpanel" id="webPanel" aria-label="Similar products from other shops">
+  <div class="wp-inner">
+    <div class="wp-head"><div class="grow"><div class="wp-kicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>From the web</div>
+      <div class="wp-title" id="wpTitle">Similar products on other shops</div><div class="wp-sub" id="wpSub">Search for a design to see similar products from other jewellery shops.</div></div>
+      <button type="button" class="wp-btn" id="wpClose" aria-label="Close the web panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="wp-body" id="wpBody"></div>
+  </div>
+</aside>
+</div>
+<button type="button" class="web-fab" id="webFab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg><span>Similar on the web</span></button>
+
+<button class="icon-btn to-top" id="top" type="button" aria-label="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+<dialog id="dlg" aria-label="Design details"></dialog>
+<dialog id="tryDlg" class="try" aria-label="Try on"></dialog>
+<dialog id="phoneDlg" class="phone" aria-label="Open on your phone"></dialog>
+
+<script>
+const EXAMPLES = [
+  "A rose gold ring for my mother, wearable every day",
+  "મારી બહેન માટે નાની અને સાદી કાનની બુટ્ટી",
+  "शादी के लिए भारी हीरे का हार",
+  "floral pendant in yellow gold as a gift",
+  "gents ring bina stone",
+  "oval diamond engagement ring",
+];
+const CAT = { ring: "Ring", earrings: "Earrings", pendant: "Pendant", necklace: "Necklace", bracelet: "Bracelet" };
+const METAL = { rose_gold: "Rose gold", white_gold: "White gold", yellow_gold: "Yellow gold" };
+const INTENT = {
+  everyday: "everyday wear", bridal: "bridal", engagement: "engagement", party: "party / festive",
+  minimal: "simple & light", statement: "heavy / statement", floral: "floral", heart: "heart",
+  solitaire: "solitaire", diamond: "diamonds", coloured_stone: "coloured stones", traditional: "traditional",
+  modern: "modern", men: "for men", women: "for women", kids: "for kids", gift: "gift", plain: "no stones",
+  tennis: "tennis style", halo: "halo", side_stones: "side stones", thin: "thin band",
+  wide: "wide band", stud: "stud", hoop: "hoop", drop: "drop", jhumka: "jhumka", bangle: "bangle",
+  cuff: "cuff", flexible: "flexible", choker: "choker", pendant_chain: "chain with pendant", cluster: "many diamonds",
+  infinity: "infinity", leaf: "leaf", twisted: "twisted", geometric: "geometric",
+};
+const GEM = `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M9 5h14l6 7-13 16L3 12zM3 12h26M12 5l4 7 4-7M9 12l7 16 7-16"/></svg>`;
+const LOOP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>`;
+const CAM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H8l1.5-2h5L16 6h2.5A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg>`;
+// a touch device has its own camera: "Live" opens it directly; elsewhere it shows a QR code for the phone
+const TOUCH = matchMedia("(pointer: coarse)").matches;
+const SPARK = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1l2.2 7.8L22 11l-7.8 2.2L12 21l-2.2-7.8L2 11l7.8-2.2z"/></svg>`;
+const BAG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 8h13l-1 12.5h-11z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>`;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const finePointer = matchMedia("(pointer: fine)").matches;
+// the buy page for a design, in the metal colour being looked at (the id guards against an index rebuild)
+const buyUrl = (d, metal) => "/buy?" + new URLSearchParams({ uid: d.uid, id: d.design_id, metal: metal || d.metal_shown });
+
+const $ = s => document.querySelector(s);
+// a catalogue picture (a large original) fades in once it has fully loaded (styles: .ready)
+document.addEventListener("load", e => { if (e.target.tagName === "IMG") e.target.classList.add("ready"); }, true);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let lastQuery = "", overrides = { category: "", metal: "" }, page = 0, current = [];
+let browsing = null;   // the category being browsed without a prompt ("Browse all categories"), else null
+let photoState = null; // the photo being searched with: { dataUrl, token }. In this page's memory only, never stored
+const moreLabel = () => browsing ? "Show 24 more" : "Show 8 more";
+
+
+/* ---------- search history (read from the server's database, never stored in the browser) ---------- */
+const CLOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>`;
+const XS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+let histItems = [], activeHist = null, histTimer;
+
+function fmtWhen(iso) {
+  const d = new Date(iso), now = new Date();
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const days = Math.floor((new Date(now.toDateString()) - new Date(d.toDateString())) / 864e5);
+  return days === 0 ? `today, ${time}` : days === 1 ? `yesterday, ${time}` : d.toLocaleDateString([], { day: "numeric", month: "short", year: d.getFullYear() === now.getFullYear() ? undefined : "numeric" }) + `, ${time}`;
+}
+function groupOf(iso) {
+  const d = new Date(iso), days = Math.floor((new Date(new Date().toDateString()) - new Date(d.toDateString())) / 864e5);
+  return days === 0 ? "Today" : days === 1 ? "Yesterday" : days < 7 ? "This week" : d.toLocaleDateString([], { month: "long", year: "numeric" });
+}
+
+// Desktop: a sidebar that folds to a slim rail. Phones: a drawer. The open/closed
+// state lives only in this page (nothing is saved on the device).
+const isPhone = () => matchMedia("(max-width: 900px)").matches;
+function foldHistory(collapsed) {
+  $("#history").classList.toggle("collapsed", collapsed);
+  $("#histBtn").setAttribute("aria-expanded", !collapsed);
+}
+function openDrawer(open) {
+  $("#history").classList.toggle("mobile-open", open);
+  $("#scrim").classList.toggle("show", open);
+  $("#histBtn").setAttribute("aria-expanded", open);
+}
+$("#history").addEventListener("click", e => {
+  if (!e.target.closest("[data-fold]")) return;
+  if (isPhone()) openDrawer(false); else foldHistory(!$("#history").classList.contains("collapsed"));
+});
+$("#histBtn").addEventListener("click", () => openDrawer(!$("#history").classList.contains("mobile-open")));
+$("#scrim").addEventListener("click", () => openDrawer(false));
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#history").classList.contains("mobile-open") && !$("#dlg").open) openDrawer(false); });
+
+async function loadHistory() {
+  const list = $("#histList");
+  if (!histItems.length) list.innerHTML = Array.from({ length: 6 }, () => `<div class="h-skel"></div>`).join("");
+  try {
+    histItems = (await api("/api/history?limit=100")).items;
+    renderHistory();
+  } catch (err) {
+    list.innerHTML = `<div class="h-empty"><h3>History unavailable</h3>${esc(err.message)}</div>`;
+  }
+}
+
+// A search was just made: the server saves it right after answering, so refresh shortly after.
+function historyChanged() {
+  clearTimeout(histTimer);
+  histTimer = setTimeout(() => { loadHistory(); loadPromptSuggestions(); }, 900);
+}
+
+function renderHistory() {
+  const f = $("#histFilter").value.trim().toLowerCase();
+  const items = histItems.filter(h => !f || h.query.toLowerCase().includes(f));
+  $("#railCount").textContent = histItems.length || "";
+  $("#histTools").hidden = !histItems.length;
+  if (!items.length) {
+    $("#histList").innerHTML = f
+      ? `<div class="h-empty"><h3>No matching searches</h3>Try another word.</div>`
+      : `<div class="h-empty">${CLOCK.replace("<svg", '<svg aria-hidden="true"')}<h3>No search history yet</h3>Every search you make is saved here, with its results, so you can come back to it anytime.</div>`;
+    return;
+  }
+  let group = "", html = "";
+  items.forEach((h, i) => {
+    const g = groupOf(h.created_at);
+    if (g !== group) { html += `<div class="h-group">${esc(g)}</div>`; group = g; }
+    const meta = [h.category && (CAT[h.category] || h.category), h.metal && METAL[h.metal]].filter(Boolean).join(" · ");
+    html += `<div class="h-item${h.id === activeHist ? " active" : ""}" role="button" tabindex="0" data-id="${h.id}" style="--i:${Math.min(i, 14)}">
+      <span class="h-thumb">${h.thumb ? `<img src="${h.thumb}" alt="" loading="lazy">` : GEM}</span>
+      <span><span class="h-q">${esc(h.query)}</span>
+        <span class="h-meta">${meta ? esc(meta) + " · " : ""}<b>${h.matches.toLocaleString()}</b> matches · ${esc(new Date(h.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))}</span></span>
+      <button type="button" class="h-del" data-del="${h.id}" aria-label="Delete this search">${XS}</button>
+    </div>`;
+  });
+  $("#histList").innerHTML = html;
+}
+$("#histFilter").addEventListener("input", renderHistory);
+
+$("#histList").addEventListener("click", async e => {
+  const del = e.target.closest("[data-del]");
+  const item = e.target.closest(".h-item");
+  if (!item) return;
+  const id = +item.dataset.id;
+  if (del) {
+    e.stopPropagation();
+    item.classList.add("gone");
+    try {
+      await api(`/api/history/${id}`, { method: "DELETE" });
+      histItems = histItems.filter(h => h.id !== id);
+      setTimeout(renderHistory, 300);
+    } catch (err) { item.classList.remove("gone"); fail("Could not delete: " + err.message); }
+    return;
+  }
+  showSaved(id);
+});
+$("#histList").addEventListener("keydown", e => {
+  const item = e.target.closest?.(".h-item");
+  if (item && e.target === item && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); showSaved(+item.dataset.id); }
+});
+$("#histClear").addEventListener("click", async () => {
+  if (!confirm("Delete your whole search history? This can't be undone.")) return;
+  try { await api("/api/history", { method: "DELETE" }); histItems = []; renderHistory(); }
+  catch (err) { fail("Could not clear history: " + err.message); }
+});
+
+// Re-open a saved search exactly as it was: same understanding, same results, loaded from the database.
+async function showSaved(id) {
+  setMode("ai");
+  activeHist = id; renderHistory(); browsing = null; clearPhoto();
+  if (isPhone()) openDrawer(false);
+  setView("search");
+  document.body.classList.add("searched");
+  $("#banner").hidden = true; skeleton();
+  try {
+    const h = await api(`/api/history/${id}`);
+    lastQuery = h.query; $("#q").value = h.query;
+    overrides = { category: h.category_override || "", metal: h.metal_override || "" };
+    history.replaceState(null, "", "?q=" + encodeURIComponent(h.query));
+    if (h.understood && h.understood.refused) { showRefused(h.understood.refused); return; }
+    showUnderstood(h.understood);
+    showStats({ matches_in_filter: h.matches, notes: h.notes || [] }, h.created_at);
+    renderGrid(h.results);
+    page = 0; $("#more").hidden = h.matches <= h.results.length;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (err) { $("#grid").innerHTML = ""; fail("Could not open this search: " + err.message); }
+}
+
+/* ---------- favourites (stored in the database; kept in memory only while the page is open) ---------- */
+const HEART = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.9 3.6 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.4 0 5.6 3.4 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg>`;
+let favSet = new Set(), favItems = [];
+const heartBtn = uid => `<button type="button" class="heart${favSet.has(uid) ? " on" : ""}" data-fav="${uid}" aria-pressed="${favSet.has(uid)}" aria-label="${favSet.has(uid) ? "Remove from" : "Add to"} favourites">${HEART}</button>`;
+
+function setFavCount() {
+  const b = $("#favCount");
+  b.textContent = favSet.size; b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump");
+}
+api("/api/favorites/ids").then(r => { favSet = new Set(r.uids); $("#favCount").textContent = favSet.size; paintHearts(); }).catch(() => {});
+
+function paintHearts(uid) {
+  document.querySelectorAll(uid === undefined ? "[data-fav]" : `[data-fav="${uid}"]`).forEach(h => {
+    const on = favSet.has(+h.dataset.fav);
+    h.classList.toggle("on", on); h.setAttribute("aria-pressed", on);
+    h.setAttribute("aria-label", (on ? "Remove from" : "Add to") + " favourites");
+  });
+  document.querySelectorAll(uid === undefined ? "[data-fav-label]" : `[data-fav-label="${uid}"]`)
+    .forEach(l => l.textContent = favSet.has(+l.dataset.favLabel) ? "In your favourites" : "Add to favourites");
+}
+
+async function toggleFav(uid, btn) {
+  const on = !favSet.has(uid);
+  on ? favSet.add(uid) : favSet.delete(uid);
+  paintHearts(uid); setFavCount();
+  if (on && btn && !reduceMotion) {
+    btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop");
+    const ring = document.createElement("span"); ring.className = "burst"; btn.appendChild(ring);
+    ring.addEventListener("animationend", () => ring.remove());
+  }
+  if (!on && !$("#favs").hidden) {
+    const tile = document.querySelector(`.tile[data-uid="${uid}"]`);
+    tile?.classList.add("gone");
+    setTimeout(() => { favItems = favItems.filter(f => f.uid !== uid); renderFavs(); }, 350);
+  }
+  try {
+    await api(`/api/favorites/${uid}`, { method: on ? "PUT" : "DELETE" });
+  } catch (err) {   // undo on failure
+    on ? favSet.delete(uid) : favSet.add(uid);
+    paintHearts(uid); setFavCount();
+    fail("Could not update favourites: " + err.message);
+  }
+}
+
+// Swap between search results and the favourites gallery.
+function setView(v) {
+  const favs = v === "favs";
+  $("#favs").hidden = !favs;
+  ["#dna", "#understood", "#notice", "#grid"].forEach(sel => $(sel).style.display = favs ? "none" : "");
+  if (favs) { $("#banner").hidden = true; $("#more").hidden = true; }
+  $("#favBtn").setAttribute("aria-pressed", favs);
+}
+
+async function showFavs() {
+  setView("favs"); activeHist = null; renderHistory();
+  document.body.classList.add("searched");
+  $("#gallery").innerHTML = Array.from({ length: 6 }, (_, i) => `<div class="tile skeleton ${i === 0 ? "big" : ""}"><div class="img">${GEM}</div></div>`).join("");
+  try {
+    favItems = (await api("/api/favorites")).items;
+    favSet = new Set(favItems.map(f => f.uid)); $("#favCount").textContent = favSet.size;
+    renderFavs();
+  } catch (err) { $("#gallery").innerHTML = `<div class="empty"><h3>Favourites unavailable</h3>${esc(err.message)}</div>`; }
+}
+$("#favBtn").addEventListener("click", () => $("#favs").hidden ? showFavs() : setView("search"));
+
+// A mixed gallery: every category together, with a rhythm of large, tall and wide tiles.
+const RHYTHM = ["big", "", "tall", "", "", "wide", "", "", "tall", "", "big", "", ""];
+function renderFavs() {
+  const counts = {};
+  favItems.forEach(f => counts[f.category] = (counts[f.category] || 0) + 1);
+  const cats = Object.keys(counts).length;
+  $("#favSub").textContent = favItems.length
+    ? `${favItems.length} design${favItems.length > 1 ? "s" : ""} you loved${cats > 1 ? ` across ${cats} categories` : ""}`
+    : "";
+  const items = favItems;
+  $("#gallery").innerHTML = items.length ? items.map((d, i) => `
+    <div class="tile ${items.length > 3 ? RHYTHM[i % RHYTHM.length] : ""}" role="button" tabindex="0" data-uid="${d.uid}" style="--i:${Math.min(i, 16)}">
+      ${heartBtn(d.uid)}<img loading="lazy" src="${d.thumb}" alt="${esc(d.design_id)}">
+      <div class="cap"><b>${esc(d.design_id)}</b><span>${esc(CAT[d.category] || d.category)}${d.metal_shown ? " · " + esc(METAL[d.metal_shown]) : ""}</span></div>
+    </div>`).join("")
+    : `<div class="empty" style="grid-column:1/-1">${HEART.replace("<svg", '<svg style="width:60px;height:60px"')}<h3>No favourites yet</h3>Tap the ♥ on any design to save it here.</div>`;
+}
+$("#gallery").addEventListener("click", e => {
+  const fav = e.target.closest("[data-fav]");
+  if (fav) { e.stopPropagation(); toggleFav(+fav.dataset.fav, fav); return; }
+  const t = e.target.closest(".tile[data-uid]");
+  if (t) openDetail(+t.dataset.uid);
+});
+$("#gallery").addEventListener("keydown", e => {
+  const t = e.target.closest?.(".tile[data-uid]");
+  if (t && e.target === t && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openDetail(+t.dataset.uid); }
+});
+
+/* ---------- signed-in user ---------- */
+function toLogin() { location.replace("/login?next=" + encodeURIComponent(location.pathname + location.search)); }
+fetch("/api/auth/me", { credentials: "same-origin" }).then(r => r.status === 401 ? toLogin() : r.ok && r.json()).then(u => {
+  if (!u) return;
+  $("#uname").textContent = u.name;
+  $("#uemail").textContent = u.email;
+  $("#avatar").textContent = u.name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
+  $("#adminLink").hidden = !u.is_admin;
+  $("#jewelerLink").hidden = !(u.is_jeweler || u.is_admin);
+  $("#brandLink").hidden = !(u.is_jeweler || u.is_admin);
+  $("#offlineNote").hidden = u.originals !== false;
+  $("#user").hidden = false;
+}).catch(() => {});
+$("#adminLink").addEventListener("click", () => { location.href = "/admin"; });
+$("#jewelerLink").addEventListener("click", () => { location.href = "/jeweler"; });
+$("#brandLink").addEventListener("click", () => { location.href = "/brand-import"; });
+$("#sketchLink").addEventListener("click", () => { location.href = "/sketch"; });
+$("#variationLink").addEventListener("click", () => { location.href = "/variation"; });
+$("#myPhotos").addEventListener("click", () => { location.href = "/tryon/me"; });
+$("#liveTry").addEventListener("click", () => {
+  if (TOUCH) location.href = "/tryon";
+  else openOnPhone({ path: "/tryon", title: "Live ring try-on", local: true, what: "Opens the live ring camera on your phone." });
+});
+$("#userBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  const open = $("#menu").hidden;
+  $("#menu").hidden = !open; $("#userBtn").setAttribute("aria-expanded", open);
+});
+document.addEventListener("click", e => { if (!e.target.closest("#user")) { $("#menu").hidden = true; $("#userBtn").setAttribute("aria-expanded", false); } });
+$("#logout").addEventListener("click", async () => {
+  await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
+  location.replace("/login");
+});
+
+/* ---------- suggested prompts under the search bar + typewriter placeholder ----------
+   Chosen for each shopper by the server (/api/prompt-suggestions, jewelsearch/recommend.py): their own
+   searches to run again, prompts in their style, what other shoppers search (meaning only) and the
+   collection. Kept in this page's memory only. The fixed EXAMPLES are the fallback. */
+const TREND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>`;
+const COMPASS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>`;
+const KIND_ICON = { recent: CLOCK.replace("<svg", '<svg aria-hidden="true"'), for_you: SPARK, popular: TREND, explore: COMPASS };
+let promptSugg = [];   // the shopper's suggested prompts: [{ text, kind, why }]
+
+function renderExamples(res) {
+  const items = res && res.items.length ? res.items : EXAMPLES.slice(0, 5).map(text => ({ text, kind: "explore", why: "Try this" }));
+  const label = res && res.items.length ? (res.personal ? "Suggested for you" : "Popular searches") : "Try";
+  $("#examples").setAttribute("aria-label", label);
+  $("#examples").innerHTML = `<span class="ex-label" aria-hidden="true">${label}</span>` + items.map((it, i) =>
+    `<button type="button" style="--i:${i}" data-text="${esc(it.text)}" title="${esc(it.why)}" aria-label="${esc(it.text)}. ${esc(it.why)}">`
+    + `${KIND_ICON[it.kind] || SPARK}<span class="ex-t">${esc(it.text)}</span></button>`).join("");
+}
+async function loadPromptSuggestions() {
+  try {
+    const res = await api("/api/prompt-suggestions");
+    promptSugg = res.items;
+    renderExamples(res);
+  } catch (_) {
+    if (!promptSugg.length) renderExamples(null);   // the fixed examples still help
+  }
+}
+loadPromptSuggestions();
+$("#examples").addEventListener("click", e => {
+  const b = e.target.closest("button[data-text]");
+  if (!b) return;
+  clearPhoto(); $("#q").value = b.dataset.text; fitBox(); overrides = { category: "", metal: "" }; run();
+});
+// texts for the animated placeholder: the shopper's own suggestions once loaded
+const placeholderTexts = () => {
+  const fresh = promptSugg.filter(s => s.kind !== "recent").map(s => s.text);
+  return fresh.length ? fresh : EXAMPLES;
+};
+(function typewriter() {
+  const el = $("#q"), base = "e.g. ";
+  if (reduceMotion) { el.placeholder = base + placeholderTexts()[0].toLowerCase(); return; }
+  let i = 0, n = 0, dir = 1;
+  (function tick() {
+    if (photoState) { setTimeout(tick, 400); return; }   // the box says how to refine the photo instead
+    const list = placeholderTexts(), text = list[i % list.length];
+    n += dir;
+    el.placeholder = base + text.slice(0, n) + (dir > 0 ? "▍" : "");
+    let wait = dir > 0 ? 45 : 18;
+    if (n >= text.length) { dir = -1; wait = 2200; }
+    else if (n <= 0) { dir = 1; i = (i + 1) % placeholderTexts().length; wait = 350; }
+    setTimeout(tick, wait);
+  })();
+})();
+
+$("#form").addEventListener("submit", e => {
+  e.preventDefault(); sgClose(); overrides = { category: "", metal: "" };
+  if (LINK_RX.test($("#q").value)) runLink($("#q").value.trim());
+  else photoState ? runPhoto() : run();
+});
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#form").requestSubmit(); } });
+$("#q").addEventListener("input", e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px"; });
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && !$("#dlg").open && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $("#q").focus(); }
+});
+
+/* ---------- suggestions while typing ----------
+   Rows: what is typed, your own matching past searches (from the history the
+   page already loaded from the server; never anyone else's), then the server's
+   suggestions (/api/suggest: completions and refinements made from the
+   collection, each checked to fill a page of results). Answers are kept in this
+   page's memory only, never stored in the browser. */
+const MAG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>`;
+const sgList = $("#suggest");
+const sg = { rows: [], active: -1, typed: "", server: [], timer: 0, ctrl: null, cache: new Map() };
+
+function fitBox() { const q = $("#q"); q.style.height = "auto"; q.style.height = Math.min(q.scrollHeight, 160) + "px"; }
+
+function sgClose() {
+  clearTimeout(sg.timer);
+  if (sg.ctrl) sg.ctrl.abort();
+  sgList.hidden = true; sg.active = -1;
+  $("#q").removeAttribute("aria-activedescendant");
+}
+
+// Bold what the suggestion adds to the typed words, like a search engine does: typed
+// words stay plain, new words are bold, and a word being typed shows its ending in bold.
+function emphasise(typed, text) {
+  const words = typed.toLowerCase().split(/\s+/).filter(Boolean);
+  let part = /\s$/.test(typed) ? null : words.pop();
+  const done = new Set(words);
+  return text.split(/(\s+)/).map(w => {
+    const lw = w.toLowerCase();
+    if (!w.trim() || done.has(lw) || lw === part) return esc(w);
+    if (part && lw.startsWith(part)) {
+      const n = part.length; part = null;   // only the first word that continues it
+      return esc(w.slice(0, n)) + "<b>" + esc(w.slice(n)) + "</b>";
+    }
+    return "<b>" + esc(w) + "</b>";
+  }).join("").replace(/<\/b>(\s+)<b>/g, "$1");
+}
+
+function sgRender() {
+  const typed = sg.typed.trim(), low = typed.toLowerCase();
+  let rows = [];
+  if (!typed) {
+    if (photoState) return sgClose();
+    rows = histItems.slice(0, 4).map(h => ({ text: h.query, kind: "history", id: h.id, section: "Recent searches" }));
+    const seen = new Set(rows.map(r => r.text.toLowerCase()));
+    const more = (promptSugg.length ? promptSugg : EXAMPLES.map(text => ({ text, kind: "explore" })))
+      .filter(p => p.kind !== "recent" && !seen.has(p.text.toLowerCase()));
+    rows.push(...more.slice(0, 7 - rows.length).map(p => ({ text: p.text, kind: "example", icon: p.kind, why: p.why,
+      section: promptSugg.length ? "Suggested for you" : "Try" })));
+  } else {
+    rows.push({ text: typed, kind: "typed" });
+    if (!photoState) {   // with a photo the words refine it, so past text searches don't fit
+      const starts = h => h.query.toLowerCase().startsWith(low);
+      rows.push(...histItems
+        .filter(h => h.query.toLowerCase() !== low && (starts(h) || h.query.toLowerCase().includes(" " + low)))
+        .sort((x, y) => starts(y) - starts(x)).slice(0, 3)
+        .map(h => ({ text: h.query, kind: "history", id: h.id })));
+    }
+    const seen = new Set(rows.map(r => r.text.toLowerCase()));
+    for (const it of sg.server) if (!seen.has(it.text.toLowerCase())) { seen.add(it.text.toLowerCase()); rows.push(it); }
+    rows = rows.slice(0, 10);
+    if (rows.length < 2) return sgClose();   // just the typed words: nothing to suggest
+  }
+  if (!rows.length) return sgClose();
+  sg.rows = rows; sg.active = -1;
+  $("#q").removeAttribute("aria-activedescendant");
+  sgList.innerHTML = rows.map((r, i) =>
+    (r.section && r.section !== rows[i - 1]?.section ? `<li class="sg-label" role="presentation">${r.section}</li>` : "")
+    + `<li class="sg" role="option" id="sg-${i}" data-i="${i}" aria-selected="false"${r.why ? ` title="${esc(r.why)}"` : ""}>`
+    + `${r.kind === "history" ? CLOCK.replace("<svg", '<svg aria-hidden="true"') : r.icon ? (KIND_ICON[r.icon] || MAG) : MAG}`
+    + `<span class="t">${r.kind === "typed" || r.kind === "example" || !typed ? esc(r.text) : emphasise(sg.typed, r.text)}</span>`
+    + (r.count ? `<span class="n">${r.count.toLocaleString()} designs</span>` : "")
+    + (r.kind === "history" ? `<button type="button" class="del" data-del="${r.id}" tabindex="-1" aria-label="Remove “${esc(r.text)}” from your history">Remove</button>` : "")
+    + `</li>`).join("");
+  sgList.hidden = false;
+}
+
+function sgUpdate() {
+  if ($("#go").disabled) return;   // a search is running
+  const typed = $("#q").value, text = typed.replace(/\s+/g, " ").replace(/^ /, "");
+  sg.typed = typed;
+  if (LINK_RX.test(typed)) return sgClose();   // a pasted link is read as a link (runLink)
+  clearTimeout(sg.timer);
+  if (text.length > 200) return sgClose();
+  const key = (photoState ? `p|${photoState.type || ""}|` : "t|") + text, cached = sg.cache.get(key);
+  if (cached || !text.trim()) { sg.server = cached || []; sgRender(); return; }
+  if (sgList.hidden) { sg.server = []; sgRender(); }   // typed words + history now, the rest when it comes
+  else {   // keep the list as it is until the answer comes (no flicker while typing)
+    sg.active = -1; $("#q").removeAttribute("aria-activedescendant");
+    sgList.querySelectorAll('.sg[aria-selected="true"]').forEach(li => li.setAttribute("aria-selected", false));
+  }
+  sg.timer = setTimeout(async () => {
+    if (sg.ctrl) sg.ctrl.abort();
+    sg.ctrl = new AbortController();
+    try {
+      const p = new URLSearchParams({ q: text });
+      if (photoState) { p.set("photo", "1"); if (photoState.type) p.set("category", photoState.type); }
+      const r = await fetch("/api/suggest?" + p, { credentials: "same-origin", signal: sg.ctrl.signal });
+      const items = r.ok ? (await r.json()).items : [];
+      if (r.ok) sg.cache.set(key, items);
+      if (sg.cache.size > 300) sg.cache.delete(sg.cache.keys().next().value);
+      // still the same words, and the shopper hasn't started moving through the list
+      if ($("#q").value === typed && document.activeElement === $("#q") && sg.active < 0) { sg.server = items; sgRender(); }
+    } catch (_) { /* cancelled by the next key, or offline: the box works without suggestions */ }
+  }, 110);
+}
+
+function sgSelect(i) {
+  sg.active = i;
+  sgList.querySelectorAll(".sg").forEach(li => li.setAttribute("aria-selected", +li.dataset.i === i));
+  if (i >= 0) $("#q").setAttribute("aria-activedescendant", "sg-" + i); else $("#q").removeAttribute("aria-activedescendant");
+  $("#q").value = i < 0 ? sg.typed : sg.rows[i].text;   // the box shows the row, as on a search engine
+  fitBox();
+}
+
+function sgPick(i) {
+  $("#q").value = sg.rows[i].text; fitBox();
+  sgClose();
+  if (TOUCH) $("#q").blur();   // put the phone keyboard away so the results show
+  $("#form").requestSubmit();
+}
+
+$("#q").addEventListener("input", sgUpdate);
+$("#q").addEventListener("focus", sgUpdate);
+$("#q").addEventListener("click", () => { if (sgList.hidden) sgUpdate(); });
+$("#q").addEventListener("blur", sgClose);
+$("#q").addEventListener("keydown", e => {
+  if (e.isComposing) return;
+  if (sgList.hidden) {
+    if (e.key === "ArrowDown" && !$("#q").value.includes("\n")) { e.preventDefault(); sgUpdate(); }
+    return;
+  }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    const n = sg.rows.length;
+    let i = sg.active + (e.key === "ArrowDown" ? 1 : -1);
+    if (i < -1) i = n - 1;
+    if (i >= n) i = -1;
+    sgSelect(i);
+  } else if (e.key === "Escape") {
+    e.preventDefault(); e.stopPropagation();
+    if (sg.active >= 0) { $("#q").value = sg.typed; fitBox(); }
+    sgClose();
+  } else if (e.key === "Tab") sgClose();
+});
+sgList.addEventListener("pointerdown", e => e.preventDefault());   // keep the typing focus in the box
+sgList.addEventListener("click", async e => {
+  const del = e.target.closest("[data-del]");
+  if (del) {
+    e.stopPropagation();
+    const id = +del.dataset.del;
+    try {
+      await api(`/api/history/${id}`, { method: "DELETE" });
+      histItems = histItems.filter(h => h.id !== id);
+      renderHistory(); sgRender();
+    } catch (err) { fail("Could not remove it from your history: " + err.message); }
+    return;
+  }
+  const li = e.target.closest(".sg");
+  if (li) sgPick(+li.dataset.i);
+});
+
+/* ripple on buttons */
+document.addEventListener("pointerdown", e => {
+  const b = e.target.closest(".primary");
+  if (!b || reduceMotion) return;
+  const r = b.getBoundingClientRect(), s = Math.max(r.width, r.height), span = document.createElement("span");
+  span.className = "ripple";
+  span.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s / 2}px;top:${e.clientY - r.top - s / 2}px`;
+  b.appendChild(span); span.addEventListener("animationend", () => span.remove());
+});
+
+/* ---------- data ---------- */
+function skeleton() {
+  $("#grid").innerHTML = Array.from({ length: 8 }, (_, i) =>
+    `<div class="card skeleton" style="--i:${i}"><div class="tilt"><div class="img">${GEM}</div><div class="body"><div style="width:60%"></div><div style="width:40%"></div></div></div></div>`).join("");
+}
+
+// Errors always carry words a shopper can act on: through the public link a stopped server answers
+// with Cloudflare's own page (no JSON detail, and HTTP/2 has no status text), so it gets one here.
+async function api(url, opts = {}) {
+  let r;
+  try { r = await fetch(url, { credentials: "same-origin", ...opts }); }
+  catch { throw new Error("Couldn't reach Design Finder. Check your connection and try again."); }
+  if (r.status === 401) { toLogin(); throw new Error("Signed out"); }
+  if (!r.ok) {
+    const detail = (await r.json().catch(() => ({}))).detail;
+    const e = new Error(typeof detail === "string" && detail ? detail
+      : r.status > 500 ? "Design Finder isn't responding right now. Please try again in a minute."
+      : r.status === 500 ? "Something went wrong on our side. Please try again."
+      : `Something went wrong (error ${r.status}). Please try again.`);
+    e.status = r.status;
+    throw e;
+  }
+  return r.json();
+}
+
+function busy(on) {
+  if (on) sgClose();
+  $("#go").disabled = on;
+  $("#form").classList.toggle("busy", on);
+}
+
+function fail(msg) {
+  $("#notice").className = "statline error";
+  $("#notice").textContent = msg;
+  const f = $("#form"); f.classList.remove("shake"); void f.offsetWidth; f.classList.add("shake");
+}
+
+async function run(query) {
+  const q = (typeof query === "string" ? query : $("#q").value).trim();
+  if (!q) { fail("Describe a design, or add a photo, to search."); $("#q").focus(); return; }
+  lastQuery = q; browsing = null; $("#dna").hidden = true;
+  setView("search");
+  document.body.classList.add("searched");
+  history.replaceState(null, "", "?q=" + encodeURIComponent(q));
+  busy(true); $("#banner").hidden = true; $("#notice").textContent = ""; $("#notice").className = "statline";
+  const u = $("#understood");
+  u.hidden = false; u.className = "understood thinking";
+  u.innerHTML = `<span class="ai-label">Reading your request</span><span class="dots"><i></i><i></i><i></i></span>`;
+  skeleton();
+  const p = new URLSearchParams({ q });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  try {
+    const res = await api("/api/search?" + p);
+    if (res.refused) { showRefused(res.refused); activeHist = null; historyChanged(); return; }
+    showUnderstood(res.query);
+    showStats(res);
+    renderGrid(res.results);
+    page = 0; $("#more").hidden = !res.has_more; $("#more").textContent = moreLabel();
+    activeHist = null; historyChanged();
+    webForPrompt(q);
+  } catch (err) {
+    $("#grid").innerHTML = ""; u.hidden = true; $("#more").hidden = true; fail("Search failed: " + err.message);
+  } finally { busy(false); }
+}
+
+function showStats(res, savedAt) {
+  const el = $("#notice");
+  el.className = "statline";
+  el.innerHTML = `<span><b data-count="${res.matches_in_filter}">0</b> designs matched the filters</span>`
+    + (savedAt ? `<span class="saved-pill">${CLOCK}Saved search · ${esc(fmtWhen(savedAt))}</span>` : `<span>in ${res.ms} ms</span>`)
+    + res.notes.map(n => `<span class="note">${esc(n)}</span>`).join("");
+  countUp(el.querySelector("[data-count]"));
+}
+
+function countUp(el) {
+  const to = +el.dataset.count;
+  if (reduceMotion || !to) { el.textContent = to.toLocaleString(); return; }
+  const t0 = performance.now(), dur = 900;
+  (function step(t) {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(to * e).toLocaleString();
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+// next 8 for the same search, appended below
+$("#more").addEventListener("click", async () => {
+  const p = new URLSearchParams({ q: lastQuery, page: page + 1 });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  $("#more").disabled = true; $("#more").textContent = "Loading…";
+  try {
+    const res = browsing ? await api(`/api/browse?category=${browsing}&page=${page + 1}`)
+      : photoState ? await photoRequest(lastQuery, page + 1) : await api("/api/search?" + p);
+    page = res.page;
+    const start = current.length;
+    current = current.concat(res.results);
+    $("#grid").insertAdjacentHTML("beforeend", res.results.map((d, i) => card(d, start + i, i)).join(""));
+    $("#more").hidden = !res.has_more;
+  } catch (err) {
+    fail("Could not load more: " + err.message);
+  } finally { $("#more").disabled = false; $("#more").textContent = moreLabel(); }
+});
+
+// Themed dropdown (the browser's native <select> menu can't be styled).
+const CHEV = `<svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>`;
+const TICK = `<svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+function select(name, options, value, anyLabel) {
+  const all = [["", anyLabel], ...Object.entries(options)];
+  const label = (all.find(([k]) => k === value) || all[0])[1];
+  return `<div class="pick" data-k="${name}" data-value="${value}">
+    <button type="button" class="pick-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="${anyLabel}: ${esc(label)}"><span>${esc(label)}</span>${CHEV}</button>
+    <ul class="pick-list" role="listbox" hidden>${all.map(([k, v]) =>
+      `<li role="option" tabindex="-1" data-v="${k}" class="${k ? "" : "any"}" aria-selected="${k === value}">${esc(v)}${TICK}</li>`).join("")}</ul>
+  </div>`;
+}
+function closePicks(except) {
+  document.querySelectorAll(".pick.open").forEach(p => {
+    if (p === except) return;
+    p.classList.remove("open"); p.querySelector(".pick-list").hidden = true;
+    p.querySelector(".pick-btn").setAttribute("aria-expanded", false);
+  });
+}
+function openPick(p) {
+  closePicks(p);
+  p.classList.add("open"); p.querySelector(".pick-list").hidden = false;
+  p.querySelector(".pick-btn").setAttribute("aria-expanded", true);
+  (p.querySelector('li[aria-selected="true"]') || p.querySelector("li")).focus();
+}
+function choosePick(p, v) {
+  closePicks();
+  p.querySelector(".pick-btn").focus();
+  if (v === p.dataset.value) return;
+  p.dataset.value = v;
+  // A manual choice pins both filters; "any" drops a filter even if the prompt set it.
+  document.querySelectorAll("#understood .pick").forEach(o => overrides[o.dataset.k] = o.dataset.value || "any");
+  searchAgain();
+}
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".pick-btn"), li = e.target.closest(".pick-list li");
+  if (btn) { const p = btn.closest(".pick"); p.classList.contains("open") ? closePicks() : openPick(p); return; }
+  if (li) { choosePick(li.closest(".pick"), li.dataset.v); return; }
+  closePicks();
+});
+document.addEventListener("keydown", e => {
+  const p = e.target.closest?.(".pick");
+  if (!p) return;
+  const items = [...p.querySelectorAll("li")], i = items.indexOf(document.activeElement);
+  if (e.target.classList.contains("pick-btn") && ["ArrowDown", "ArrowUp"].includes(e.key)) { e.preventDefault(); openPick(p); }
+  else if (i >= 0 && e.key === "ArrowDown") { e.preventDefault(); items[Math.min(i + 1, items.length - 1)].focus(); }
+  else if (i >= 0 && e.key === "ArrowUp") { e.preventDefault(); items[Math.max(i - 1, 0)].focus(); }
+  else if (i >= 0 && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); choosePick(p, items[i].dataset.v); }
+  else if (e.key === "Escape" && p.classList.contains("open")) { e.preventDefault(); e.stopPropagation(); closePicks(); p.querySelector(".pick-btn").focus(); }
+  else if (e.key === "Tab" && p.classList.contains("open")) closePicks();
+});
+
+function showUnderstood(u) {
+  const el = $("#understood");
+  el.hidden = false; el.className = "understood";
+  const parts = [
+    `<span class="ai-label smart">AI Smart Filters</span>`,
+    select("category", CAT, u.category || "", "Any type"),
+    ...u.categories.slice(1).map(c => `<span class="tag">+ ${esc(CAT[c])}</span>`),
+    select("metal", METAL, u.metal || "", "Any metal"),
+    u.shape ? `<span class="tag">${esc(u.shape)} cut</span>` : "",
+    ...u.intents.map(i => `<span class="tag">${esc(INTENT[i] || i)}</span>`),
+    ...u.not_intents.map(i => `<span class="tag neg" title="Not wanted">${esc(INTENT[i] || i)}</span>`),
+    ...u.exclude_metals.map(m => `<span class="tag neg" title="Not wanted">${esc(METAL[m])}</span>`),
+    ...u.exclude_categories.map(c => `<span class="tag neg" title="Not wanted">${esc(CAT[c])}</span>`),
+    ...Object.entries(u.corrections).map(([a, b]) => `<span class="fix">read “${esc(a)}” as “${esc(b)}”</span>`),
+    u.free_text ? `<span class="tag" title="Words passed to the image model as-is">“${esc(u.free_text)}”</span>` : "",
+  ].filter(Boolean);
+  el.innerHTML = parts.join("");
+  [...el.children].forEach((c, i) => c.style.setProperty("--i", i));
+}
+
+function card(d, i, stagger = i) {
+  const sw = d.metals.map(m => `<button type="button" class="sw ${m} ${m === d.metal_shown ? "on" : ""}" data-metal="${m}" title="${METAL[m]}" aria-label="${METAL[m]}"></button>`).join("");
+  const chips = (d.tryon ? `<button type="button" class="tryon-chip" data-tryon="${d.uid}" title="See it on your ${d.tryon}">${SPARK}Try on</button>` : "")
+    + (d.live ? `<button type="button" class="tryon-chip" data-live="${d.uid}" title="Live try-on with the camera">${CAM}Live</button>` : "");
+  return `<article class="card" tabindex="0" data-uid="${d.uid}" style="--i:${stagger}"><div class="tilt">
+    <div class="img">${heartBtn(d.uid)}${d.match ? `<span class="match m-${d.match}">${MATCH[d.match]}</span>` : ""}${chips ? `<div class="chips">${chips}</div>` : ""}<img loading="lazy" src="${d.thumb}" alt="${esc(d.design_id)}"></div>
+    <div class="body">
+      <div><div class="id" title="${esc(d.design_id)}">${esc(d.design_id)}</div>
+      <div class="sub">${esc(CAT[d.category] || d.category)}${d.stone_shape ? " · " + esc(d.stone_shape) + " cut" : ""}${d.variant_count ? ` · ${d.variant_count} other stone shape${d.variant_count > 1 ? "s" : ""}` : ""}</div></div>
+      ${d.tags.length ? `<div class="tags">${d.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
+      ${d.shares && d.shares.length ? `<div class="shares" title="Details this design shares with your photo">Shares: ${d.shares.map(x => esc(x.toLowerCase())).join(" · ")}</div>` : ""}
+      <div class="row"><div class="swatches">${sw}</div><div class="row-btns"><button type="button" class="more-like" data-similar="${d.uid}">${LOOP}<span>Similar</span></button><button type="button" class="more-like web-like" data-web-card="${d.uid}" title="Find products like this design on other shops' websites" aria-label="Search on web for designs like ${esc(d.design_id)}">${WEB_ICON}<span>Web</span></button></div></div>
+      <a class="buy-btn" data-buy href="${buyUrl(d)}">${BAG}<span>Proceed to buy</span></a>
+    </div></div></article>`;
+}
+
+// Not a jewellery search ("pizza", "boxing ring"): no designs, a clear message, and real searches to try.
+function showRefused(r, withPhoto = false) {
+  current = [];
+  $("#understood").hidden = true;
+  $("#notice").className = "statline"; $("#notice").textContent = "";
+  $("#more").hidden = true; $("#banner").hidden = true;
+  $("#grid").innerHTML = `<div class="empty refused" role="status">${GEM.replace("<svg", '<svg aria-hidden="true"')}`
+    + `<h3>${esc(r.title)}</h3><p>${esc(r.hint)}</p>`
+    + (withPhoto ? `<p><button type="button" class="ghost" data-photo>${CAM}<span>Search with a photo</span></button></p>` : "")
+    + `<div class="try">${(promptSugg.length ? promptSugg.map(s => s.text) : EXAMPLES).slice(0, 4)
+      .map(e => `<button type="button" data-try>${esc(e)}</button>`).join("")}</div></div>`;
+}
+$("#grid").addEventListener("click", e => {
+  if (e.target.closest("[data-photo]")) { $("#photoFile").click(); return; }
+  const b = e.target.closest("[data-try]");
+  if (!b) return;
+  clearPhoto(); $("#q").value = b.textContent; fitBox(); overrides = { category: "", metal: "" }; run();
+});
+
+function renderGrid(items) {
+  current = items;
+  $("#grid").innerHTML = items.length ? items.map((d, i) => card(d, i)).join("")
+    : `<div class="empty">${GEM.replace("<svg", '<svg aria-hidden="true"')}<h3>Nothing matches yet</h3>Try removing the type or metal filter above.</div>`;
+}
+
+function swapImg(img, src) {
+  if (img.getAttribute("src") === src) return;
+  img.classList.add("swap");
+  const pre = new Image();
+  pre.onload = pre.onerror = () => setTimeout(() => { img.src = src; img.classList.remove("swap"); }, 180);
+  pre.src = src;
+}
+
+$("#grid").addEventListener("click", e => {
+  const tile = e.target.closest("[data-browse]");
+  if (tile) { browseCategory(tile.dataset.browse); return; }
+  const fav = e.target.closest("[data-fav]");
+  if (fav) { e.stopPropagation(); toggleFav(+fav.dataset.fav, fav); return; }
+  const sw = e.target.closest(".sw");
+  const cardEl = e.target.closest(".card");
+  if (!cardEl || cardEl.classList.contains("skeleton")) return;
+  if (cardEl.dataset.brand) {
+    if (!e.target.closest("a")) location.href = "/brand-design?id=" + cardEl.dataset.brand;
+    return;
+  }
+  const uid = +cardEl.dataset.uid;
+  const d = current.find(x => x.uid === uid);
+  const buy = e.target.closest("[data-buy]");
+  if (buy) {   // a normal link (opens in a new tab too); only the metal is brought up to date
+    e.stopPropagation();
+    buy.href = buyUrl(d, cardEl.querySelector(".sw.on")?.dataset.metal);
+    return;
+  }
+  if (e.target.closest("[data-live]")) {
+    e.stopPropagation();
+    openLive(d);
+    return;
+  }
+  if (e.target.closest("[data-tryon]")) {
+    e.stopPropagation();
+    openTryOn(uid, cardEl.querySelector(".sw.on")?.dataset.metal || d.metal_shown);
+    return;
+  }
+  if (sw) {
+    e.stopPropagation();
+    swapImg(cardEl.querySelector(".img img"), d.thumbs_by_metal[sw.dataset.metal]);
+    cardEl.querySelectorAll(".sw").forEach(s => s.classList.toggle("on", s === sw));
+    return;
+  }
+  const sim = e.target.closest("[data-similar]");
+  if (sim) { similar(+sim.dataset.similar); return; }
+  if (e.target.closest("[data-web-card]")) {   // this design's pictures, matched against other shops' products
+    e.stopPropagation();
+    webOpen(true);
+    webForDesign(uid, d.design_id, cardEl.querySelector(".sw.on")?.dataset.metal || d.metal_shown);
+    return;
+  }
+  openDetail(uid);
+});
+$("#grid").addEventListener("keydown", e => {
+  const c = e.target.closest?.(".card");
+  if (c && e.target === c && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    if (c.dataset.brand) location.href = "/brand-design?id=" + c.dataset.brand; else openDetail(+c.dataset.uid);
+  }
+});
+
+/* 3D tilt + light that follows the pointer */
+let tilted = null;
+function untilt() { if (tilted) { tilted.style.removeProperty("--rx"); tilted.style.removeProperty("--ry"); tilted = null; } }
+if (finePointer && !reduceMotion) {
+  $("#grid").addEventListener("pointermove", e => {
+    const c = e.target.closest(".card:not(.skeleton)");
+    const t = c?.querySelector(".tilt");
+    if (t !== tilted) untilt();
+    if (!t) return;
+    tilted = t;
+    const r = t.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    t.style.setProperty("--rx", ((.5 - y) * 9).toFixed(2) + "deg");
+    t.style.setProperty("--ry", ((x - .5) * 11).toFixed(2) + "deg");
+    t.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+    t.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+  });
+  $("#grid").addEventListener("pointerleave", untilt);
+}
+
+async function similar(uid) {
+  setView("search"); browsing = null;
+  skeleton(); $("#notice").textContent = ""; $("#understood").hidden = true; $("#dna").hidden = true;
+  document.body.classList.add("searched");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  try {
+    const res = await api(`/api/similar/${uid}`);
+    const s = res.source;
+    $("#banner").hidden = false;
+    $("#banner").innerHTML = `<img src="${s.thumb}" alt=""><div class="grow"><div class="sub">Designs similar to</div><strong>${esc(s.design_id)}</strong>
+      <div class="sub">Same type, closest in shape and style</div></div>
+      ${lastQuery || photoState ? `<button type="button" class="ghost" id="back">← Back to results</button>` : ""}`;
+    $("#back")?.addEventListener("click", searchAgain);
+    renderGrid(res.results);
+    $("#more").hidden = true;
+    webForDesign(uid, s.design_id);
+  } catch (err) { $("#grid").innerHTML = ""; fail(err.message); }
+}
+
+/* ---------- search by photo: its design DNA and the designs closest to it ---------- */
+// The photo is shrunk to 1024 px and re-encoded as JPEG here (no location data leaves the phone),
+// sent once, and read on the server; filters, words and "Show more" then reuse it by token.
+const MATCH = { same: "Same design", very_close: "Very close", close: "Close match", similar: "Similar style" };
+const METAL_DOT = { rose_gold: "var(--rose)", white_gold: "var(--white)", yellow_gold: "var(--yellow)" };
+const A_TYPE = { ring: "a ring", earrings: "earrings", pendant: "a pendant", necklace: "a necklace", bracelet: "a bracelet" };
+const PHOTO_SIDE = 1024, PHOTO_RAW_MAX = 40 * 1024 * 1024;
+
+async function prepPhoto(file) {
+  if (!file || (file.type && !file.type.startsWith("image/"))) throw new Error("Choose a photo (JPG, PNG or WebP).");
+  if (file.size > PHOTO_RAW_MAX) throw new Error("This photo is too large. Use one under 40 MB.");
+  let src;
+  try { src = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+  catch {
+    src = await new Promise((ok, no) => {
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { URL.revokeObjectURL(url); ok(im); };
+      im.onerror = () => { URL.revokeObjectURL(url); no(new Error("This photo can't be opened here. Use a JPG, PNG or WebP image.")); };
+      im.src = url;
+    });
+  }
+  const w = src.width, h = src.height, k = Math.min(1, PHOTO_SIDE / Math.max(w, h));
+  if (Math.min(w, h) < 64) throw new Error("This photo is too small. Use one at least 64 pixels on each side.");
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+  const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);   // a cut-out PNG goes on white, like the catalogue
+  g.drawImage(src, 0, 0, c.width, c.height);
+  src.close?.();
+  return c.toDataURL("image/jpeg", 0.9);
+}
+
+async function attachPhoto(file) {
+  try {
+    const dataUrl = await prepPhoto(file);
+    photoState = { dataUrl, token: null };
+    $("#photoThumb").src = dataUrl;
+    $("#photoChip").hidden = false;
+    $("#form").classList.add("has-photo");
+    $("#q").placeholder = matchMedia("(max-width: 560px)").matches ? "Add words"
+      : "Add words to refine (optional), e.g. rose gold, no side stones";
+    overrides = { category: "", metal: "" };
+    runPhoto();
+  } catch (err) { fail(err.message); }
+}
+
+function clearPhoto() {
+  if (!photoState) return;
+  photoState = null;
+  $("#photoChip").hidden = true; $("#photoThumb").removeAttribute("src");
+  $("#form").classList.remove("has-photo");
+  $("#dna").hidden = true; $("#dna").innerHTML = "";
+  $("#q").placeholder = "e.g. " + EXAMPLES[0].toLowerCase();
+}
+
+/* ---------- Manual search: pick a design's properties instead of describing it ----------
+   The server (jewelsearch/manual.py) lists the options with how many designs each leaves and writes the
+   picks as the prompt the AI search understands; "Find designs" runs that prompt like a typed one (same
+   filters, ranking, notes and history). The picks live in memory only. */
+let mode = "ai", manualPicks = [], manualState = null, manualSeq = 0;
+const LEAD_AI = $(".hero .lead").innerHTML;
+const LEAD_MANUAL = "Pick the type, metal, diamonds and style, and the AI finds the designs that match them best.";
+const AI_MARK = SPARK.replace("<svg ", '<svg class="ai" ');
+function setMode(m) {
+  if (mode === m) return;
+  mode = m;
+  document.body.classList.toggle("manual", m === "manual");
+  document.querySelectorAll(".modes [data-mode]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.mode === m)));
+  $("#manual").hidden = m !== "manual";
+  $(".hero .lead").innerHTML = m === "manual" ? LEAD_MANUAL : LEAD_AI;
+  sgClose();
+  if (m === "manual" && !manualState) loadManual();
+}
+document.querySelectorAll(".modes [data-mode]").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+async function loadManual() {
+  const seq = ++manualSeq;
+  try {
+    const r = await api("/api/manual", { method: "POST", headers: { "Content-Type": "application/json" },
+                                         body: JSON.stringify({ picks: manualPicks }) });
+    if (seq !== manualSeq) return;   // a newer pick is on its way
+    manualState = r; manualPicks = r.picks;
+    renderManual();
+  } catch (err) {
+    if (seq === manualSeq) $("#mRead").innerHTML = `<span class="statline error">${esc(err.message)}</span>`;
+  }
+}
+
+function renderManual() {
+  const r = manualState;
+  $("#mGroups").innerHTML = r.groups.map(g => `<div class="m-group" role="group" aria-labelledby="mg-${g.key}">
+    <div class="m-title" id="mg-${g.key}">${esc(g.title)}</div>
+    <div class="m-opts">${g.options.map(o => {
+      const dead = !o.picked && (o.blocked || o.count === 0);
+      const why = o.blocked || (dead ? "No design has this together with your other picks"
+        : o.kind === "ai" ? "The AI ranks designs by how much they show this"
+        : o.kind === "cut" ? `${o.count.toLocaleString()} designs are known to have this cut` : `${o.count.toLocaleString()} designs`);
+      const tail = o.kind === "ai" ? AI_MARK : o.count == null ? "" : `<span class="n">${o.count.toLocaleString()}</span>`;
+      return `<button type="button" class="m-opt" data-k="${esc(o.key)}" aria-pressed="${o.picked}"${dead ? " disabled" : ""} title="${esc(why)}">${esc(o.label)}${tail}</button>`;
+    }).join("")}</div>
+    ${g.hint ? `<div class="m-hint">${esc(g.hint)}</div>` : ""}
+  </div>`).join("");
+  const go = $("#mGo"), n = $("#mN");
+  go.disabled = !r.prompt || !r.count;
+  go.querySelector("span").textContent = !r.prompt ? "Pick at least one" : !r.count ? "No design has all of these" : "Find designs";
+  n.hidden = !r.prompt || !r.count;
+  n.textContent = r.count.toLocaleString();
+  n.title = "designs pass your filters";
+  $("#mRead").innerHTML = (r.prompt
+    ? `The AI will search for <q>${esc(r.prompt)}</q> <button type="button" class="linkish" id="mEdit">Edit in words</button>`
+    : "Pick what the design should have. You can combine one choice from each group.")
+    + r.warnings.map(w => `<span class="m-warn">${esc(w)}</span>`).join("");
+  $("#mClear").hidden = !r.picks.length;
+}
+
+$("#mGroups").addEventListener("click", e => {
+  const b = e.target.closest(".m-opt");
+  if (!b || b.disabled) return;
+  const k = b.dataset.k, group = k.split(":")[0], on = b.getAttribute("aria-pressed") !== "true";
+  manualPicks = manualPicks.filter(x => x.split(":")[0] !== group).concat(on ? [k] : []);
+  b.parentElement.querySelectorAll(".m-opt").forEach(x => x.setAttribute("aria-pressed", String(on && x === b)));   // at once
+  loadManual();
+});
+$("#mClear").addEventListener("click", () => { manualPicks = []; loadManual(); });
+$("#mRead").addEventListener("click", e => {
+  if (!e.target.closest("#mEdit")) return;
+  const text = manualState.prompt;
+  setMode("ai");
+  $("#q").value = text; fitBox(); $("#q").focus();
+});
+$("#mGo").addEventListener("click", async () => {
+  if (!manualState?.prompt || !manualState.count) return;
+  clearPhoto(); overrides = { category: "", metal: "" };
+  $("#q").value = manualState.prompt; fitBox();
+  await run(manualState.prompt);
+  $("#understood").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+});
+
+/* ---------- search by a product link ----------
+   The server reads the page (jewelsearch/linksearch.py): the jewellery picture on it becomes the search
+   photo, exactly like an upload (same token, filters and "Show 8 more"); else its jewellery words are
+   searched; else a clear message. The picture shown is a copy made by the server. */
+const LINK_RX = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
+async function runLink(text) {
+  setMode("ai");
+  clearPhoto(); browsing = null;
+  if (activeHist) { activeHist = null; renderHistory(); }
+  setView("search");
+  document.body.classList.add("searched");
+  history.replaceState(null, "", location.pathname);   // a link search isn't kept in the address bar
+  busy(true); $("#banner").hidden = true; $("#notice").textContent = ""; $("#notice").className = "statline";
+  $("#dna").hidden = true;
+  const u = $("#understood");
+  u.hidden = false; u.className = "understood thinking";
+  u.innerHTML = `<span class="ai-label">Reading the link and finding the jewellery in it</span><span class="dots"><i></i><i></i><i></i></span>`;
+  skeleton();
+  try {
+    const res = await api("/api/link-search", { method: "POST", headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ text }) });
+    if (res.mode === "image") {
+      photoState = { dataUrl: res.image, token: res.token, type: res.dna.type.sure ? res.dna.type.value : null, fromLink: true };
+      $("#photoThumb").src = res.image; $("#photoChip").hidden = false;
+      $("#photoChip").title = "From " + res.source.site;
+      $("#form").classList.add("has-photo");
+      $("#q").value = res.words || ""; fitBox();
+      $("#q").placeholder = matchMedia("(max-width: 560px)").matches ? "Add words" : "Add words to refine (optional), e.g. rose gold, no side stones";
+      lastQuery = res.words || "";
+      showDna(res);
+    } else if (res.mode === "text") {
+      $("#q").value = res.prompt; fitBox();
+      lastQuery = res.prompt;
+    } else {
+      showRefused(res.failed, true);
+      return;
+    }
+    showUnderstood(res.query);
+    showStats(res);
+    renderGrid(res.results);
+    page = 0; $("#more").hidden = !res.has_more; $("#more").textContent = moreLabel();
+    if (res.mode === "image") webForPhoto(lastQuery); else webForPrompt(res.prompt);
+  } catch (err) {
+    $("#grid").innerHTML = ""; u.hidden = true; $("#more").hidden = true;
+    fail("Couldn't search with that link: " + err.message);
+  } finally { busy(false); }
+}
+
+// filters, "Back to results": the photo when one is attached, else the words
+function searchAgain() { photoState ? runPhoto() : run(lastQuery); }
+
+async function photoRequest(q, pg) {
+  const p = new URLSearchParams({ q, page: pg });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  if (photoState.token) {
+    try { return await api(`/api/photo-search/${photoState.token}?${p}`); }
+    catch (err) { if (err.status !== 410) throw err; photoState.token = null; }   // expired: send the photo again
+  }
+  const body = { image: photoState.dataUrl, q };
+  if (overrides.category) body.category = overrides.category;
+  if (overrides.metal) body.metal = overrides.metal;
+  let res;
+  try {
+    res = await api("/api/photo-search", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  } catch (err) {   // a server started before photo search existed has no such route
+    if (err.status === 404 || err.status === 405) throw new Error("this server is running an older version of the app. Restart it to turn photo search on.");
+    throw err;
+  }
+  photoState.token = res.token;
+  return pg ? photoRequest(q, pg) : res;
+}
+
+async function runPhoto() {
+  if (!photoState) return;
+  setMode("ai");
+  const q = $("#q").value.trim();
+  lastQuery = q; browsing = null;
+  if (activeHist) { activeHist = null; renderHistory(); }
+  setView("search");
+  document.body.classList.add("searched");
+  history.replaceState(null, "", location.pathname);   // a photo can't live in a link
+  busy(true); $("#banner").hidden = true; $("#notice").textContent = ""; $("#notice").className = "statline";
+  const u = $("#understood");
+  u.hidden = false; u.className = "understood thinking";
+  u.innerHTML = `<span class="ai-label">Reading the design DNA</span><span class="dots"><i></i><i></i><i></i></span>`;
+  dnaLoading();
+  skeleton();
+  try {
+    const res = await photoRequest(q, 0);
+    if (!photoState) return;   // removed while it was loading
+    photoState.type = res.dna.type.sure ? res.dna.type.value : null;   // suggestions are checked against it
+    showDna(res);
+    showUnderstood(res.query);
+    showStats(res);
+    renderGrid(res.results);
+    page = 0; $("#more").hidden = !res.has_more; $("#more").textContent = moreLabel();
+    webForPhoto(q);
+  } catch (err) {
+    $("#grid").innerHTML = ""; u.hidden = true; $("#dna").hidden = true; $("#more").hidden = true;
+    fail("Photo search failed: " + err.message);
+  } finally { busy(false); }
+}
+
+function dnaPhoto(box) {
+  const b = box ? `<span class="dna-box" style="left:${box[0] * 100}%;top:${box[1] * 100}%;width:${(box[2] - box[0]) * 100}%;height:${(box[3] - box[1]) * 100}%"></span>` : "";
+  return `<div class="dna-photo"><img src="${photoState.dataUrl}" alt="Your photo">${b}</div>`;
+}
+
+function dnaLoading() {
+  const el = $("#dna");
+  el.hidden = false;
+  el.innerHTML = `<div class="dna-photo"><img src="${photoState.dataUrl}" alt="Your photo">${reduceMotion ? "" : `<span class="scan"></span>`}</div>
+    <div class="dna-info"><span class="ai-label smart">Design DNA</span><div class="dna-head"><strong>Reading your photo…</strong></div>
+    <div class="dna-hint">Finding the piece, its type, metal colour, stones and style, then the designs that share them.</div></div>`;
+}
+
+// a trait word in the search box (as the parser reads it), so a chip shows whether it is in use
+const wordRx = w => new RegExp(`(^|[\\s,])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[\\s,.])`, "i");
+function toggleWord(w) {
+  const el = $("#q");
+  let t = el.value.trim();
+  t = wordRx(w).test(t) ? t.replace(wordRx(w), "$1").replace(/\s*,\s*,\s*/g, ", ").replace(/^[\s,]+|[\s,]+$/g, "").replace(/\s{2,}/g, " ")
+    : (t ? `${t}, ${w}` : w);
+  el.value = t;
+  el.dispatchEvent(new Event("input"));
+  runPhoto();
+}
+
+function showDna(res) {
+  const d = res.dna, t = d.type, el = $("#dna"), raw = res.query.raw || "";
+  const chip = (label, word, title) => word
+    ? `<button type="button" class="trait${wordRx(word).test(raw) ? " on" : ""}" data-word="${esc(word)}" title="${esc(title || "")}${wordRx(word).test(raw) ? " · in your search (tap to remove)" : " · tap to add to your search"}">${esc(label)}<span class="plus">${wordRx(word).test(raw) ? "✓" : "+"}</span></button>`
+    : `<span class="trait" title="${esc(title || "")}">${esc(label)}</span>`;
+  const how = t.p >= .85 ? "clearly" : t.p >= .6 ? "most likely" : "perhaps";
+  let head;
+  const pic = photoState && photoState.fromLink ? "the linked picture" : "your photo";
+  if (res.type_from === "photo") head = `<strong>${esc(CAT[t.value])}</strong><span class="sub">${how} ${A_TYPE[t.value]}, read from ${pic}</span>`;
+  else if (res.type_from) {
+    const asked = res.query.categories.map(c => PLURAL_CAT[c]).join(" + ") || "Every type";
+    head = `<strong>${esc(asked)}</strong><span class="sub">as you chose · the photo looks like ${A_TYPE[t.value]}</span>`;
+  } else head = `<strong>Type unclear</strong><span class="sub">perhaps ${[t, ...t.others].map(o => A_TYPE[o.value]).slice(0, 2).join(" or ")} · pick a type below</span>`;
+  const groups = {};
+  d.traits.forEach(x => (groups[x.group] = groups[x.group] || []).push(chip(x.label, x.word, `${Math.round(x.p * 100)}% of the reading`)));
+  const rows = [];
+  if (d.metal && d.metal.metal) rows.push(`<div class="dna-row"><span class="k">Metal colour</span><span class="trait"><span class="dot" style="background:${METAL_DOT[d.metal.metal]}"></span>${METAL[d.metal.metal]}</span><span class="dna-hint">results shown in this colour; every design comes in all three</span></div>`);
+  const dd = d.diamonds || {}, beat = m => `stronger than in ${Math.round(m.pct * 100)}% of the collection's ${PLURAL_CAT[t.value].toLowerCase()}`;
+  const read = x => `${Math.round(x.p * 100)}% sure, read from ${pic}`;
+  const dia = [...(groups.Stones || [])];   // "No stones" (or the image reading when the layout isn't clear)
+  if (dd.layout) dia.push(chip(dd.layout.label, dd.layout.word, read(dd.layout)));
+  if (dd.centre_cut) dia.push(chip(`${dd.centre_cut.label} centre stone`, dd.centre_cut.word, read(dd.centre_cut)));
+  (dd.settings || []).forEach(m => dia.push(chip(m.label, m.word, beat(m))));
+  if (dia.length) rows.push(`<div class="dna-row"><span class="k">Diamonds</span>${dia.join("")}</div>`);
+  for (const g of ["Band", "Look", "Form"]) if (groups[g]) rows.push(`<div class="dna-row"><span class="k">${g}</span>${groups[g].join("")}</div>`);
+  const style = d.motifs.map(m => chip(m.label, m.word, beat(m)));
+  if (style.length) rows.push(`<div class="dna-row"><span class="k">Style</span>${style.join("")}</div>`);
+  // details that make the design itself (halo, clusters on the band, two-tone), read by a vision-language model
+  const DETAIL_WORD = { halo: "halo", pave_band: "pave" };
+  const det = (d.details || []).map(x => chip(x.label, DETAIL_WORD[x.key], read(x)
+    + (x.key === "two_tone" ? " · every design can be made in any metal" : "")));
+  if (det.length) rows.push(`<div class="dna-row"><span class="k">Details</span>${det.join("")}</div>`);
+  const s = d.same;
+  const same = s ? `<div class="same"><img src="${s.thumb}" alt=""><div class="grow"><div class="sub">Your photo matches a design in the collection</div><strong>${esc(s.design_id)}</strong></div><button type="button" class="ghost" data-open="${s.uid}">View</button></div>` : "";
+  el.hidden = false;
+  el.innerHTML = `${dnaPhoto(d.box)}<div class="dna-info">
+    <span class="ai-label smart">Design DNA</span>
+    <div class="dna-head">${head}</div>
+    ${rows.join("")}${same}
+    ${d.traits.some(x => x.word) || style.length || dia.length ? `<div class="dna-hint">Tap a trait to add it to your search as a filter, or type your own words above.</div>` : ""}
+  </div>`;
+  [...el.querySelector(".dna-info").children].forEach((c, i) => c.style.setProperty("--i", i));
+}
+
+$("#dna").addEventListener("click", e => {
+  const w = e.target.closest("[data-word]");
+  if (w) { toggleWord(w.dataset.word); return; }
+  const o = e.target.closest("[data-open]");
+  if (o) openDetail(+o.dataset.open);
+});
+$("#photoBtn").addEventListener("click", () => $("#photoFile").click());
+$("#photoBtn2").addEventListener("click", () => $("#photoFile").click());
+$("#photoFile").addEventListener("change", e => {
+  const f = e.target.files[0];
+  e.target.value = "";   // choosing the same file again still fires "change"
+  if (f) attachPhoto(f);
+});
+$("#photoClear").addEventListener("click", () => {
+  clearPhoto();
+  $("#q").focus();
+  if ($("#q").value.trim()) run();
+});
+// drop a photo anywhere on the page, or paste one (a screenshot)
+let dragDepth = 0;
+const dragsFiles = e => [...(e.dataTransfer?.types || [])].includes("Files");
+window.addEventListener("dragenter", e => { if (dragsFiles(e)) { dragDepth++; $("#form").classList.add("dropping"); } });
+window.addEventListener("dragleave", e => { if (dragsFiles(e) && --dragDepth <= 0) { dragDepth = 0; $("#form").classList.remove("dropping"); } });
+window.addEventListener("dragover", e => { if (dragsFiles(e)) e.preventDefault(); });
+window.addEventListener("drop", e => {
+  if (!dragsFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; $("#form").classList.remove("dropping");
+  const f = [...e.dataTransfer.files].find(x => x.type.startsWith("image/"));
+  f ? attachPhoto(f) : fail("Drop a photo (JPG, PNG or WebP) to search with it.");
+});
+document.addEventListener("paste", e => {
+  const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith("image/"));
+  const a = document.activeElement;
+  if (!f || (a && a.tagName === "INPUT")) return;   // e.g. the history filter box
+  e.preventDefault(); attachPhoto(f);
+});
+
+/* ---------- browse the collection without a prompt ---------- */
+const PLURAL_CAT = { ring: "Rings", earrings: "Earrings", pendant: "Pendants", necklace: "Necklaces", bracelet: "Bracelets" };
+const fmtCount = n => n.toLocaleString("en-IN");
+
+function enterBrowse(url) {
+  setView("search"); browsing = null;
+  if (activeHist) { activeHist = null; renderHistory(); }
+  document.body.classList.add("searched");
+  $("#understood").hidden = true; $("#dna").hidden = true; $("#notice").textContent = ""; $("#notice").className = "statline"; $("#more").hidden = true;
+  history.replaceState(null, "", url);
+}
+
+function browseBanner(title, sub, back) {
+  $("#banner").hidden = false;
+  $("#banner").innerHTML = `<div class="grow"><div class="sub">Browse the collection</div><strong>${esc(title)}</strong><div class="sub" id="browseSub">${esc(sub)}</div></div>
+    ${back ? `<button type="button" class="ghost" data-cats>← All categories</button>` : ""}
+    ${lastQuery || photoState ? `<button type="button" class="ghost" data-back-search>Back to results</button>` : ""}`;
+}
+$("#banner").addEventListener("click", e => {
+  if (e.target.closest("[data-cats]")) showCategories();
+  else if (e.target.closest("[data-back-search]")) searchAgain();
+});
+
+async function showCategories() {
+  setMode("ai");
+  enterBrowse("?browse=all");
+  browseBanner("All categories", "Pick a category to see all of its designs, the richest pieces first.", false);
+  skeleton();
+  try {
+    const [{ items }, others] = await Promise.all([api("/api/categories"), brandDesigns()]);
+    current = [];
+    $("#grid").innerHTML = items.map((c, i) => `<button type="button" class="cat-tile" data-browse="${c.category}" style="--i:${i}">
+      <span class="img"><img src="${c.thumb}" alt=""></span><span class="name">${PLURAL_CAT[c.category] || esc(c.category)}</span>
+      <span class="count">${fmtCount(c.designs)} designs</span><span class="go">Browse →</span></button>`).join("")
+      + (others.length ? `<button type="button" class="cat-tile brands" data-browse="brands" style="--i:${items.length}">
+      <span class="img"><img src="${esc(others[0].thumb || "")}" alt=""></span><span class="name">Other brands</span>
+      <span class="count">${fmtCount(others.length)} design${others.length === 1 ? "" : "s"} with our version</span><span class="go">Browse →</span></button>` : "");
+  } catch (err) { $("#grid").innerHTML = ""; fail("Could not load the categories: " + err.message); }
+}
+
+/* designs from other jewellers' websites, listed by the team with our own version (brands.py) */
+const money = n => "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+async function brandDesigns(cat) {
+  try { return (await api("/api/brand-designs" + (cat ? "?category=" + encodeURIComponent(cat) : ""))).items; }
+  catch { return []; }   // not set up yet, or unavailable: the catalogue still shows our own designs
+}
+function brandCard(d, i, isNew) {
+  const seller = d.seller_price != null ? (d.currency && d.currency !== "INR" ? d.currency + " " + Number(d.seller_price).toLocaleString("en-IN") : money(d.seller_price)) : "Not shown";
+  return `<article class="card bcard${isNew ? " is-new" : ""}" tabindex="0" data-brand="${d.id}" style="--i:${i}"><div class="tilt">
+    <div class="img"><span class="from-badge">From ${esc(d.brand)}</span>${isNew ? `<span class="new-badge">Just listed</span>` : ""}${d.thumb ? `<img loading="lazy" src="${esc(d.thumb)}" alt="${esc(d.name)}">` : ""}</div>
+    <div class="body">
+      <div><div class="id" title="${esc(d.name)}">${esc(d.name)}</div><div class="sub">${esc(CAT[d.category] || d.category)} · our version of a ${esc(d.brand)} design</div></div>
+      <div class="bprices"><div><span>Seller</span><b>${seller}</b></div><div class="ours"><span>Ours from</span><b>${d.our_price_from != null ? money(d.our_price_from) : "–"}</b></div></div>
+      <div class="bbtns"><a class="buy-btn" href="/buy?brand=${d.id}">${BAG}<span>Buy with us</span></a>
+        ${d.seller_url ? `<a class="seller-btn" href="${esc(d.seller_url)}" target="_blank" rel="noopener noreferrer">Buy with seller ↗</a>` : ""}</div>
+    </div></div></article>`;
+}
+function showNew(fresh, items) {
+  const d = items.find(x => x.id === fresh);
+  if (!d) return;
+  $("#notice").className = "statline";
+  $("#notice").textContent = `“${d.name}” is now listed in the catalogue, first in ${PLURAL_CAT[d.category] || d.category}.`;
+  requestAnimationFrame(() => document.querySelector(`[data-brand="${fresh}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+}
+
+async function browseBrands(fresh) {
+  enterBrowse("?browse=brands");
+  browseBanner("From other brands", "Designs from other jewellers' websites, each with our own version and price.", true);
+  skeleton();
+  const items = await brandDesigns();
+  current = [];
+  $("#grid").innerHTML = items.length ? items.map((d, i) => brandCard(d, i, d.id === fresh)).join("")
+    : `<div class="empty">${GEM.replace("<svg", '<svg aria-hidden="true"')}<h3>No designs from other brands yet</h3>The team lists them from the brand designs panel.</div>`;
+  showNew(fresh, items);
+}
+
+async function browseCategory(cat, fresh) {
+  if (cat === "brands") return browseBrands(fresh);
+  enterBrowse("?browse=" + cat);
+  browseBanner(PLURAL_CAT[cat] || cat, "", true);
+  skeleton();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  try {
+    const [res, others] = await Promise.all([api(`/api/browse?category=${encodeURIComponent(cat)}`), brandDesigns(cat)]);
+    browsing = cat; page = 0;
+    $("#browseSub").textContent = `${fmtCount(res.total)} designs${others.length ? ` + ${others.length} from other brands` : ""} · the richest pieces first`;
+    renderGrid(res.results);
+    // other brands' designs lead the category, the one just listed first of all
+    others.sort((a, b) => (b.id === fresh) - (a.id === fresh));
+    if (others.length) $("#grid").insertAdjacentHTML("afterbegin", others.map((d, i) => brandCard(d, i, d.id === fresh)).join(""));
+    showNew(fresh, others);
+    $("#more").hidden = !res.has_more; $("#more").textContent = moreLabel();
+  } catch (err) { $("#grid").innerHTML = ""; fail("Could not load this category: " + err.message); }
+}
+$("#browseBtn").addEventListener("click", showCategories);
+
+/* ---------- detail dialog ---------- */
+const dlg = $("#dlg");
+function closeDialog() {
+  if (!dlg.open || dlg.classList.contains("closing")) return;
+  if (reduceMotion) { dlg.close(); return; }
+  dlg.classList.add("closing");
+  setTimeout(() => { dlg.classList.remove("closing"); dlg.close(); }, 280);
+}
+dlg.addEventListener("cancel", e => { e.preventDefault(); closeDialog(); });
+dlg.addEventListener("close", () => { dlg.innerHTML = ""; });
+// Any click outside the card (on the dimmed page) closes it.
+dlg.addEventListener("click", e => {
+  const r = dlg.getBoundingClientRect();
+  // the backdrop only: a button pressed with the keyboard reports clientX/Y = 0, which looks "outside"
+  if (e.target === dlg && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) closeDialog();
+});
+
+async function openDetail(uid) {
+  dlg.innerHTML = `<div class="detail"><div class="stage"></div><div class="info"><p class="muted">Loading<span class="dots"><i></i><i></i><i></i></span></p></div></div>`;
+  if (!dlg.open) dlg.showModal();
+  let d;
+  try { d = await api(`/api/design/${uid}`); }
+  catch (err) { dlg.querySelector(".info").innerHTML = `<button class="icon-btn close" type="button" aria-label="Close">✕</button><p class="statline error">${esc(err.message)}</p>`; return; }
+  let metal = d.metal_shown, view = 0, first = true;
+
+  const draw = () => {
+    const views = d.views[metal] || [];
+    const video = d.videos[metal];
+    const stage = view === "video" && video
+      ? `<video src="${video}" controls autoplay loop muted playsinline></video>`
+      : `<img src="${views[view]?.thumb}" alt="${esc(d.design_id)}">${finePointer ? `<span class="zoom-hint">HOVER TO ZOOM</span>` : ""}<a href="${views[view]?.full}" target="_blank" rel="noopener">Full resolution ↗</a>`;
+    dlg.innerHTML = `<div class="detail"><div class="stage">${stage}</div>
+      <div class="info${first ? " first" : ""}">
+        <button class="icon-btn close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <div><h3>${esc(CAT[d.category] || d.category)}${d.stone_shape ? " · " + esc(d.stone_shape) + " cut" : ""}</h3><h2>${esc(d.design_id)}</h2></div>
+        <div><h3>Metal</h3><div class="metals">${d.metals.map(m => `<button type="button" data-m="${m}" class="${m === metal ? "on" : ""}"><span class="sw ${m}"></span>${METAL[m]}</button>`).join("")}</div></div>
+        <div><h3>Angles</h3><div class="strip">${views.map((v, i) => `<button type="button" data-v="${i}" class="${i === view ? "on" : ""}"><img src="${v.thumb}" alt="View ${i + 1}"></button>`).join("")}
+          ${video ? `<button type="button" data-v="video" class="${view === "video" ? "on" : ""}"><span class="vid">▶ 3D</span></button>` : ""}</div></div>
+        ${d.variants.length ? `<div><h3>Other stone shapes</h3><div class="strip">${d.variants.map(v => `<button type="button" data-open="${v.uid}" title="${esc(v.design_id)}"><img src="${v.thumb}" alt="${esc(v.design_id)}"></button>`).join("")}</div></div>` : ""}
+        <div class="actions"><a class="primary" href="${buyUrl(d, metal)}"><span>Proceed to buy</span>${BAG}</a>${d.tryon ? `<button type="button" class="primary" data-tryon-d="${d.uid}"><span>Try it on me</span>${SPARK}</button>` : ""}${d.live ? `<button type="button" class="ghost" data-live-d="${d.uid}">${CAM}<span>Live try-on</span></button>` : ""}</div>
+        <div class="fav-toggle"><button type="button" class="ghost" data-similar-d="${d.uid}">${LOOP}<span>More like this</span></button><button type="button" class="ghost" data-web-d="${d.uid}">${WEB_ICON}<span>Similar on the web</span></button>${heartBtn(d.uid)}<span class="muted" data-fav-label="${d.uid}">${favSet.has(d.uid) ? "In your favourites" : "Add to favourites"}</span></div>
+        <div class="facts"><div>Folder: ${d.folders.map(esc).join("<br>")}</div>${d.has_cad ? "<div>CAD file available (3dm / stl)</div>" : ""}</div>
+      </div></div>`;
+    first = false;
+    const st = dlg.querySelector(".stage");
+    if (finePointer && view !== "video") {
+      st.addEventListener("pointermove", e => {
+        const r = st.getBoundingClientRect();
+        st.style.setProperty("--zx", ((e.clientX - r.left) / r.width * 100) + "%");
+        st.style.setProperty("--zy", ((e.clientY - r.top) / r.height * 100) + "%");
+        st.classList.toggle("zoom", !e.target.closest("a"));
+      });
+      st.addEventListener("pointerleave", () => st.classList.remove("zoom"));
+    }
+  };
+  draw();
+  dlg.onclick = e => {
+    if (e.target.closest(".close")) { closeDialog(); return; }
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.fav) { toggleFav(+b.dataset.fav, b); return; }
+    if (b.dataset.m) { metal = b.dataset.m; if (view !== "video") view = Math.min(view, (d.views[metal] || []).length - 1); draw(); }
+    else if (b.dataset.v !== undefined) { view = b.dataset.v === "video" ? "video" : +b.dataset.v; draw(); }
+    else if (b.dataset.open) { openDetail(+b.dataset.open); }
+    else if (b.dataset.similarD) { closeDialog(); similar(+b.dataset.similarD); }
+    else if (b.dataset.webD) { closeDialog(); webOpen(true); webForDesign(+b.dataset.webD, d.design_id, metal); }
+    else if (b.dataset.tryonD) { closeDialog(); openTryOn(+b.dataset.tryonD, metal); }
+    else if (b.dataset.liveD) { openLive(d); }
+  };
+}
+
+/* ---------- instant try-on: the design on the user's own saved photo ---------- */
+const PART_LABEL = { hand: "hand", face: "face", neck: "neck" };
+const PART_ICON = { hand: "✋", face: "🙂", neck: "💎" };
+const tryDlg = $("#tryDlg");
+let tryView = null;   // one WebGL renderer, reused for every preview
+tryDlg.addEventListener("click", e => {
+  const r = tryDlg.getBoundingClientRect();
+  if (e.target === tryDlg && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) tryDlg.close();
+});
+tryDlg.addEventListener("close", () => {
+  tryContext = null;
+  const u = new URL(location.href);
+  if (u.searchParams.has("tryon")) { u.searchParams.delete("tryon"); history.replaceState(null, "", u); }
+});
+
+// Where the photo sits in the try-on stage. Close-up: the body part the
+// piece is on (hand, both ears, neck to chest) fills the frame; Full photo:
+// the whole picture fits inside it.
+const TRY_MAX_SCALE = 1.5;   // screen px per photo px: closer than this, the photo turns soft
+function tryFocus(part, cat, a, W, H) {
+  if (part === "hand") {
+    // ring: the four fingers and knuckles; bracelet: the wrist and back of the hand
+    const ids = cat === "bracelet" ? [0, 1, 2, 5, 9, 13, 17] : [5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20];
+    const pts = ids.map(i => a.landmarks[i]);
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    if (cat === "bracelet") {   // include the forearm past the wrist
+      const [wx, wy] = a.landmarks[0], [mx, my] = a.landmarks[9];
+      xs.push(wx + (wx - mx) * 0.5); ys.push(wy + (wy - my) * 0.5);
+      x0 = Math.min(...xs); x1 = Math.max(...xs); y0 = Math.min(...ys); y1 = Math.max(...ys);
+    }
+    const px = (x1 - x0) * 0.25, py = (y1 - y0) * 0.15;
+    return [x0 - px, y0 - py, x1 + px, y1 + py];
+  }
+  if (part === "face") {
+    const w = a.lobeR.x - a.lobeL.x, h = w * W / H, cy = (a.lobeL.y + a.lobeR.y) / 2;
+    return [a.lobeL.x - w * 0.35, cy - h * 0.95, a.lobeR.x + w * 0.35, cy + h * 0.75];
+  }
+  const mm = a.pxPerMm / H, sy = (a.shoulderL.y + a.shoulderR.y) / 2;
+  return [Math.min(a.shoulderL.x, a.shoulderR.x), a.chin.y - 25 * mm, Math.max(a.shoulderL.x, a.shoulderR.x), sy + 80 * mm];
+}
+function placeTryFrame(stage, frame, photo, part, cat, view) {
+  const sw = stage.clientWidth, sh = stage.clientHeight, W = photo.width, H = photo.height;
+  if (!sw || !sh) return;
+  const fit = Math.min(sw / W, sh / H), cover = Math.max(sw / W, sh / H);
+  let scale = fit, cx = W / 2, cy = H / 2;
+  if (view === "close") {
+    const [x0, y0, x1, y1] = tryFocus(part, cat, photo.anchors, W, H);
+    cx = (x0 + x1) / 2 * W; cy = (y0 + y1) / 2 * H;
+    scale = Math.min(sw / ((x1 - x0) * W), sh / ((y1 - y0) * H));
+    scale = Math.max(cover, Math.min(scale, TRY_MAX_SCALE));
+  }
+  // visible part of the photo, kept edge to edge where the photo is big enough
+  const vw = sw / scale, vh = sh / scale;
+  const left = vw <= W ? Math.min(Math.max(cx - vw / 2, 0), W - vw) : (W - vw) / 2;
+  const top = vh <= H ? Math.min(Math.max(cy - vh / 2, 0), H - vh) : (H - vh) / 2;
+  Object.assign(frame.style, { left: `${-left * scale}px`, top: `${-top * scale}px`, width: `${W * scale}px`, height: `${H * scale}px` });
+}
+
+/* ---------- "On phone": a QR code that opens this page, or the design being tried on, on a phone ---------- */
+const phoneDlg = $("#phoneDlg");
+let tryContext = null;   // the design in the try-on dialog while it is open
+phoneDlg.addEventListener("click", e => { if (e.target === phoneDlg) phoneDlg.close(); });
+async function openOnPhone(target) {
+  let path = location.pathname + location.search, title = "Continue on your phone",
+    what = "Opens this page on your phone, where you can try designs on with the phone camera.";
+  const t = target?.path ? null : tryDlg.open ? tryContext : null;
+  if (target?.path) ({ path, title, what } = target);
+  else if (t?.live) {
+    path = `/tryon?model=${encodeURIComponent(t.slug)}`; title = `Try ${t.id} live`;
+    what = "Opens the live camera on your phone: the ring follows your hand.";
+  } else if (t) {
+    path = `/?tryon=${t.uid}`; title = `Try ${t.id} on your phone`;
+    what = "Opens this design's try-on on your phone.";
+  }
+  phoneDlg.innerHTML = `<div class="phone-card">
+    <button class="icon-btn close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3>Scan with your phone</h3><h2>${esc(title)}</h2>
+    <div class="qr" id="phoneQr"><span class="muted">Making the code…</span></div>
+    <p class="muted">${esc(what)} Point the phone camera at the code, sign in once and allow the camera.</p>
+    <div class="url" id="phoneUrl"></div>
+    ${target?.local ? `<a href="${esc(target.path)}" class="muted">or use this computer's camera</a>` : ""}</div>`;
+  phoneDlg.querySelector(".close").onclick = () => phoneDlg.close();
+  if (!phoneDlg.open) phoneDlg.showModal();
+  try {
+    const r = await api(`/api/phone-link?path=${encodeURIComponent(path)}`);
+    $("#phoneQr").innerHTML = r.svg;   // made by the server from its own address
+    $("#phoneUrl").textContent = r.url;
+  } catch (err) {
+    $("#phoneQr").innerHTML = `<span class="statline error">${esc(err.message)}</span>`;
+  }
+}
+$("#phoneBtn").onclick = () => openOnPhone();
+
+// Live camera try-on of one ring: straight to the camera on a phone, a QR code for the phone on a computer
+function openLive(d) {
+  const path = `/tryon?model=${encodeURIComponent(d.live)}`;
+  if (TOUCH) { location.href = path; return; }
+  openOnPhone({ path, title: `Try ${d.design_id} live`, local: true,
+    what: "Opens the live camera on your phone: the ring follows your hand." });
+}
+
+async function openTryOn(uid, metal) {
+  tryDlg.classList.remove("wide");
+  tryDlg.innerHTML = `<div class="detail"><div class="stage"><div class="busy">Preparing your preview…</div></div><div class="info"><p class="muted">Loading<span class="dots"><i></i><i></i><i></i></span></p></div></div>`;
+  if (!tryDlg.open) tryDlg.showModal();
+  let design, body;
+  try {
+    [design, body] = await Promise.all([api(`/api/tryon/design/${uid}`), api("/api/body")]);
+  } catch (err) {
+    tryDlg.querySelector(".info").innerHTML = `<button class="icon-btn close" type="button" aria-label="Close">✕</button><p class="statline error">${esc(err.message)}</p>`;
+    tryDlg.querySelector(".close").onclick = () => tryDlg.close();
+    return;
+  }
+  const d = design.card, part = design.part, photo = body.parts[part];
+  // what "On phone" opens: a ring with a 3D model goes to the live camera
+  tryContext = { uid, id: d.design_id, slug: design.slug, live: !!d.live };
+  metal = d.metals.includes(metal) ? metal : d.metal_shown;
+  // come back to this preview after adding a photo
+  const ret = `/?${new URLSearchParams({ ...(lastQuery ? { q: lastQuery } : {}), tryon: uid })}`;
+  const addUrl = how => `/tryon/me?${new URLSearchParams({ part, how, return: ret })}`;
+  const head = `<button class="icon-btn close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div><h3>Try on · ${esc(CAT[d.category] || d.category)}</h3><h2>${esc(d.design_id)}</h2></div>`;
+
+  if (!photo) {
+    tryDlg.innerHTML = `<div class="detail"><div class="stage"><img src="${d.thumb}" alt="${esc(d.design_id)}" style="object-fit:contain;padding:12%"></div>
+      <div class="info">${head}
+        <div class="need"><span class="big">${PART_ICON[part]}</span>
+          <b>Add a photo of your ${PART_LABEL[part]} once</b>
+          <span class="muted">Then every ${esc((CAT[d.category] || "").toLowerCase())} and similar piece opens on you instantly. Your photo stays private and you can delete it any time.</span>
+          <div class="actions"><a class="primary" href="${addUrl("camera")}" style="text-decoration:none"><span>Take photo</span></a><a class="ghost" href="${addUrl("upload")}" style="text-decoration:none">Upload photo</a></div>
+          ${d.live ? `<span class="muted">Or try it live, without a photo:</span><button type="button" class="ghost" id="tryLive">${CAM}<span>Live try-on</span></button>` : ""}
+        </div>
+      </div></div>`;
+    tryDlg.querySelector(".close").onclick = () => tryDlg.close();
+    const liveBtn = $("#tryLive");
+    if (liveBtn) liveBtn.onclick = () => openLive(d);
+    return;
+  }
+
+  const closeBtn = head.slice(0, head.indexOf("</button>") + 9);
+  tryDlg.classList.add("wide");
+  tryDlg.innerHTML = `<div class="tryw">
+    <div class="tstage" id="tryStage">
+      <div class="tframe instant" id="tryFrame"><img id="tryPhoto" alt="Your ${PART_LABEL[part]}"><canvas id="tryGl"></canvas></div>
+      <div class="busy" id="tryBusy">Placing the ${esc((CAT[d.category] || "piece").toLowerCase())}…</div>
+      ${closeBtn}
+      <div class="tview" role="group" aria-label="View"><button type="button" data-v="close" class="on">Close-up</button><button type="button" data-v="full">Full photo</button></div>
+      ${design.has3d && Object.keys(design.photos || {}).length ? `<div class="tview tlook" role="group" aria-label="Look"><button type="button" data-look="photo" class="on">Real photo</button><button type="button" data-look="3d">3D</button></div>` : ""}
+    </div>
+    <div class="tbar">
+      <div><h3>Try on · ${esc(CAT[d.category] || d.category)}</h3><h2>${esc(d.design_id)}</h2></div>
+      <div class="metals">${d.metals.map(m => `<button type="button" data-m="${m}" class="${m === metal ? "on" : ""}"><span class="sw ${m}"></span>${METAL[m]}</button>`).join("")}</div>
+      <div class="actions">
+        <button type="button" class="primary" id="trySave"><span>Save photo</span></button>
+        <button type="button" class="ghost" id="tryPhone">On phone</button>
+        ${d.live ? `<button type="button" class="ghost" id="tryLiveCam">${CAM}<span>Live camera</span></button>` : ""}
+      </div>
+      <p class="muted">Shown at its real size on your photo. <a href="${addUrl("camera")}">Change my ${PART_LABEL[part]} photo</a></p>
+    </div></div>`;
+  tryDlg.querySelector(".close").onclick = () => tryDlg.close();
+  // Close-up frames the hand / ears / neck; Full photo shows the whole picture
+  let view = "close";
+  const stage = $("#tryStage"), frame = $("#tryFrame");
+  const place = () => placeTryFrame(stage, frame, photo, part, d.category, view);
+  place();
+  frame.offsetWidth;   // apply the first layout without animating it
+  frame.classList.remove("instant");
+  new ResizeObserver(place).observe(stage);
+  tryDlg.querySelector(".tview").onclick = e => {
+    const b = e.target.closest("[data-v]");
+    if (!b) return;
+    view = b.dataset.v;
+    tryDlg.querySelectorAll(".tview button").forEach(x => x.classList.toggle("on", x === b));
+    place();
+  };
+  const img = $("#tryPhoto");
+  try {
+    await new Promise((ok, bad) => { img.onload = ok; img.onerror = () => bad(new Error("Couldn't load your photo")); img.src = photo.url; });
+    const { PhotoTryOn } = await import("/tryon-app/photo-view.js");
+    const canvas = $("#tryGl");
+    if (tryView) {   // move the one renderer's canvas into the new dialog content
+      canvas.replaceWith(tryView.renderer.domElement);
+      tryView.renderer.domElement.id = "tryGl";
+    } else {
+      tryView = new PhotoTryOn(canvas);
+    }
+    // "Real photo" places the design's own catalogue render; "3D" the model
+    const showLook = look => tryView.show(photo, { category: d.category, model: design.model,
+      photos: look === "photo" || !design.has3d ? design.photos : null,   // no 3D model: always the real photo
+      url: `/api/tryon/models/${encodeURIComponent(design.slug)}.glb?v=${design.model.version}` }, { image: img, metal });
+    await showLook(Object.keys(design.photos || {}).length ? "photo" : "3d");
+    tryView.setMetal(metal);
+    $("#tryBusy").remove();
+    const lookBox = tryDlg.querySelector(".tlook");
+    if (lookBox) lookBox.onclick = async e => {
+      const b = e.target.closest("[data-look]");
+      if (!b || b.classList.contains("on")) return;
+      lookBox.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+      await showLook(b.dataset.look);
+      tryView.setMetal(metal);
+    };
+  } catch (err) {
+    $("#tryBusy").textContent = "Couldn't show the preview: " + err.message;
+    return;
+  }
+  tryDlg.querySelector(".metals").onclick = e => {
+    const b = e.target.closest("[data-m]");
+    if (!b) return;
+    metal = b.dataset.m;
+    tryDlg.querySelectorAll(".metals button").forEach(x => x.classList.toggle("on", x === b));
+    tryView.setMetal(metal);
+  };
+  // right-click / long-press on the preview saves the combined picture, like Save photo
+  frame.addEventListener("contextmenu", e => { e.preventDefault(); $("#trySave").click(); });
+  $("#tryPhone").onclick = () => openOnPhone();
+  $("#tryLiveCam")?.addEventListener("click", () => openLive(d));
+  $("#trySave").onclick = async () => {
+    const blob = await tryView.snapshot(img);
+    const file = new File([blob], `${d.design_id}-try-on.jpg`, { type: "image/jpeg" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: d.design_id }); return; } catch (e) { if (e.name === "AbortError") return; }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+}
+
+/* ---------- scroll effects ---------- */
+function onScroll() {
+  const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
+  $("#topbar").classList.toggle("scrolled", y > 10);
+  $("#progress").style.transform = `scaleX(${h > 0 ? y / h : 0})`;
+  $("#top").classList.toggle("show", y > 600);
+}
+addEventListener("scroll", onScroll, { passive: true }); onScroll();
+$("#top").addEventListener("click", () => { scrollTo({ top: 0, behavior: "smooth" }); $("#q").focus({ preventScroll: true }); });
+
+loadHistory();   // the sidebar is open by default and shows the list (or the empty state)
+
+/* shareable links: /?q=... runs that search on load */
+const initial = new URLSearchParams(location.search).get("q");
+const initialBrowse = new URLSearchParams(location.search).get("browse");
+if (initial) { $("#q").value = initial; run(initial); }
+else if (initialBrowse === "all") showCategories();
+else if (CAT[initialBrowse] || initialBrowse === "brands") browseCategory(initialBrowse, +new URLSearchParams(location.search).get("new") || null);
+/* back from "My try-on photos" with a design waiting: open its preview */
+const pendingTry = new URLSearchParams(location.search).get("tryon");
+if (/^\d+$/.test(pendingTry || "")) openTryOn(+pendingTry);
+
+/* ---------- sparkle field ---------- */
+(function sparkles() {
+  if (reduceMotion) return;
+  const cv = $("#sparkles"), ctx = cv.getContext("2d");
+  let w, h, dpr, stars = [];
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + "px"; cv.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round(Math.min(70, w * h / 22000));
+    stars = Array.from({ length: n }, () => ({
+      x: Math.random() * w, y: Math.random() * h, r: .6 + Math.random() * 2.2,
+      vy: -(.05 + Math.random() * .18), vx: (Math.random() - .5) * .08,
+      ph: Math.random() * Math.PI * 2, sp: .006 + Math.random() * .018, cross: Math.random() < .28,
+    }));
+  }
+  function frame() {
+    ctx.clearRect(0, 0, w, h);
+    for (const s of stars) {
+      s.x += s.vx; s.y += s.vy; s.ph += s.sp;
+      if (s.y < -10) { s.y = h + 10; s.x = Math.random() * w; }
+      const a = (Math.sin(s.ph) * .5 + .5) * .45;
+      ctx.fillStyle = `rgba(224,182,84,${a * .35})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 2.4, 0, 7); ctx.fill();
+      ctx.fillStyle = `rgba(184,134,43,${a * .8})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * .55, 0, 7); ctx.fill();
+      if (s.cross && a > .45) {
+        const L = s.r * 6 * a;
+        ctx.strokeStyle = `rgba(184,134,43,${a * .6})`; ctx.lineWidth = .7;
+        ctx.beginPath(); ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y); ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
+      }
+    }
+    if (!document.hidden) requestAnimationFrame(frame);
+  }
+  resize(); addEventListener("resize", resize);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) requestAnimationFrame(frame); });
+  requestAnimationFrame(frame);
+})();
+
+/* ---------- "From the web" panel (demo): similar products of other shops ---------- */
+const WEB_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>`;
+const WEB_OUT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>`;
+const WEB_COPY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>`;
+const WEB_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+const web = { list: [], title: "", sub: "", idx: -1, ticket: 0, opened: false };
+const webWide = matchMedia("(min-width: 1200px)");
+
+function webPrice(p) {
+  if (p.price == null) return "";
+  try { return new Intl.NumberFormat("en-IN", { style: "currency", currency: p.currency || "INR", maximumFractionDigits: 0 }).format(p.price); }
+  catch { return `${p.currency || ""} ${Math.round(p.price).toLocaleString("en-IN")}`; }
+}
+function webHue(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+function webShop(p) {
+  return `<div class="wshop"><span class="wfav" style="background:hsl(${webHue(p.shop)} 45% 45%)">${esc(p.shop[0] || "?")}</span><span class="n">${esc(p.shop)}</span>${p.new ? `<span class="wnew">New</span>` : ""}</div>`;
+}
+function webUrlText(u) { try { const x = new URL(u); return x.hostname.replace(/^www\./, "") + decodeURIComponent(x.pathname); } catch { return u; } }
+function webFrame(p, large) {
+  const src = large ? p.img_large : p.img;
+  return `<span class="wframe" style="--src:url('${src}')"><img src="${src}" ${large ? "" : `srcset="${p.img} 320w, ${p.img_large} 640w" sizes="(max-width: 560px) 45vw, 180px"`} alt="${esc(p.title)}" loading="lazy" decoding="async"></span>`;
+}
+function webCard(p, i) {
+  return `<div class="wcard">
+    <button type="button" class="wframe-btn" data-wi="${i}" style="all:unset;display:block;width:100%;cursor:pointer" aria-label="Preview ${esc(p.title)}">${webFrame(p, false)}</button>
+    <div class="wmeta">${webShop(p)}<div class="wname" title="${esc(p.title)}">${esc(p.title)}</div>
+      <div class="wprice">${esc(webPrice(p))}</div>${p.material ? `<div class="wmat">${esc(p.material)}</div>` : ""}
+      <a class="wurl" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" title="Open on ${esc(p.site)}">${esc(webUrlText(p.url))} ↗</a></div>
+  </div>`;
+}
+
+function webOpen(on) {
+  document.body.classList.toggle("web-open", on);
+  $("#webPanel").inert = !on;
+  $("#webPanel").setAttribute("aria-hidden", String(!on));
+  $("#webBtn").setAttribute("aria-pressed", String(on));
+  $("#webFab").classList.toggle("show", !on && web.list.length > 0);
+}
+
+function webHead(title, sub) {
+  web.title = title; web.sub = sub;
+  $("#wpTitle").textContent = title;
+  $("#wpSub").textContent = sub;
+}
+
+function webShowList() {
+  web.idx = -1;
+  const b = $("#wpBody");
+  b.innerHTML = web.list.length ? `<div class="wp-grid">${web.list.map(webCard).join("")}</div>`
+    : `<p class="wp-note">${esc(web.empty || "No similar products found on the shops we read.")}</p>`;
+  b.scrollTop = 0;
+  $("#webFab").classList.toggle("show", !document.body.classList.contains("web-open") && web.list.length > 0);
+}
+
+async function webLoad(url, title) {
+  const t = ++web.ticket;
+  webHead(title, "Looking at other shops…");
+  $("#wpBody").innerHTML = `<div class="wp-grid">${Array.from({ length: 6 }, () => `<div><span class="wframe h-skel" style="height:auto"></span></div>`).join("")}</div>`;
+  if (!web.opened && webWide.matches) { web.opened = true; webOpen(true); }   // wide screens: open it once by itself
+  try {
+    const r = await api(url);
+    if (t !== web.ticket) return;
+    web.list = r.results || [];
+    web.empty = r.refused ? "Not a jewellery search." : r.note || "";
+    const shops = [...new Set(web.list.map(p => p.shop))];
+    webHead(title, web.list.length ? `${web.list.length} similar products from ${shops.length} shop${shops.length === 1 ? "" : "s"} · prices as listed by each shop` : "Nothing similar found");
+    webShowList();
+  } catch (err) {
+    if (t !== web.ticket) return;
+    web.list = []; web.empty = err.message; webHead(title, ""); webShowList();
+  }
+}
+
+function webForPrompt(q) {
+  const p = new URLSearchParams({ q });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  webLoad("/api/web-products?" + p, `Similar to “${q}”`);
+}
+function webForPhoto(words) {
+  if (!photoState || !photoState.token) return;
+  const p = new URLSearchParams({ q: words || "" });
+  if (overrides.category) p.set("category", overrides.category);
+  if (overrides.metal) p.set("metal", overrides.metal);
+  const what = photoState.fromLink ? "the linked picture" : "your photo";
+  webLoad(`/api/web-products/photo/${photoState.token}?${p}`, `Like ${what}${words ? ` · “${words}”` : ""}`);
+}
+function webForDesign(uid, name, metal) {
+  webLoad(`/api/web-products/design/${uid}${metal ? "?metal=" + encodeURIComponent(metal) : ""}`,
+          `Like our design ${name || ""}${metal ? " · " + (METAL[metal] || "") : ""}`.trim());
+}
+
+async function webPreview(i) {
+  const p = web.list[i];
+  if (!p) return;
+  web.idx = i;
+  const b = $("#wpBody");
+  b.innerHTML = `<div class="wprev">
+    <div class="wp-nav"><button type="button" class="wp-btn" data-wback aria-label="Back to the list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><span class="grow"></span>
+      <button type="button" class="wp-btn" data-wstep="-1" aria-label="Previous product" ${i <= 0 ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button type="button" class="wp-btn" data-wstep="1" aria-label="Next product" ${i >= web.list.length - 1 ? "disabled" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    ${webShop(p)}<h3>${esc(p.title)}</h3>
+    ${webFrame(p, true)}
+    <div class="wfacts"><span class="wprice">${esc(webPrice(p))}</span>${p.material ? `<span class="wmat">${esc(p.material)}</span>` : ""}<span class="wmat">${esc(CAT[p.category] || p.category)}</span></div>
+    <div class="wactions"><a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${WEB_OUT}<span>Visit</span></a><button type="button" data-wcopy>${WEB_COPY}<span>Copy link</span></button></div>
+    <a class="wurl" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(webUrlText(p.url))} ↗</a>
+    <h4>Related products</h4><div class="wp-grid" id="wpRelated"><p class="wp-note" style="grid-column:1/-1">Loading…</p></div>
+  </div>`;
+  b.scrollTop = 0;
+  const t = ++web.ticket;
+  try {
+    const r = await api(`/api/web-products/item/${p.id}`);
+    if (t !== web.ticket || web.idx !== i) return;
+    web.related = r.results || [];
+    $("#wpRelated").innerHTML = web.related.map((q, j) => webCard(q, "r" + j)).join("") || `<p class="wp-note" style="grid-column:1/-1">No related products.</p>`;
+  } catch (err) { if (t === web.ticket) $("#wpRelated").innerHTML = `<p class="wp-note" style="grid-column:1/-1">${esc(err.message)}</p>`; }
+}
+
+$("#wpBody").addEventListener("click", async e => {
+  const card = e.target.closest("[data-wi]");
+  if (card) {
+    const k = card.dataset.wi;
+    if (k.startsWith("r")) {   // a related product: it becomes the list's next item, then is previewed
+      const p = web.related[+k.slice(1)];
+      web.list.splice(web.idx + 1, 0, p);
+      webPreview(web.idx + 1);
+    } else webPreview(+k);
+    return;
+  }
+  if (e.target.closest("[data-wback]")) { webShowList(); return; }
+  const step = e.target.closest("[data-wstep]");
+  if (step) { webPreview(web.idx + +step.dataset.wstep); return; }
+  const copy = e.target.closest("[data-wcopy]");
+  if (copy) {
+    try { await navigator.clipboard.writeText(web.list[web.idx].url); copy.querySelector("span").textContent = "Copied"; }
+    catch { copy.querySelector("span").textContent = "Couldn't copy"; }
+    setTimeout(() => { const s = copy.querySelector("span"); if (s) s.textContent = "Copy link"; }, 1600);
+  }
+});
+$("#wpClose").addEventListener("click", () => webOpen(false));
+$("#webBtn").addEventListener("click", () => webOpen(!document.body.classList.contains("web-open")));
+$("#webFab").addEventListener("click", () => webOpen(true));
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.body.classList.contains("web-open") && !webWide.matches && !$("#dlg").open) webOpen(false);
+});
+webOpen(false);
+</script>
+</body>
+</html>
