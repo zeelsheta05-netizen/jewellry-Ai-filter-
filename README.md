@@ -1046,6 +1046,17 @@ are kept in `data/sketch/tiles/` (newest 300). The model writes no text; the ser
 accents included). With Auto, if the account runs out of balance mid-set, the rest is drawn with FLUX.2 Klein.
 Sets run as background jobs the page polls (the tunnel ends requests at 100 s).
 
+## Social post (`/ai?tab=social`)
+
+The fourth tab of the AI generation panel. Upload a jewellery picture (or pick one of your AI designs), choose platforms and get one caption per platform, ready to copy, edit or rewrite.
+
+- **Platforms and their rules** (`jewelsearch/social.py`, `PLATFORMS`): Instagram (2,200 characters, hook line under 125, 5 hashtags, Instagram's cap since December 2025), Facebook (3 hashtags), X (fits 280 with 2 hashtags), Threads (500, 1 topic tag), LinkedIn (3), Pinterest (title 100 + description 500, 2), YouTube Shorts (title 100 + description, 3) and Google Business (local post, no hashtags).
+- **What it says**: the piece is read from the picture by our own Design DNA reader (type, metal, stones, style), plus the "Details to mention" the user types. Sentences with prices, discounts, carats, certificates, hallmarks, "handcrafted", delivery or warranty claims are removed unless the user's details make the same claim.
+- **SEO**: a main keyword built from the facts ("rose gold diamond ring") goes in the first line or title; related search phrases (occasion, city, gift intent) and hashtags are built in code, so they stay on-topic and inside each platform's limit.
+- **Trending**: a dated festival and season calendar (Navratri, Karwa Chauth, Dhanteras, Diwali, wedding seasons, Christmas, Valentine's Day, Akshaya Tritiya, Mother's Day, Raksha Bandhan...) ranked by how much each moves jewellery sales. "Auto" picks the strongest one for today; the user can pick any upcoming one or none. This is not live social-network trend data. Lunar festival dates are filled in up to August 2027 and need adding each year (`OCCASIONS`); fixed-date holidays repeat by themselves.
+- **Writer**: Pollinations' text model (it sees the picture) when `POLLINATIONS_KEY` has balance, else the local Qwen3-1.7B already loaded for the jewellery check, else a ready-made template (marked as a quick draft on the page). While the local picture generator is drawing, the local model is away, so captions come from the template until it is back.
+- API: `GET /api/social/options`, `POST /api/social/start` (picture as data URL, or `gid` of an AI design), `GET /api/social/job/{id}` (fills in per platform), `POST /api/social/job/{id}/rewrite`. Jobs live in memory for an hour.
+
 ## Ring try-on (`/tryon`)
 
 Live camera try-on in the phone browser: the ring follows the user's ring
@@ -1113,6 +1124,42 @@ image (it doesn't wrap the finger or cast shadows), 3D looks like computer graph
 ~1,000 of ~3,700 designs have been converted with the current converter. Planned next step
 when resumed: server-side path-traced rendering (Blender Cycles) of the verified CAD models
 posed on the user's photo, for photo-real results.
+
+## Try on ready-made models (the "Try on" button)
+
+Since 2026-10-08 the **Try on** chip on every design card (and "Try it on me" in the design
+details) opens a model picker instead of the user's own saved photo. It replaces
+"My try-on photos" in the user menu (`/tryon/me` still works but is no longer linked).
+
+- **Recommended**: our model library, `data/tryon/library/`, only the photos measured for the
+  piece's body part (hands for rings and bracelets, front portraits for earrings, pendants and
+  necklaces), so a ring can never be placed on an ear. The server checks this again.
+- **Custom**: **Upload** (several photos at once), e.g. a model photo from the web. The page
+  measures it with the same MediaPipe analysis; a photo where the body part isn't found is
+  refused with the reason. Uploads are kept per user (`data/tryon/custom/<user>`).
+- Pick any number of models, 1 or 2 pictures each, **Generate**. Each picture is made in one
+  step (since 2026-10-09; the earlier "place the catalogue render, then let the AI blend it"
+  two-step flow is gone):
+  1. the spot comes from the landmarks measured on the model photo (base of the ring finger,
+     each earlobe, the neck); a square crop is centred on it (a finger turned to point up);
+  2. that crop and the design's own catalogue picture go to FLUX.2 Klein on this Mac together,
+     with one instruction: put exactly this design on the model, at the centre;
+  3. the AI's picture must show a piece drawn at the spot, with the model unchanged around it
+     (no hand moved, nothing drawn elsewhere), and the drawn piece must be recognised as THIS
+     design among all designs of its kind (SigLIP2 search model, closest 2%; the right ring
+     ranked 13th-44th of 3,338 on AI-made pictures). A miss is drawn once more, then reported
+     ("try again or pick another model") instead of showing a wrong picture;
+  4. only the piece the AI drew (and its shadow), colour-matched, is taken back into the photo:
+     every other pixel is the original model photo at its full resolution.
+  Results (download, delete): `data/tryon/results/<user>`.
+- Every design with a catalogue front picture has **Try on** (no 3D model needed any more).
+
+Pictures queue behind the one AI on this Mac (the same lock as AI generation), about 3 min each.
+
+Build or extend the library (model photos must be checked by eye for hands with extra fingers;
+the landmark check doesn't catch that):
+
+    .venv/bin/python scripts/build_model_library.py SOURCE_DIR --labels labels.json
 
 ## Instant try-on on your own photo
 

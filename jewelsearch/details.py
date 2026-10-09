@@ -19,6 +19,7 @@ import numpy as np
 import torch
 from PIL import Image
 
+from . import memory
 from .config import GPU, device
 from .embedder import on_white
 
@@ -43,31 +44,68 @@ QUESTIONS = {
 SHOWN = {"pave_band"}
 YES = 0.8             # shown / used as a property when the reading is at least this sure...
 NO = 0.2              # ...and as its absence at most this
+LETTERS = "ABCDEFGHIJKL"
 
 
 class DetailReader:
     def __init__(self, model_id: str = MODEL):
-        from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+        import threading
+        from transformers import AutoProcessor
+        self.model_id = model_id
         self.dev = device()
-        dtype = torch.float16 if self.dev in ("mps", "cuda") else torch.float32
+        self.dtype = torch.float16 if self.dev in ("mps", "cuda") else torch.float32
+        self._load_lock = threading.Lock()
+        self.model = None
         try:
             self.proc = AutoProcessor.from_pretrained(model_id, local_files_only=True)
-            model = Qwen3VLForConditionalGeneration.from_pretrained(model_id, dtype=dtype, local_files_only=True)
         except OSError:
             self.proc = AutoProcessor.from_pretrained(model_id)
-            model = Qwen3VLForConditionalGeneration.from_pretrained(model_id, dtype=dtype)
-        with GPU:
-            self.model = model.to(self.dev).eval()
+        self.load()
         tok = self.proc.tokenizer
         self.proc.tokenizer.padding_side = "left"   # the answer is read at the last position of every row
         ids = lambda w: tok.encode(w, add_special_tokens=False)[0]
         self.yes, self.no = [ids("yes"), ids("Yes")], [ids("no"), ids("No")]
         self.keys = [k for k, (_, _, matched) in QUESTIONS.items() if matched]
+        self.letters = [ids(c) for c in LETTERS]
+        memory.register(self)   # lets go of its ~4.5 GB while the local picture model draws
+
+    def load(self) -> bool:
+        """Load the weights (at start, and again after a drawing). True when loaded now."""
+        with self._load_lock:
+            if self.model is not None:
+                return False
+            from transformers import Qwen3VLForConditionalGeneration
+            try:
+                model = Qwen3VLForConditionalGeneration.from_pretrained(self.model_id, dtype=self.dtype, local_files_only=True)
+            except OSError:
+                model = Qwen3VLForConditionalGeneration.from_pretrained(self.model_id, dtype=self.dtype)
+            with GPU:
+                self.model = model.to(self.dev).eval()
+            return True
+
+    def release(self) -> bool:
+        """Let go of the weights (the local picture model is about to draw)."""
+        with self._load_lock, GPU:   # waits for a reading in progress
+            if self.model is None:
+                return False
+            self.model = None
+            return True
+
+    def ready(self) -> bool:
+        """Loaded, or loaded now; False while a picture is being drawn (the reading is skipped then)."""
+        if self.model is not None:
+            return True
+        if memory.DRAWING.is_set():
+            return False
+        self.load()
+        return self.model is not None
 
     @torch.no_grad()
     def read(self, im: Image.Image, keys: list[str] | None = None, side: int = SIDE) -> dict[str, float]:
-        """picture -> {question key: probability of yes}"""
+        """picture -> {question key: probability of yes}; {} while a picture is being drawn."""
         keys = keys or self.keys
+        if not self.ready():
+            return {}
         im = on_white(im).convert("RGB")
         im.thumbnail((side, side))
         convs = [[{"role": "user", "content": [{"type": "image", "image": im},
@@ -76,11 +114,44 @@ class DetailReader:
         x = self.proc.apply_chat_template(convs, tokenize=True, add_generation_prompt=True, return_dict=True,
                                           return_tensors="pt", processor_kwargs={"padding": True})
         with GPU:
-            logits = self.model(**x.to(self.dev)).logits[:, -1].float()
+            model = self.model
+            if model is None:   # let go in between (a drawing started)
+                return {}
+            logits = model(**x.to(self.dev)).logits[:, -1].float()
             yes = torch.logsumexp(logits[:, self.yes], dim=1)
             no = torch.logsumexp(logits[:, self.no], dim=1)
             p = torch.sigmoid(yes - no).cpu().numpy()
         return {k: float(v) for k, v in zip(keys, p)}
+
+
+    @torch.no_grad()
+    def choose(self, im: Image.Image, questions: list[tuple[str, list[str]]], side: int = SIDE) -> list[list[float]]:
+        """Multiple-choice questions about one picture, all in one batch:
+        [(question, [option, ...]), ...] -> per question the probability of each option,
+        read from the answer letter's logits (no text is generated).
+        Raises RuntimeError while a picture is being drawn (callers fall back)."""
+        if not self.ready():
+            raise RuntimeError("details reader is let go while a picture is drawn")
+        im = on_white(im).convert("RGB")
+        im.thumbnail((side, side))
+        convs = []
+        for q, opts in questions:
+            listed = "\n".join(f"{LETTERS[i]}. {o}" for i, o in enumerate(opts))
+            convs.append([{"role": "user", "content": [
+                {"type": "image", "image": im},
+                {"type": "text", "text": f"{q}\n{listed}\nAnswer with the letter only."}]}])
+        x = self.proc.apply_chat_template(convs, tokenize=True, add_generation_prompt=True, return_dict=True,
+                                          return_tensors="pt", processor_kwargs={"padding": True})
+        with GPU:
+            model = self.model
+            if model is None:
+                raise RuntimeError("details reader is let go while a picture is drawn")
+            logits = model(**x.to(self.dev)).logits[:, -1].float()
+        out = []
+        for row, (_, opts) in zip(logits, questions):
+            pick = row[torch.tensor(self.letters[:len(opts)], device=row.device)]
+            out.append(torch.softmax(pick, 0).cpu().tolist())
+        return out
 
 
 def shown(reading: dict[str, float]) -> list[dict]:

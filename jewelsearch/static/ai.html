@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI generation · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #2f7a3f;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost.small { padding: 5px 12px; font-size: 12px; }
+.ghost:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.topbar { position: relative; flex: none; }
+.aitabs { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 24px; border-bottom: 1px solid var(--line); background: var(--chip); overflow-x: auto; }
+.aitabs .label { font: 500 12px/1 var(--serif); letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin-right: 6px; white-space: nowrap; }
+.aitab { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: #fff; border-radius: 999px;
+  padding: 9px 18px; font-weight: 600; font-size: 14px; color: var(--accent-ink); white-space: nowrap; transition: background .3s, transform .35s var(--ease); }
+.aitab svg { width: 18px; height: 18px; flex: none; }
+.aitab:hover { background: var(--btn-hover); }
+.aitab[aria-selected="true"] { background: var(--btn); border-color: var(--tone2); box-shadow: 0 6px 18px -10px var(--glow); }
+.frames { flex: 1; min-height: 0; position: relative; }
+.frames iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
+@media (max-width: 640px) {
+  .topbar, .aitabs { padding-left: 16px; padding-right: 16px; }
+  .brand small { display: none; }
+  .aitabs .label { display: none; }
+  .aitab { font-size: 13px; padding: 8px 14px; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>AI generation</small></div>
+  </a>
+  <a class="ghost" href="/">← Catalogue</a>
+</header>
+
+<nav class="aitabs" role="tablist" aria-label="AI generation">
+  <span class="label">AI generation</span>
+  <button type="button" class="aitab" role="tab" id="tab-sketch" data-tab="sketch" aria-controls="frame-sketch">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+    Sketch to design AI</button>
+  <button type="button" class="aitab" role="tab" id="tab-variation" data-tab="variation" aria-controls="frame-variation">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Design variation AI</button>
+  <button type="button" class="aitab" role="tab" id="tab-design" data-tab="design" aria-controls="frame-design">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M12 21 8 9l4-6 4 6-4 12"/></svg>
+    Design generator AI</button>
+  <button type="button" class="aitab" role="tab" id="tab-social" data-tab="social" aria-controls="frame-social">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg>
+    Social post</button>
+</nav>
+
+<main class="frames">
+  <iframe id="frame-sketch" title="Sketch to design AI" role="tabpanel" aria-labelledby="tab-sketch" allow="camera; clipboard-write" hidden></iframe>
+  <iframe id="frame-variation" title="Design variation AI" role="tabpanel" aria-labelledby="tab-variation" allow="camera; clipboard-write" hidden></iframe>
+  <iframe id="frame-design" title="Design generator AI" role="tabpanel" aria-labelledby="tab-design" allow="clipboard-write" hidden></iframe>
+  <iframe id="frame-social" title="Social post" role="tabpanel" aria-labelledby="tab-social" allow="clipboard-write" hidden></iframe>
+</main>
+
+<script>
+// Each AI tool stays loaded once opened, so a picture still being made in one
+// tab keeps going while the other tab is in use.
+const TABS = { sketch: "/sketch", variation: "/variation", design: "/design", social: "/social" };
+const frame = t => document.getElementById("frame-" + t);
+
+function show(tab, from) {
+  if (!TABS[tab]) tab = "sketch";
+  const f = frame(tab);
+  if (from) f.src = TABS[tab] + "?" + new URLSearchParams({ embed: "1", from });
+  else if (!f.getAttribute("src")) f.src = TABS[tab] + "?embed=1";
+  for (const t of Object.keys(TABS)) {
+    frame(t).hidden = t !== tab;
+    document.getElementById("tab-" + t).setAttribute("aria-selected", String(t === tab));
+  }
+  history.replaceState(null, "", "/ai?tab=" + tab);
+  f.focus();
+}
+
+document.querySelectorAll(".aitab").forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
+// the tools ask to switch tab (e.g. "Variation" on a sketch result) through a message
+window.addEventListener("message", e => {
+  if (e.origin !== location.origin || !e.data || e.data.ai !== "tab") return;
+  show(e.data.tab, typeof e.data.from === "string" ? e.data.from : "");
+});
+const q = new URLSearchParams(location.search);
+show(q.get("tab") || "sketch", q.get("from") || "");
+</script>
+</body>
+</html>

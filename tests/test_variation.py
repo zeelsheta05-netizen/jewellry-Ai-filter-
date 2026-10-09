@@ -67,6 +67,7 @@ class FakePlanner:
 def jobs(tmp_path, monkeypatch):
     for k in ("SKETCH_PER_USER_DAY", "SKETCH_USD_DAY", "SKETCH_USD_MONTH"):
         monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("SKETCH_PER_USER_DAY", "20")   # these tests check the counter; the default is now no limit
     monkeypatch.setattr(V, "RETRY_WAIT", 0)
     return V.Jobs(sketch.Studio(tmp_path, caller=FakeAI()), planner=FakePlanner())
 
@@ -111,20 +112,20 @@ def test_parse_plan_tolerates_chatter_and_drops_duplicates():
 
 
 def test_planner_down_falls_back_to_random_ideas_that_differ_each_time():
-    _, a, ai = V.plan_ideas(b"x", 9, "", [], planner=FakePlanner(fail=True))
+    _, a, who = V.plan_ideas(b"x", 9, "", [], planner=FakePlanner(fail=True))
     _, b, _ = V.plan_ideas(b"x", 9, "", [i["name"] for i in a], planner=FakePlanner(fail=True))
-    assert ai is False and len(a) == len(b) == 9
+    assert who == "random" and len(a) == len(b) == 9
     assert not {i["name"] for i in a} & {i["name"] for i in b}
 
 
 def test_tile_prompt_names_each_panel_with_its_brief():
     ideas = [{"name": f"N{i}", "brief": f"b{i}"} for i in range(4)]
     p = V.tile_prompt(ideas, "Direction here.", "photo", "A green ring.")
-    assert "2x2 grid" in p and "top-left: N0 (b0)" in p and "bottom-right: N3 (b3)" in p
+    assert "2x2 grid" in p and "top-left: b0" in p and "bottom-right: b3" in p and "N0" not in p   # names are captions only
     assert "The original piece: A green ring." in p and "Direction: Direction here." in p
     assert "photorealistic" in p and "No text" in p
     one = V.tile_prompt(ideas[:1], "", "pencil")
-    assert "create one variation — N0: b0" in one and "grid" not in one
+    assert "create one variation: b0" in one and "grid" not in one
 
 
 # ---------- tiles and sets ----------
@@ -159,7 +160,7 @@ def test_sixteen_variations_one_plan_four_drawing_calls(jobs):
     assert j["status"] == "done", j
     assert len(jobs.studio.caller.calls) == 4 and len(jobs.planner.prompts) == 1
     r = j["result"]
-    assert r["panel"] == "variation" and r["meta"]["n"] == 16 and r["meta"]["planned"] is True
+    assert r["panel"] == "variation" and r["meta"]["n"] == 16 and r["meta"]["planned"] == "ai"
     assert labels(r)[:3] == ["Idea 1", "Idea 2", "Idea 3"] and r["meta"]["piece"] == "A green ring."
     assert "The original piece: A green ring." in jobs.studio.caller.calls[0][1]
     assert jobs.studio.spent(0)[0] == pytest.approx(4 * sketch.BY_KEY["p-gptimage"].usd + sketch.PLANNER_USD)
@@ -180,7 +181,7 @@ def test_planner_failure_still_makes_a_set(tmp_path, monkeypatch):
     monkeypatch.setattr(V, "RETRY_WAIT", 0)
     jobs = V.Jobs(sketch.Studio(tmp_path, caller=FakeAI()), planner=FakePlanner(fail=True))
     r = jobs.start("u1", pic(), 4, "", "illustration", "p-gptimage", wait=True)["result"]
-    assert r["meta"]["planned"] is False and len(set(labels(r))) == 4
+    assert r["meta"]["planned"] == "random" and len(set(labels(r))) == 4
 
 
 def test_single_variation_is_one_plain_picture(jobs):
@@ -367,7 +368,7 @@ def test_low_balance_with_a_picked_model_stops_with_a_plain_message(tmp_path, mo
 
 def test_variations_default_to_our_server_when_installed(monkeypatch):
     monkeypatch.setattr(sketch, "_key", lambda p: "on" if p in ("local", "pollinations") else "")
-    assert V.default_model() == "local-klein-hd"
+    assert V.default_model() == "local-klein"       # the fast size first (HD stays selectable)
     monkeypatch.setattr(sketch, "_key", lambda p: "on" if p == "pollinations" else "")
     assert V.default_model() == "p-gptimage"
 
@@ -376,4 +377,113 @@ def test_low_balance_falls_back_to_our_server_first(tmp_path, monkeypatch):
     monkeypatch.setattr(sketch, "_key", lambda p: "on" if p in ("local", "pollinations") else "")
     jobs = V.Jobs(sketch.Studio(tmp_path, caller=BrokeOn("p-gptimage")), planner=FakePlanner())
     r = jobs.start("u1", pic(), 4, "", "illustration", "p-gptimage", wait=True, auto=True)["result"]
-    assert r["model"] == "local-klein-hd" and jobs.studio.caller.calls == ["p-gptimage", "local-klein-hd"]
+    assert r["model"] == "local-klein" and jobs.studio.caller.calls == ["p-gptimage", "local-klein"]
+
+
+
+# ---------- planning without Pollinations: our photo reading + the local language model ----------
+
+RING_DNA = {"type": {"value": "ring", "sure": True}, "metal": {"metal": "yellow_gold"},
+            "traits": [{"group": "Stones", "label": "No stones"}, {"group": "Band", "label": "Wide band"},
+                       {"group": "Look", "label": "Textured"}],
+            "diamonds": {}, "motifs": [{"label": "Organic"}], "details": []}
+
+
+class FakeEngine:
+    def __init__(self, dna=RING_DNA):
+        self.dna = dna
+
+    def read_photo(self, im):
+        from types import SimpleNamespace
+        return SimpleNamespace(dna=self.dna)
+
+
+class FakeWriter:
+    def __init__(self):
+        self.prompts, self.k = [], 0
+
+    def __call__(self, prompt, max_tokens):
+        self.prompts.append(prompt)
+        n = int(re.search(r"exactly (\d+)", prompt).group(1))
+        out = []
+        for _ in range(n):
+            self.k += 1
+            out.append({"name": f"Band idea {self.k}", "brief": f"wide band change {self.k}"})
+        return json.dumps({"piece": "x", "ideas": out})
+
+
+def test_read_piece_describes_type_metal_and_no_stones():
+    info = V.read_piece(FakeEngine(), sketch_png())
+    assert info["kind"] == "ring" and info["stones"] is False
+    assert info["piece"].startswith("a yellow gold ring") and "no gemstones" in info["piece"] and "wide band" in info["piece"]
+
+
+def test_without_credit_the_local_model_plans_from_the_photo_reading():
+    w = FakeWriter()
+    piece, ideas, who = V.plan_ideas(sketch_png(), 9, "realistic", ["Old idea"], planner=FakePlanner(fail=True),
+                                     engine=FakeEngine(), writer=w)
+    assert who == "local" and len(ideas) == 9 and ideas[0]["name"] == "Band idea 1"
+    assert "a yellow gold ring" in w.prompts[0] and "Old idea" in w.prompts[0] and "a ring stays a ring" in w.prompts[0]
+    assert len(w.prompts) == 2   # asked in batches of up to 6
+    assert "Band idea 1" in w.prompts[1]   # the second batch avoids the first
+
+
+def test_no_balance_does_not_ask_pollinations_twice():
+    p = FakePlanner(fail=True)
+    p.fail = False
+    calls = []
+
+    def broke(prompt, picture, mt):
+        calls.append(1)
+        raise sketch.SketchError("limit", 429, "balance")
+    V.plan_ideas(sketch_png(), 4, "", [], planner=broke, engine=FakeEngine(), writer=FakeWriter())
+    assert len(calls) == 1
+
+
+def test_random_fallback_keeps_the_kind_of_piece():
+    piece, ideas, who = V.plan_ideas(sketch_png(), 4, "", [], planner=FakePlanner(fail=True), engine=FakeEngine())
+    assert who == "random" and all("the same ring" in i["brief"] for i in ideas)
+
+
+def test_stone_free_piece_gets_the_no_stones_rule_and_realistic_words_win():
+    ideas = [{"name": f"N{i}", "brief": "b"} for i in range(4)]
+    p = V.tile_prompt(ideas, "make realistic real life ring design", "illustration", "a yellow gold ring, no gemstones", False)
+    assert "do not add any" in p and "same gemstones" not in p and "photorealistic" in p and "illustration" not in p
+    assert V.effective_look("photo", "pencil sketch please") == "pencil"
+    assert V.effective_look("illustration", "") == "illustration"
+
+
+def test_job_uses_local_planning_and_stone_rule(tmp_path, monkeypatch):
+    monkeypatch.setattr(V, "RETRY_WAIT", 0)
+    jobs = V.Jobs(sketch.Studio(tmp_path, caller=FakeAI()), planner=FakePlanner(fail=True),
+                  engine=FakeEngine(), writer=FakeWriter())
+    r = jobs.start("u1", pic(), 4, "make realistic ring", "illustration", "local-klein-hd", wait=True)["result"]
+    assert r["meta"]["planned"] == "local" and r["meta"]["look"] == "photo"
+    prompt = jobs.studio.caller.calls[0][1]
+    assert "no gemstones" in prompt and "do not add any" in prompt and "wide band change 1" in prompt
+
+
+
+def test_local_writer_finds_the_judge_behind_its_cache():
+    from functools import lru_cache
+    from types import SimpleNamespace
+
+    class J:
+        model = tok = dev = gpu = torch = object()
+
+        def __init__(self):
+            self.ask = lru_cache(maxsize=8)(self._ask)
+
+        def _ask(self, p):
+            return "yes"
+    eng = SimpleNamespace(domain=SimpleNamespace(_judge=J().ask))
+    assert V.local_writer(eng) is not None
+    assert V.local_writer(SimpleNamespace(domain=SimpleNamespace(_judge=None))) is None
+
+
+
+def test_parse_plan_takes_pairs_from_almost_json():
+    text = ('{"piece": "A ring.", "ideas": [{"name": "Eclipse Flow", "brief": "organic flow"}], '
+            '[{"name": "Ripple Flow", "brief": "wavy band"}], [{"name": "Lunar Tide", "brief": "crescent')
+    piece, ideas = V._parse_plan(text, 2, keep_all=True)
+    assert piece == "A ring." and [i["name"] for i in ideas] == ["Eclipse Flow", "Ripple Flow"]

@@ -115,6 +115,8 @@ textarea { resize: vertical; min-height: 92px; line-height: 1.5; }
 .viewer .vbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 860px; }
 .viewer .vbar .ghost { background: rgba(255,255,255,.94); }
 .selbox { position: absolute; border: 3px solid var(--tone1); border-radius: 6px; box-shadow: 0 0 0 9999px rgba(28,22,14,.35); pointer-events: none; }
+.refine { display: flex; gap: 8px; margin-top: 12px; }
+.refine input { flex: 1; min-width: 0; }
 .touch { display: flex; gap: 8px; width: min(92vw, 860px); }
 .touch input { flex: 1; min-width: 0; }
 .analysis { width: min(92vw, 860px); max-height: 32vh; overflow: auto; background: #fff; border-radius: 16px; padding: 14px 16px; font-size: 13.5px; }
@@ -141,6 +143,18 @@ section.block { margin-top: 26px; }
   .zoombox { height: 320px; }
 }
 </style>
+<script>
+// This tool is a tab of the AI generation page (/ai). Opened on its own, go there.
+const IN_AI = window.top !== window.self;
+if (!IN_AI) {
+  const q = new URLSearchParams(location.search); q.delete("embed"); q.set("tab", "variation");
+  location.replace("/ai?" + q);
+} else document.documentElement.classList.add("embed");
+// open the other AI tool (optionally with a picture) as the other tab
+const aiTab = (tab, from) => window.parent.postMessage({ ai: "tab", tab, from: from || "" }, location.origin);
+const toLogin = () => { window.top.location.href = "/login?next=" + encodeURIComponent("/ai?tab=variation"); };
+</script>
+<style>.embed .topbar { display: none; }</style>
 </head>
 <body>
 <header class="topbar">
@@ -221,6 +235,15 @@ section.block { margin-top: 26px; }
     <img class="sheet" id="sheet" alt="Variations">
     <p class="hint" id="resultNote"></p>
     <div class="actions"><button type="button" class="ghost" id="openViewer">Open · zoom · pick one</button></div>
+    <div id="editBlock" style="margin-top:16px">
+      <div id="editPickRow" hidden><label class="f" for="editPick">Variation to change</label><select id="editPick"></select></div>
+      <div class="refine">
+        <input type="text" id="editText" maxlength="200" placeholder="Change this… e.g. make the band thinner, add a halo">
+        <button type="button" class="ghost" id="editGo">Apply</button>
+      </div>
+      <p class="hint" id="editHint">Write a short change and the AI edits this picture.</p>
+      <p class="err" id="editErr" role="alert"></p>
+    </div>
   </section>
 
   <section class="block">
@@ -258,7 +281,7 @@ let opts = null, source = null, current = null, busy = false, stream = null;
 
 async function api(url, init = {}) {
   const r = await fetch(url, { credentials: "same-origin", ...init });
-  if (r.status === 401) { location.href = "/login?next=" + encodeURIComponent(location.pathname + location.search); throw new Error("Sign in required"); }
+  if (r.status === 401) { toLogin(); throw new Error("Sign in required"); }
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.detail || `Something went wrong (${r.status})`);
   return data;
@@ -460,7 +483,7 @@ async function loadOptions() {
   $("#go").disabled = !opts.live;
   showBudget(opts.budget);
 }
-function showBudget(b) { if (b) $("#budget").textContent = `${b.left_today} of ${b.per_user_day} designs left for you today`; }
+function showBudget(b) { if (b) $("#budget").textContent = b.per_user_day == null ? "" : `${b.left_today} of ${b.per_user_day} designs left for you today`; }
 
 /* ---------- generate ---------- */
 $("#go").onclick = async () => {
@@ -497,7 +520,12 @@ function showResult(r, scroll) {
   $("#sheet").src = r.image;
   const m = r.meta || {};
   $("#resultTitle").textContent = m.n > 1 ? `${m.n} variations` : (m.label || (m.cells && m.cells[0]?.label) || "Your variation");
-  $("#resultNote").textContent = m.note || (m.n > 1 ? "Open it to zoom in and tap one variation to see its idea, download it, touch it up, or take it further." : (m.cells?.[0]?.brief || ""));
+  $("#resultNote").textContent = m.note || (m.n > 1 ? "Open it to zoom in and tap one variation to see its idea, download it, touch it up, or take it further." : (m.cells?.[0]?.brief || (m.edit ? "Edited from the earlier picture. Write another change to keep refining it." : "")));
+  const cells = m.cells || [];
+  $("#editPickRow").hidden = cells.length < 2;
+  $("#editPick").innerHTML = cells.map((c, i) => `<option value="${i}">${i + 1} · ${esc(c.label || "Variation " + (i + 1))}</option>`).join("");
+  $("#editHint").textContent = cells.length > 1 ? "Pick a variation, write a short change and the AI edits that one." : "Write a short change and the AI edits this picture.";
+  $("#editErr").textContent = "";
   if (scroll) $("#resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
   loadMine();
 }
@@ -516,7 +544,7 @@ function select(i) {
   if (i == null) { b.hidden = true; $("#vHint").textContent = cells.length > 1 ? "Tap a variation to pick it · actions apply to the whole set until you do" : "Scroll to zoom · drag to pan · double-click resets"; return; }
   const c = cells[i], W = img.naturalWidth, H = img.naturalHeight;
   Object.assign(b.style, { left: c.x / W * 100 + "%", top: c.y / H * 100 + "%", width: c.w / W * 100 + "%", height: c.h / H * 100 + "%" });
-  b.hidden = false;
+  b.hidden = false; $("#editPick").value = String(i);
   $("#vHint").textContent = `Picked: ${c.label}${c.brief && c.brief !== c.label ? " — " + c.brief : ""} · actions apply to this one · tap it again for the whole set`;
 }
 function openViewer() {
@@ -532,11 +560,15 @@ $("#vClose").onclick = closeViewer;
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#viewer").hidden) closeViewer(); });
 
 // the design an action works on: the picked cell (cut out once, on the server) or the whole set
-async function target() {
-  if (sel == null || (current.meta?.cells || []).length < 2) return current;
-  if (!cellCache[sel]) cellCache[sel] = await post(`/api/sketch/${current.id}/cell`, { index: sel });
-  return cellCache[sel];
+async function target(i = sel) {
+  if (i == null || (current.meta?.cells || []).length < 2) return current;
+  if (!cellCache[i]) cellCache[i] = await post(`/api/sketch/${current.id}/cell`, { index: i });
+  return cellCache[i];
 }
+// edits keep the design closest with the image-editing models
+const editModel = () => opts.models.find(m => m.key === "local-klein") ? "local-klein"
+  : opts.models.find(m => m.key === "p-kontext") ? "p-kontext" : "";
+const clock = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 async function act(btn, fn) {
   btn.disabled = true;
   try { await fn(); } catch (e) { toast(e.message); } finally { btn.disabled = false; }
@@ -553,7 +585,7 @@ $("#aShare").onclick = e => act(e.target, async () => {
 $("#aCopy").onclick = e => act(e.target, async () => {
   const t = await target(); await navigator.clipboard.writeText(location.origin + t.image); toast("Link copied · opens for signed-in team members");
 });
-$("#aSketch").onclick = e => act(e.target, async () => { const t = await target(); location.href = `/sketch?from=${encodeURIComponent(t.id)}`; });
+$("#aSketch").onclick = e => act(e.target, async () => { const t = await target(); aiTab("sketch", t.id); });
 $("#aVariation").onclick = e => act(e.target, async () => {
   const t = await target(); closeViewer(); await loadFrom(t.id); window.scrollTo({ top: 0, behavior: "smooth" }); toast("Picked as the new source");
 });
@@ -561,15 +593,35 @@ $("#aTouch").onclick = () => { $("#touchRow").hidden = !$("#touchRow").hidden; $
 $("#touchGo").onclick = e => act(e.target, async () => {
   const change = $("#touchText").value.trim();
   if (!change) throw new Error("Write what to change.");
-  const t = await target();
-  const touchModel = opts.models.find(m => m.key === "local-klein") ? "local-klein"
-    : opts.models.find(m => m.key === "p-kontext") ? "p-kontext" : "";   // keeps the design closest
+  const t = await target(), touchModel = editModel();
   const r = await waitJob(await post(`/api/sketch/${t.id}/refine`, { change, model: touchModel }),
-    sec => $("#vHint").textContent = `Touching up${isLocal(touchModel || opts.default_model) ? " on our server" : ""}… ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`);
+    sec => $("#vHint").textContent = `Touching up${isLocal(touchModel || opts.default_model) ? " on our server" : ""}… ${clock(sec)}`);
   $("#touchText").value = ""; $("#touchRow").hidden = true;
   showResult(r, false); $("#vImg").src = r.image; select(null);
   if (r.budget) showBudget(r.budget);
 });
+/* ---------- edit box under the result ---------- */
+async function applyEdit() {
+  if (!current || busy) return;
+  const change = $("#editText").value.trim();
+  if (!change) { $("#editErr").textContent = "Write what to change."; return; }
+  if (!opts?.live) { $("#editErr").textContent = "AI is not connected on this server yet."; return; }
+  const multi = (current.meta?.cells || []).length > 1, keepHint = $("#editHint").textContent;
+  busy = true; $("#editGo").disabled = $("#go").disabled = true; $("#editErr").textContent = "";
+  try {
+    $("#editHint").textContent = multi ? "Taking out the picked variation…" : "Starting…";
+    const t = await target(multi ? +$("#editPick").value : null), m = editModel();
+    const r = await waitJob(await post(`/api/sketch/${t.id}/refine`, { change, model: m }),
+      sec => $("#editHint").textContent = `Editing${isLocal(m || opts.default_model) ? " on our server" : ""}… ${clock(sec)}`);
+    $("#editText").value = "";
+    showResult(r, false);
+    if (r.budget) showBudget(r.budget);
+  } catch (e) { $("#editErr").textContent = e.message; $("#editHint").textContent = keepHint; }
+  finally { busy = false; $("#editGo").disabled = false; $("#go").disabled = !opts?.live; }
+}
+$("#editGo").onclick = applyEdit;
+$("#editText").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); applyEdit(); } });
+
 $("#aAnalyze").onclick = e => act(e.target, async () => {
   const t = await target(); const el = $("#analysis"); $("#touchRow").hidden = true;
   el.hidden = false; el.innerHTML = "Reading the design…";
@@ -588,7 +640,7 @@ $("#aAnalyze").onclick = e => act(e.target, async () => {
   const items = (res.results || []).slice(0, 6);
   el.innerHTML = `<b>Design reading</b>${rows.join("") || "<p class='hint'>No clear traits.</p>"}
     <div style="margin-top:10px"><b>Closest in our collection</b></div>
-    <div class="cards">${items.map(c => `<a class="mini" href="/buy?${new URLSearchParams({ uid: c.uid, id: c.design_id, metal: c.metal_shown || "" })}"><img loading="lazy" src="${esc(c.thumb)}" alt=""><div class="cap"><span>${esc(c.design_id)}</span></div></a>`).join("")}</div>`;
+    <div class="cards">${items.map(c => `<a class="mini" target="_top" href="/buy?${new URLSearchParams({ uid: c.uid, id: c.design_id, metal: c.metal_shown || "" })}"><img loading="lazy" src="${esc(c.thumb)}" alt=""><div class="cap"><span>${esc(c.design_id)}</span></div></a>`).join("")}</div>`;
 });
 
 /* ---------- gallery + hand-over from other panels ---------- */

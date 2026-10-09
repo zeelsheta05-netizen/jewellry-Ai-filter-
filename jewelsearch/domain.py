@@ -118,31 +118,73 @@ class Judge:
 
     def __init__(self, model_id: str = JUDGE_MODEL):
         import torch
-        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from transformers import AutoTokenizer
 
+        from . import memory
         from .config import GPU, device
         self.gpu = GPU
         self.torch = torch
+        self.memory = memory
+        self.model_id = model_id
         self.dev = device()
-        dtype = torch.float16 if self.dev in ("mps", "cuda") else torch.float32
+        self.dtype = torch.float16 if self.dev in ("mps", "cuda") else torch.float32
+        self._load_lock = threading.Lock()
+        self.model = None
         try:
             self.tok = AutoTokenizer.from_pretrained(model_id, local_files_only=True)
-            model = AutoModelForCausalLM.from_pretrained(model_id, dtype=dtype, local_files_only=True)
         except OSError:   # not downloaded yet
             self.tok = AutoTokenizer.from_pretrained(model_id)
-            model = AutoModelForCausalLM.from_pretrained(model_id, dtype=dtype)
-        with GPU:
-            self.model = model.to(self.dev).eval()
+        self.load()
         self.ids = [self.tok.encode(v, add_special_tokens=False)[0] for v in VERDICTS]
         self.ask = lru_cache(maxsize=4096)(self._ask)
+        memory.register(self)   # lets go of its ~3.5 GB while the local picture model draws
+
+    def load(self) -> bool:
+        with self._load_lock:
+            if self.model is not None:
+                return False
+            from transformers import AutoModelForCausalLM
+            try:
+                model = AutoModelForCausalLM.from_pretrained(self.model_id, dtype=self.dtype, local_files_only=True)
+            except OSError:
+                model = AutoModelForCausalLM.from_pretrained(self.model_id, dtype=self.dtype)
+            with self.gpu:
+                self.model = model.to(self.dev).eval()
+            return True
+
+    def release(self) -> bool:
+        with self._load_lock, self.gpu:
+            if self.model is None:
+                return False
+            self.model = None
+            return True
+
+    def available(self) -> bool:
+        """Loaded (or loaded now); False while a picture is being drawn: the search is screened
+        by words and the picture check meanwhile."""
+        if self.model is not None:
+            return True
+        if self.memory.DRAWING.is_set():
+            return False
+        self.load()
+        return self.model is not None
 
     def _ask(self, prompt: str) -> str:
+        if not self.available():
+            raise JudgeAway()
         msgs = [{"role": "system", "content": JUDGE_SYSTEM}, {"role": "user", "content": prompt}]
         text = self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
         x = self.tok(text, return_tensors="pt")
         with self.gpu, self.torch.no_grad():
-            logits = self.model(**x.to(self.dev)).logits[0, -1].float()
+            model = self.model
+            if model is None:
+                raise JudgeAway()
+            logits = model(**x.to(self.dev)).logits[0, -1].float()
             return VERDICTS[int(logits[self.ids].argmax())]
+
+
+class JudgeAway(Exception):
+    """The judge let go of its memory for a drawing; nothing is cached for this prompt."""
 
 
 class Domain:
@@ -152,7 +194,7 @@ class Domain:
         self.engine = engine
         self._judge = judge            # "auto" = load on first need, None = no judge, or a callable
         self._load_lock = threading.Lock()
-        self.check = lru_cache(maxsize=4096)(self._check)
+        self._cached = lru_cache(maxsize=4096)(self._check)
 
     def load_judge(self):
         """Load the judge now (the server does this at start-up, so no shopper waits)."""
@@ -166,14 +208,20 @@ class Domain:
                     self._judge = None
         return self._judge
 
-    def _check(self, prompt: str) -> Verdict:
+    def check(self, prompt: str) -> Verdict:
+        try:
+            return self._cached(prompt)
+        except JudgeAway:   # a picture is being drawn: words + picture check, not cached
+            return self._check(prompt, use_judge=False)
+
+    def _check(self, prompt: str, use_judge: bool = True) -> Verdict:
         text, budget = strip_budget(" ".join(prompt.split()))
         q = parse(text)
         if not understood(q):
             return Verdict(False, text, "nothing", "words", budget)
         if not q.free_text():
             return Verdict(True, text, via="words", budget=budget)
-        judge = self.load_judge() if self._judge == "auto" else self._judge
+        judge = (self.load_judge() if self._judge == "auto" else self._judge) if use_judge else None
         if judge:
             v = judge(english(text))
             if v != "yes":

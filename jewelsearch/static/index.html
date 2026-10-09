@@ -474,6 +474,86 @@ dialog.try.wide { width: min(1440px, calc(100vw - 24px)); height: min(940px, cal
   .tbar h2 { font-size: 20px; }
   .tbar .actions { margin-left: 0; }
 }
+/* try-on on ready-made models */
+.mt { display: grid; grid-template-columns: 340px minmax(0, 1fr); height: 100%; position: relative; }
+.mt-loading { grid-column: 1 / -1; display: grid; place-items: center; gap: 12px; align-content: center; }
+.mt-side { display: flex; flex-direction: column; gap: 10px; padding: 22px; border-right: 1px solid var(--line); overflow: auto; background: var(--bg2); }
+.mt-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.mt-head h3 { font-size: 10.5px; text-transform: uppercase; letter-spacing: .24em; color: var(--tone2); margin: 0 0 4px; font-weight: 700; }
+.mt-head h2 { font: 400 26px/1.1 var(--serif); letter-spacing: -.02em; margin: 0; }
+.mt-label { font: 700 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+.mt-product { aspect-ratio: 4 / 3; border: 1px solid var(--line); border-radius: 18px; background: #fff; display: grid; place-items: center; overflow: hidden; }
+.mt-product img { max-width: 78%; max-height: 82%; object-fit: contain; }
+.mt-sel { border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 10px; display: flex; gap: 12px; align-items: center; min-height: 96px; }
+.mt-empty { all: unset; cursor: pointer; display: flex; gap: 12px; align-items: center; width: 100%; }
+.mt-empty b, .mt-selinfo b { display: block; font-size: 15px; }
+.mt-empty .muted, .mt-selinfo .muted { display: block; font-size: 12.5px; margin-top: 2px; }
+.mt-ph { width: 64px; height: 76px; flex: none; border: 1.5px dashed var(--line-strong); border-radius: 12px; display: grid; place-items: center; color: var(--tone2); background: var(--chip); }
+.mt-ph svg { width: 20px; height: 20px; }
+.mt-stack { position: relative; width: 84px; height: 96px; flex: none; }
+.mt-stack img { position: absolute; top: 0; left: calc(var(--i) * 8px); width: 68px; height: 96px; object-fit: cover; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 4px 12px -6px rgba(0,0,0,.35); }
+.mt-total { position: absolute; left: 4px; top: 4px; z-index: 3; font: 700 10.5px var(--sans); color: #fff; background: rgba(30, 24, 16, .72); border-radius: 6px; padding: 2px 6px; }
+.mt-selbtns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.ghost.sm { padding: 6px 12px; font-size: 12.5px; }
+.mt-count { display: flex; gap: 8px; }
+.mt-count button { flex: 1; border: 1px solid var(--line); background: #fff; border-radius: 14px; padding: 11px 8px; font: 600 14px var(--sans); color: var(--muted); }
+.mt-count button.on { border: 2px solid var(--ink); color: var(--ink); }
+.mt-foot { margin-top: auto; display: grid; gap: 10px; padding-top: 10px; }
+.mt-go { justify-content: center; padding: 15px; font-size: 15px; }
+.mt-go:disabled, #mtDone:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.mt-note { font-size: 12px; margin: 0; }
+.mt-main { display: flex; flex-direction: column; min-height: 0; overflow: auto; padding: 22px 26px; }
+.mt-pickhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-right: 8px; }
+.mt-pickhead h2 { font: 500 26px/1.1 var(--serif); margin: 0; letter-spacing: -.01em; }
+.mt-tabs { display: flex; gap: 26px; align-items: center; margin: 16px 0 6px; flex-wrap: wrap; }
+.mt-tabs [role=tab] { border: 0; background: none; padding: 4px 0; font: 600 16px var(--sans); color: var(--muted); border-bottom: 2px solid transparent; }
+.mt-tabs [role=tab][aria-selected=true] { color: var(--ink); border-color: var(--tone2); }
+.mt-tabs select { margin-left: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--chip); padding: 9px 12px; font: 500 13.5px var(--sans); color: var(--ink); }
+.mt-hint { font-size: 12.5px; margin: 0 0 12px; }
+.mt-grid { margin-bottom: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.mt-tile { position: relative; aspect-ratio: 3 / 4; border: 2px solid var(--line); border-radius: 16px; overflow: hidden; padding: 0; background: var(--chip); transition: transform .3s var(--ease), border-color .2s; }
+.mt-tile:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+.mt-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mt-tile.on { border-color: var(--tone2); box-shadow: 0 0 0 3px var(--glow); }
+.mt-check { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 800 14px var(--sans);
+  background: rgba(255, 255, 255, .85); color: transparent; border: 1.5px solid rgba(0, 0, 0, .15); }
+.mt-tile.on .mt-check { background: var(--tone2); color: #fff; border-color: var(--tone2); }
+.mt-cap { position: absolute; left: 8px; bottom: 8px; font: 600 11px var(--sans); color: #fff; background: rgba(30, 24, 16, .6); padding: 3px 8px; border-radius: 999px; }
+.mt-del { position: absolute; top: 8px; left: 8px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.9); color: var(--danger); }
+.mt-del svg { width: 15px; height: 15px; }
+.mt-up { border-style: dashed; display: grid; place-items: center; align-content: center; gap: 6px; cursor: pointer; text-align: center; color: var(--ink); }
+.mt-up svg { width: 38px; height: 38px; color: var(--tone2); }
+.mt-up b { font-size: 16px; }
+.mt-up .muted { font-size: 12.5px; }
+.mt-pickfoot { position: sticky; bottom: -22px; margin: auto -26px -22px; margin-top: auto; padding: 14px 26px; display: flex; justify-content: flex-end; align-items: center; gap: 14px;
+  background: color-mix(in srgb, var(--surface-solid) 94%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(10px); }
+.mt-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; margin-top: 16px; }
+.mt-card { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.mt-card figcaption { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mt-img { position: relative; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--chip); aspect-ratio: 4 / 5; }
+.mt-img img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+.mt-img.wait img { filter: saturate(.8) brightness(.9); cursor: default; }
+.mt-wait { position: absolute; inset: auto 10px 10px; display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.92); font-size: 13px; font-weight: 600; }
+.mt-wait .statline { margin: 0; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--tone2); animation: mtspin 1s linear infinite; flex: none; }
+@keyframes mtspin { to { transform: rotate(360deg); } }
+.mt-acts { display: flex; align-items: center; gap: 8px; }
+.mt-acts .icon-btn.sm { width: 36px; height: 36px; }
+.mt-acts .icon-btn svg { width: 16px; height: 16px; }
+.mt-acts .icon-btn:first-of-type { margin-left: auto; }
+.mt-kind { font-size: 12px; }
+.mt-zoom { position: absolute; inset: 0; z-index: 10; background: rgba(20, 16, 10, .92); display: grid; place-items: center; padding: 20px; }
+.mt-zoom img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+.mt-zoom .icon-btn { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.92); }
+@media (max-width: 860px) {
+  .mt { grid-template-columns: 1fr; height: auto; min-height: 100%; }
+  .mt-side { border-right: 0; border-bottom: 1px solid var(--line); }
+  .mt-product { aspect-ratio: 16 / 9; }
+  .mt-main { padding: 18px 16px; overflow: visible; }
+  .mt-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .mt-pickfoot { margin: 16px -16px -18px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); bottom: 0; }
+  dialog.try.wide { overflow: auto; }
+}
 .try .need { text-align: center; padding: 30px 20px; color: var(--muted); display: grid; gap: 12px; place-items: center; }
 .try .need .big { font-size: 56px; }
 
@@ -962,7 +1042,7 @@ body.web-open .web-fab { display: none; }
     <button type="button" class="top-btn" id="histBtn" aria-controls="history" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span>History</span></button>
     <div class="user" id="user" hidden>
       <button type="button" class="user-btn" id="userBtn" aria-haspopup="true" aria-expanded="false"><span class="avatar" id="avatar"></span><span class="uname" id="uname"></span></button>
-      <div class="menu" id="menu" hidden><div class="menu-email" id="uemail"></div><button type="button" id="liveTry">Live ring try-on</button><button type="button" id="myPhotos">My try-on photos</button><button type="button" id="sketchLink">Sketch to design · AI</button><button type="button" id="variationLink">Design variations · AI</button><button type="button" id="jewelerLink" hidden>Jeweler panel · Orders</button><button type="button" id="brandLink" hidden>Brand designs · List from other sites</button><button type="button" id="adminLink" hidden>Admin panel · Upload designs</button><button type="button" id="logout">Sign out</button></div>
+      <div class="menu" id="menu" hidden><div class="menu-email" id="uemail"></div><button type="button" id="liveTry">Live ring try-on</button><button type="button" id="aiLink">AI generation · Designs &amp; social posts</button><button type="button" id="jewelerLink" hidden>Jeweler panel · Orders</button><button type="button" id="brandLink" hidden>Brand designs · List from other sites</button><button type="button" id="adminLink" hidden>Admin panel · Upload designs</button><button type="button" id="logout">Sign out</button></div>
     </div>
   </div>
 </header>
@@ -1333,9 +1413,7 @@ fetch("/api/auth/me", { credentials: "same-origin" }).then(r => r.status === 401
 $("#adminLink").addEventListener("click", () => { location.href = "/admin"; });
 $("#jewelerLink").addEventListener("click", () => { location.href = "/jeweler"; });
 $("#brandLink").addEventListener("click", () => { location.href = "/brand-import"; });
-$("#sketchLink").addEventListener("click", () => { location.href = "/sketch"; });
-$("#variationLink").addEventListener("click", () => { location.href = "/variation"; });
-$("#myPhotos").addEventListener("click", () => { location.href = "/tryon/me"; });
+$("#aiLink").addEventListener("click", () => { location.href = "/ai"; });
 $("#liveTry").addEventListener("click", () => {
   if (TOUCH) location.href = "/tryon";
   else openOnPhone({ path: "/tryon", title: "Live ring try-on", local: true, what: "Opens the live ring camera on your phone." });
@@ -2422,7 +2500,6 @@ async function openDetail(uid) {
 const PART_LABEL = { hand: "hand", face: "face", neck: "neck" };
 const PART_ICON = { hand: "✋", face: "🙂", neck: "💎" };
 const tryDlg = $("#tryDlg");
-let tryView = null;   // one WebGL renderer, reused for every preview
 tryDlg.addEventListener("click", e => {
   const r = tryDlg.getBoundingClientRect();
   if (e.target === tryDlg && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) tryDlg.close();
@@ -2432,50 +2509,6 @@ tryDlg.addEventListener("close", () => {
   const u = new URL(location.href);
   if (u.searchParams.has("tryon")) { u.searchParams.delete("tryon"); history.replaceState(null, "", u); }
 });
-
-// Where the photo sits in the try-on stage. Close-up: the body part the
-// piece is on (hand, both ears, neck to chest) fills the frame; Full photo:
-// the whole picture fits inside it.
-const TRY_MAX_SCALE = 1.5;   // screen px per photo px: closer than this, the photo turns soft
-function tryFocus(part, cat, a, W, H) {
-  if (part === "hand") {
-    // ring: the four fingers and knuckles; bracelet: the wrist and back of the hand
-    const ids = cat === "bracelet" ? [0, 1, 2, 5, 9, 13, 17] : [5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20];
-    const pts = ids.map(i => a.landmarks[i]);
-    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
-    let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    if (cat === "bracelet") {   // include the forearm past the wrist
-      const [wx, wy] = a.landmarks[0], [mx, my] = a.landmarks[9];
-      xs.push(wx + (wx - mx) * 0.5); ys.push(wy + (wy - my) * 0.5);
-      x0 = Math.min(...xs); x1 = Math.max(...xs); y0 = Math.min(...ys); y1 = Math.max(...ys);
-    }
-    const px = (x1 - x0) * 0.25, py = (y1 - y0) * 0.15;
-    return [x0 - px, y0 - py, x1 + px, y1 + py];
-  }
-  if (part === "face") {
-    const w = a.lobeR.x - a.lobeL.x, h = w * W / H, cy = (a.lobeL.y + a.lobeR.y) / 2;
-    return [a.lobeL.x - w * 0.35, cy - h * 0.95, a.lobeR.x + w * 0.35, cy + h * 0.75];
-  }
-  const mm = a.pxPerMm / H, sy = (a.shoulderL.y + a.shoulderR.y) / 2;
-  return [Math.min(a.shoulderL.x, a.shoulderR.x), a.chin.y - 25 * mm, Math.max(a.shoulderL.x, a.shoulderR.x), sy + 80 * mm];
-}
-function placeTryFrame(stage, frame, photo, part, cat, view) {
-  const sw = stage.clientWidth, sh = stage.clientHeight, W = photo.width, H = photo.height;
-  if (!sw || !sh) return;
-  const fit = Math.min(sw / W, sh / H), cover = Math.max(sw / W, sh / H);
-  let scale = fit, cx = W / 2, cy = H / 2;
-  if (view === "close") {
-    const [x0, y0, x1, y1] = tryFocus(part, cat, photo.anchors, W, H);
-    cx = (x0 + x1) / 2 * W; cy = (y0 + y1) / 2 * H;
-    scale = Math.min(sw / ((x1 - x0) * W), sh / ((y1 - y0) * H));
-    scale = Math.max(cover, Math.min(scale, TRY_MAX_SCALE));
-  }
-  // visible part of the photo, kept edge to edge where the photo is big enough
-  const vw = sw / scale, vh = sh / scale;
-  const left = vw <= W ? Math.min(Math.max(cx - vw / 2, 0), W - vw) : (W - vw) / 2;
-  const top = vh <= H ? Math.min(Math.max(cy - vh / 2, 0), H - vh) : (H - vh) / 2;
-  Object.assign(frame.style, { left: `${-left * scale}px`, top: `${-top * scale}px`, width: `${W * scale}px`, height: `${H * scale}px` });
-}
 
 /* ---------- "On phone": a QR code that opens this page, or the design being tried on, on a phone ---------- */
 const phoneDlg = $("#phoneDlg");
@@ -2520,131 +2553,301 @@ function openLive(d) {
     what: "Opens the live camera on your phone: the ring follows your hand." });
 }
 
+/* Try on ready-made models: pick one or more model photos (our library, or
+   photos you upload), press Generate. The design's catalogue picture and each
+   model photo go to the AI as they are, and it draws the piece worn on the
+   model in one step (server: jewelsearch/modeltryon.py), checked to be this
+   design at the right spot. Everything outside the piece stays the original
+   photo. */
+const MT_SEL_KEY = "jf.tryon.models.";
+const mtLoad = part => { try { return JSON.parse(localStorage.getItem(MT_SEL_KEY + part) || "[]"); } catch { return []; } };
+const mtSave = (part, refs) => { try { localStorage.setItem(MT_SEL_KEY + part, JSON.stringify(refs)); } catch {} };
+const MT_PART_WORD = { hand: "hand", face: "portrait (both ears)", neck: "portrait (neck and shoulders)" };
+const MT_STAGE = { queued: "Waiting for the AI…", done: "Done" };
+const DL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>`;
+const BIN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>`;
+const UP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5M12 12v8M9 15l3-3 3 3"/></svg>`;
+let mtPoll = null;
+
 async function openTryOn(uid, metal) {
-  tryDlg.classList.remove("wide");
-  tryDlg.innerHTML = `<div class="detail"><div class="stage"><div class="busy">Preparing your preview…</div></div><div class="info"><p class="muted">Loading<span class="dots"><i></i><i></i><i></i></span></p></div></div>`;
+  tryDlg.classList.add("wide");
+  tryDlg.innerHTML = `<div class="mt"><div class="mt-loading muted">Loading<span class="dots"><i></i><i></i><i></i></span></div></div>`;
   if (!tryDlg.open) tryDlg.showModal();
-  let design, body;
+  let design, lib, past;
   try {
-    [design, body] = await Promise.all([api(`/api/tryon/design/${uid}`), api("/api/body")]);
+    [design, lib, past] = await Promise.all([api(`/api/tryon/design/${uid}`), api(`/api/tryon/models-lib?design=${uid}`),
+      api(`/api/tryon/results?design=${uid}`)]);
   } catch (err) {
-    tryDlg.querySelector(".info").innerHTML = `<button class="icon-btn close" type="button" aria-label="Close">✕</button><p class="statline error">${esc(err.message)}</p>`;
-    tryDlg.querySelector(".close").onclick = () => tryDlg.close();
+    tryDlg.innerHTML = `<div class="mt"><div class="mt-loading"><p class="statline error">${esc(err.message)}</p><button type="button" class="ghost" id="mtX">Close</button></div></div>`;
+    $("#mtX").onclick = () => tryDlg.close();
     return;
   }
-  const d = design.card, part = design.part, photo = body.parts[part];
-  // what "On phone" opens: a ring with a 3D model goes to the live camera
+  const d = design.card, part = design.part, catWord = (CAT[d.category] || "piece").toLowerCase();
   tryContext = { uid, id: d.design_id, slug: design.slug, live: !!d.live };
   metal = d.metals.includes(metal) ? metal : d.metal_shown;
-  // come back to this preview after adding a photo
-  const ret = `/?${new URLSearchParams({ ...(lastQuery ? { q: lastQuery } : {}), tryon: uid })}`;
-  const addUrl = how => `/tryon/me?${new URLSearchParams({ part, how, return: ret })}`;
-  const head = `<button class="icon-btn close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div><h3>Try on · ${esc(CAT[d.category] || d.category)}</h3><h2>${esc(d.design_id)}</h2></div>`;
+  const all = () => [...lib.recommended, ...lib.custom];
+  const byRef = ref => all().find(m => m.ref === ref);
+  let sel = mtLoad(part).filter(byRef);
+  if (!sel.length && lib.recommended[0]) sel = [lib.recommended[0].ref];
+  let tab = "recommended", tag = "", takes = 1, view = past.items.length ? "results" : "pick";
+  const cards = [];   // results shown: { id?, job?, ... }
+  for (const r of past.items) cards.push({ result: r });
 
-  if (!photo) {
-    tryDlg.innerHTML = `<div class="detail"><div class="stage"><img src="${d.thumb}" alt="${esc(d.design_id)}" style="object-fit:contain;padding:12%"></div>
-      <div class="info">${head}
-        <div class="need"><span class="big">${PART_ICON[part]}</span>
-          <b>Add a photo of your ${PART_LABEL[part]} once</b>
-          <span class="muted">Then every ${esc((CAT[d.category] || "").toLowerCase())} and similar piece opens on you instantly. Your photo stays private and you can delete it any time.</span>
-          <div class="actions"><a class="primary" href="${addUrl("camera")}" style="text-decoration:none"><span>Take photo</span></a><a class="ghost" href="${addUrl("upload")}" style="text-decoration:none">Upload photo</a></div>
-          ${d.live ? `<span class="muted">Or try it live, without a photo:</span><button type="button" class="ghost" id="tryLive">${CAM}<span>Live try-on</span></button>` : ""}
-        </div>
-      </div></div>`;
-    tryDlg.querySelector(".close").onclick = () => tryDlg.close();
-    const liveBtn = $("#tryLive");
-    if (liveBtn) liveBtn.onclick = () => openLive(d);
-    return;
-  }
-
-  const closeBtn = head.slice(0, head.indexOf("</button>") + 9);
-  tryDlg.classList.add("wide");
-  tryDlg.innerHTML = `<div class="tryw">
-    <div class="tstage" id="tryStage">
-      <div class="tframe instant" id="tryFrame"><img id="tryPhoto" alt="Your ${PART_LABEL[part]}"><canvas id="tryGl"></canvas></div>
-      <div class="busy" id="tryBusy">Placing the ${esc((CAT[d.category] || "piece").toLowerCase())}…</div>
-      ${closeBtn}
-      <div class="tview" role="group" aria-label="View"><button type="button" data-v="close" class="on">Close-up</button><button type="button" data-v="full">Full photo</button></div>
-      ${design.has3d && Object.keys(design.photos || {}).length ? `<div class="tview tlook" role="group" aria-label="Look"><button type="button" data-look="photo" class="on">Real photo</button><button type="button" data-look="3d">3D</button></div>` : ""}
-    </div>
-    <div class="tbar">
-      <div><h3>Try on · ${esc(CAT[d.category] || d.category)}</h3><h2>${esc(d.design_id)}</h2></div>
+  tryDlg.innerHTML = `<div class="mt">
+    <aside class="mt-side">
+      <div class="mt-head"><div><h3>Try on · ${esc(CAT[d.category] || d.category)}</h3><h2>${esc(d.design_id)}</h2></div>
+        <button class="icon-btn close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="mt-label">Product</div>
+      <div class="mt-product"><img id="mtProd" src="${d.thumbs_by_metal?.[metal] || d.thumb}" alt="${esc(d.design_id)}"></div>
       <div class="metals">${d.metals.map(m => `<button type="button" data-m="${m}" class="${m === metal ? "on" : ""}"><span class="sw ${m}"></span>${METAL[m]}</button>`).join("")}</div>
-      <div class="actions">
-        <button type="button" class="primary" id="trySave"><span>Save photo</span></button>
-        <button type="button" class="ghost" id="tryPhone">On phone</button>
-        ${d.live ? `<button type="button" class="ghost" id="tryLiveCam">${CAM}<span>Live camera</span></button>` : ""}
+      <div class="mt-label">Try on model</div>
+      <div class="mt-sel" id="mtSel"></div>
+      <div class="mt-label">Pictures per model</div>
+      <div class="mt-count" role="group" aria-label="Pictures per model"><button type="button" data-n="1" class="on">1 photo</button><button type="button" data-n="2">2 photos</button></div>
+      <div class="mt-foot">
+        <button type="button" class="primary mt-go" id="mtGo"><span>Generate</span>${SPARK}</button>
+        <p class="muted mt-note" id="mtNote"></p>
+        ${d.live ? `<button type="button" class="ghost" id="tryLiveCam">${CAM}<span>Live try-on</span></button>` : ""}
       </div>
-      <p class="muted">Shown at its real size on your photo. <a href="${addUrl("camera")}">Change my ${PART_LABEL[part]} photo</a></p>
-    </div></div>`;
+    </aside>
+    <section class="mt-main" id="mtMain"></section>
+    <div class="mt-zoom" id="mtZoom" hidden><img alt=""><button class="icon-btn" type="button" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  </div>`;
   tryDlg.querySelector(".close").onclick = () => tryDlg.close();
-  // Close-up frames the hand / ears / neck; Full photo shows the whole picture
-  let view = "close";
-  const stage = $("#tryStage"), frame = $("#tryFrame");
-  const place = () => placeTryFrame(stage, frame, photo, part, d.category, view);
-  place();
-  frame.offsetWidth;   // apply the first layout without animating it
-  frame.classList.remove("instant");
-  new ResizeObserver(place).observe(stage);
-  tryDlg.querySelector(".tview").onclick = e => {
-    const b = e.target.closest("[data-v]");
-    if (!b) return;
-    view = b.dataset.v;
-    tryDlg.querySelectorAll(".tview button").forEach(x => x.classList.toggle("on", x === b));
-    place();
-  };
-  const img = $("#tryPhoto");
-  try {
-    await new Promise((ok, bad) => { img.onload = ok; img.onerror = () => bad(new Error("Couldn't load your photo")); img.src = photo.url; });
-    const { PhotoTryOn } = await import("/tryon-app/photo-view.js");
-    const canvas = $("#tryGl");
-    if (tryView) {   // move the one renderer's canvas into the new dialog content
-      canvas.replaceWith(tryView.renderer.domElement);
-      tryView.renderer.domElement.id = "tryGl";
-    } else {
-      tryView = new PhotoTryOn(canvas);
-    }
-    // "Real photo" places the design's own catalogue render; "3D" the model
-    const showLook = look => tryView.show(photo, { category: d.category, model: design.model,
-      photos: look === "photo" || !design.has3d ? design.photos : null,   // no 3D model: always the real photo
-      url: `/api/tryon/models/${encodeURIComponent(design.slug)}.glb?v=${design.model.version}` }, { image: img, metal });
-    await showLook(Object.keys(design.photos || {}).length ? "photo" : "3d");
-    tryView.setMetal(metal);
-    $("#tryBusy").remove();
-    const lookBox = tryDlg.querySelector(".tlook");
-    if (lookBox) lookBox.onclick = async e => {
-      const b = e.target.closest("[data-look]");
-      if (!b || b.classList.contains("on")) return;
-      lookBox.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-      await showLook(b.dataset.look);
-      tryView.setMetal(metal);
-    };
-  } catch (err) {
-    $("#tryBusy").textContent = "Couldn't show the preview: " + err.message;
-    return;
-  }
+  $("#tryLiveCam")?.addEventListener("click", () => openLive(d));
+  $("#mtGo").onclick = () => generate();
+  const note = $("#mtNote"), main = $("#mtMain");
+  note.textContent = lib.ai ? "The AI puts this design on each model you pick. The model photo itself is not changed."
+    : "The AI try-on is not available on this server right now.";
+
   tryDlg.querySelector(".metals").onclick = e => {
     const b = e.target.closest("[data-m]");
     if (!b) return;
     metal = b.dataset.m;
     tryDlg.querySelectorAll(".metals button").forEach(x => x.classList.toggle("on", x === b));
-    tryView.setMetal(metal);
+    $("#mtProd").src = d.thumbs_by_metal?.[metal] || d.thumb;
   };
-  // right-click / long-press on the preview saves the combined picture, like Save photo
-  frame.addEventListener("contextmenu", e => { e.preventDefault(); $("#trySave").click(); });
-  $("#tryPhone").onclick = () => openOnPhone();
-  $("#tryLiveCam")?.addEventListener("click", () => openLive(d));
-  $("#trySave").onclick = async () => {
-    const blob = await tryView.snapshot(img);
-    const file = new File([blob], `${d.design_id}-try-on.jpg`, { type: "image/jpeg" });
-    if (navigator.canShare?.({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: d.design_id }); return; } catch (e) { if (e.name === "AbortError") return; }
+  tryDlg.querySelector(".mt-count").onclick = e => {
+    const b = e.target.closest("[data-n]");
+    if (!b) return;
+    takes = +b.dataset.n;
+    tryDlg.querySelectorAll(".mt-count button").forEach(x => x.classList.toggle("on", x === b));
+  };
+
+  function drawSel() {
+    const box = $("#mtSel");
+    sel = sel.filter(byRef);
+    mtSave(part, sel);
+    $("#mtGo").disabled = !sel.length;
+    if (!sel.length) {
+      box.innerHTML = `<button type="button" class="mt-empty" id="mtPickBtn"><span class="mt-ph">${SPARK}</span><span><b>Select try-on models</b><span class="muted">Choose one or more ${esc(MT_PART_WORD[part])} photos</span></span></button>`;
+    } else {
+      const ms = sel.map(byRef);
+      box.innerHTML = `<div class="mt-stack">${ms.slice(0, 3).map((m, i) => `<img src="${m.thumb}" alt="" style="--i:${i}">`).join("")}<span class="mt-total">Total ${ms.length}</span></div>
+        <div class="mt-selinfo"><b>Try on model</b><span class="muted">Selected ${ms.length} model${ms.length > 1 ? "s" : ""}</span>
+        <div class="mt-selbtns"><button type="button" class="ghost sm" id="mtPickBtn">Edit selection</button><button type="button" class="ghost sm" id="mtClear">Clear</button></div></div>`;
+      $("#mtClear").onclick = () => { sel = []; drawSel(); if (view === "pick") drawPick(); };
     }
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  };
+    $("#mtPickBtn").onclick = () => { view = "pick"; drawMain(); };
+  }
+
+  function drawMain() { if (view === "pick") drawPick(); else drawResults(); }
+
+  function drawPick() {
+    const list = tab === "recommended" ? lib.recommended : lib.custom;
+    const tags = [...new Set(lib.recommended.flatMap(m => m.tags || []))];
+    const shown = list.filter(m => !tag || (m.tags || []).includes(tag));
+    main.innerHTML = `<div class="mt-pickhead"><h2>Select try-on model</h2>
+        ${cards.length ? `<button type="button" class="ghost sm" id="mtBack">Show my pictures (${cards.length})</button>` : ""}</div>
+      <div class="mt-tabs" role="tablist"><button type="button" role="tab" data-tab="recommended" aria-selected="${tab === "recommended"}">Recommended</button><button type="button" role="tab" data-tab="custom" aria-selected="${tab === "custom"}">Custom</button>
+        ${tab === "recommended" && tags.length ? `<select id="mtTag" aria-label="Type"><option value="">Type: all</option>${tags.map(t => `<option ${t === tag ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>` : ""}</div>
+      <p class="muted mt-hint">Showing models that fit ${esc(catWord === "earrings" ? "earrings" : "a " + catWord)}: ${esc(MT_PART_WORD[part])} photos. Pick as many as you like.</p>
+      <div class="mt-grid">
+        ${tab === "custom" ? `<label class="mt-tile mt-up"><input type="file" accept="image/*" multiple hidden id="mtFile">${UP}<b>Upload</b><span class="muted">Batch supported</span></label>` : ""}
+        ${shown.map(m => `<button type="button" class="mt-tile ${sel.includes(m.ref) ? "on" : ""}" data-ref="${esc(m.ref)}" aria-pressed="${sel.includes(m.ref)}">
+          <img src="${m.thumb}" alt="${esc(m.label || "Model")}" loading="lazy"><span class="mt-check">✓</span>
+          ${m.label ? `<span class="mt-cap">${esc(m.label)}</span>` : ""}
+          ${tab === "custom" ? `<span class="mt-del" data-del="${esc(m.id)}" role="button" aria-label="Delete">${BIN}</span>` : ""}</button>`).join("")}
+        ${!shown.length && tab === "recommended" ? `<p class="muted">No ready-made models for this piece yet. Upload your own on the Custom tab.</p>` : ""}
+      </div>
+      <p class="statline" id="mtUpMsg"></p>
+      <div class="mt-pickfoot"><span class="muted">${sel.length} selected</span><button type="button" class="primary" id="mtDone" ${sel.length ? "" : "disabled"}><span>Generate for ${sel.length || ""} model${sel.length === 1 ? "" : "s"}</span>${SPARK}</button></div>`;
+    main.querySelector(".mt-tabs").onclick = e => {
+      const b = e.target.closest("[data-tab]");
+      if (b) { tab = b.dataset.tab; drawPick(); }
+    };
+    $("#mtTag")?.addEventListener("change", e => { tag = e.target.value; drawPick(); });
+    $("#mtBack")?.addEventListener("click", () => { view = "results"; drawMain(); });
+    $("#mtDone").onclick = () => generate();
+    main.querySelector(".mt-grid").onclick = async e => {
+      const del = e.target.closest("[data-del]");
+      if (del) {
+        e.stopPropagation();
+        if (!confirm("Delete this model photo?")) return;
+        try { await api(`/api/tryon/custom/${del.dataset.del}`, { method: "DELETE" }); } catch (err) { $("#mtUpMsg").textContent = err.message; return; }
+        lib.custom = lib.custom.filter(m => m.id !== del.dataset.del);
+        drawSel(); drawPick();
+        return;
+      }
+      const t = e.target.closest("[data-ref]");
+      if (!t) return;
+      const ref = t.dataset.ref;
+      sel = sel.includes(ref) ? sel.filter(r => r !== ref) : [...sel, ref];
+      drawSel(); drawPick();
+    };
+    $("#mtFile")?.addEventListener("change", e => upload([...e.target.files]));
+  }
+
+  // Your own model photos (e.g. a model picture from the web): measured here
+  // with the same checks as the library, then kept for your next try-ons.
+  async function upload(files) {
+    const msg = $("#mtUpMsg");
+    msg.className = "statline";
+    const { analyse } = await import("/tryon-app/body-analysis.js");
+    const bad = [];
+    for (const [i, f] of files.entries()) {
+      msg.textContent = `Checking photo ${i + 1} of ${files.length}…`;
+      try {
+        const img = await loadImg(URL.createObjectURL(f));
+        const c = document.createElement("canvas");
+        const k = Math.min(1, 3000 / Math.max(img.naturalWidth, img.naturalHeight));
+        c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        const parts = {};
+        let tip = "";
+        for (const p of part === "hand" ? ["hand", "face", "neck"] : ["face", "neck", "hand"]) {
+          const r = await analyse(p, c, "IMAGE");
+          if (r.found && mtUsable(p, r.checks)) parts[p] = r.anchors;
+          else if (p === part) tip = r.found ? r.tip : `No ${MT_PART_WORD[p]} found`;
+        }
+        if (!Object.keys(parts).length) { bad.push(`${f.name}: ${tip || "no hand or face found"}`); continue; }
+        const image = c.toDataURL("image/jpeg", 0.95);
+        const m = await api("/api/tryon/custom", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image, width: c.width, height: c.height, parts, label: "" }) });
+        m.anchors = parts[part] || null;
+        lib.custom.unshift(m);
+        if (parts[part]) sel = [...sel, m.ref];
+        else bad.push(`${f.name}: saved, but it doesn't fit this ${catWord} (${tip})`);
+      } catch (err) { bad.push(`${f.name}: ${err.message}`); }
+    }
+    lib.custom = lib.custom.filter(m => m.parts.includes(part));
+    drawSel(); drawPick();
+    const m2 = $("#mtUpMsg");
+    if (bad.length) { m2.className = "statline error"; m2.textContent = bad.join(" · "); }
+  }
+
+  function drawResults() {
+    main.innerHTML = `<div class="mt-pickhead"><h2>Your try-on pictures</h2><button type="button" class="ghost sm" id="mtMore">Choose models</button></div>
+      <div class="mt-results" id="mtRes"></div>`;
+    $("#mtMore").onclick = () => { view = "pick"; drawMain(); };
+    const box = $("#mtRes");
+    if (!cards.length) box.innerHTML = `<p class="muted">No pictures yet.</p>`;
+    for (const c of cards) box.append(cardEl(c));
+  }
+
+  function cardEl(c) {
+    const el = document.createElement("figure");
+    el.className = "mt-card";
+    const r = c.result, when = new Date((r?.created || c.started) * 1000);
+    const stamp = `${when.toLocaleDateString(undefined, { day: "numeric", month: "short" })} ${when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    if (!r) {
+      el.innerHTML = `<figcaption>${esc(stamp)}</figcaption><div class="mt-img wait">${c.preview ? `<img src="${c.preview}" alt="">` : ""}
+        <div class="mt-wait">${c.error ? `<span class="statline error">${esc(c.error)}</span>` : `<span class="spin"></span><span>${esc(c.stage || "Waiting for the AI…")}</span>`}</div></div>`;
+      return el;
+    }
+    el.innerHTML = `<figcaption>${esc(stamp)}<span>${esc(METAL[r.metal] || "")}</span></figcaption>
+      <div class="mt-img"><img src="${r.url}" alt="${esc(r.design_id)} on a model" loading="lazy"></div>
+      <div class="mt-acts">
+        <span class="muted mt-kind">${esc(r.label || "")}</span>
+        <button type="button" class="icon-btn sm" data-a="dl" aria-label="Download">${DL}</button>
+        <button type="button" class="icon-btn sm" data-a="del" aria-label="Delete">${BIN}</button>
+      </div>`;
+    const img = el.querySelector(".mt-img img");
+    img.onclick = () => { const z = $("#mtZoom"); z.querySelector("img").src = img.src; z.hidden = false; };
+    el.querySelector("[data-a=dl]").onclick = () => {
+      const a = document.createElement("a");
+      a.href = img.src; a.download = `${r.design_id}-try-on.jpg`; a.click();
+    };
+    el.querySelector("[data-a=del]").onclick = async () => {
+      if (!confirm("Delete this picture?")) return;
+      try { await api(`/api/tryon/result/${r.id}`, { method: "DELETE" }); } catch (err) { alert(err.message); return; }
+      cards.splice(cards.indexOf(c), 1);
+      el.remove();
+    };
+    return el;
+  }
+  $("#mtZoom").onclick = e => { if (e.target.tagName !== "IMG") $("#mtZoom").hidden = true; };
+
+  async function generate() {
+    if (!sel.length) return;
+    const go = $("#mtGo");
+    go.disabled = true;
+    view = "results";
+    const models = sel.map(byRef).filter(Boolean);
+    const fresh = [];
+    for (const m of models) {
+      for (let k = 0; k < takes; k++) {
+        const c = { started: Date.now() / 1000, stage: "Placing the piece…" };
+        cards.unshift(c); fresh.push(c);
+      }
+    }
+    drawResults();
+    let i = 0;
+    for (const m of models) {
+      const group = fresh.slice(i, i + takes); i += takes;
+      try {
+        group.forEach(c => { c.preview = m.thumb; c.stage = "Sending…"; });
+        drawResults();
+        // the design and the model photo go to the AI as they are: it draws the piece on the model
+        const r = await api("/api/tryon/generate", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ design: uid, metal, model: m.ref, takes }) });
+        r.jobs.forEach((j, k) => { group[k].job = j.id; group[k].stage = MT_STAGE[j.stage] || "Waiting for the AI…"; });
+      } catch (err) {
+        group.forEach(c => { c.error = err.message; });
+      }
+      drawResults();
+    }
+    go.disabled = false;
+    pollJobs();
+  }
+
+  function pollJobs() {
+    clearTimeout(mtPoll);
+    const open = cards.filter(c => c.job && !c.result && !c.error);
+    if (!open.length || !tryDlg.open) return;
+    mtPoll = setTimeout(async () => {
+      for (const c of open) {
+        try {
+          const j = await api(`/api/tryon/job/${c.job}`);
+          if (j.status === "done") c.result = j.result;
+          else if (j.status === "error") c.error = j.error;
+          else c.stage = MT_STAGE[j.stage] || (j.stage.startsWith("ai") ? `The AI is putting it on the model… (${j.stage.split("try ")[1] === "2" ? "second try" : "about 3 min"})` : "Working…");
+        } catch (err) { if (err.status === 404) c.error = "Lost after a server restart. Please generate again."; }
+      }
+      if (tryDlg.open && view === "results") drawResults();
+      pollJobs();
+    }, 4000);
+  }
+
+  drawSel();
+  drawMain();
+}
+
+// The essential checks for a photo someone uploads (a web model photo may be
+// darker or softer than our own capture rules, but the body part must be there).
+function mtUsable(part, ch) {
+  if (part === "hand") return ch.hand && ch.frame && ch.back && ch.straight;
+  if (part === "face") return ch.face && ch.ears && ch.earsVisible && ch.frontal;
+  return ch.face && ch.shoulders && ch.neckVisible && ch.chest;
+}
+function loadImg(src) {
+  return new Promise((ok, bad) => {
+    const img = new Image();
+    img.onload = () => ok(img);
+    img.onerror = () => bad(new Error("Couldn't load the photo"));
+    img.src = src;
+  });
 }
 
 /* ---------- scroll effects ---------- */

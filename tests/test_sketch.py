@@ -39,6 +39,7 @@ class FakeGoogle:
 def studio(tmp_path, monkeypatch):
     for k in ("SKETCH_PER_USER_DAY", "SKETCH_USD_DAY", "SKETCH_USD_MONTH"):
         monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("SKETCH_PER_USER_DAY", "20")   # these tests check the counter; the default is now no limit
     return sketch.Studio(tmp_path, caller=FakeGoogle())
 
 
@@ -140,6 +141,14 @@ def test_daily_count_limit(studio, monkeypatch):
     studio.generate("u2", "lite-1k", "c", pic)   # someone else still can
 
 
+def test_no_per_user_limit_by_default(studio, monkeypatch):
+    monkeypatch.delenv("SKETCH_PER_USER_DAY", raising=False)
+    pic = sketch.prepare(png())
+    for i in range(22):
+        studio.generate("u1", "lite-1k", f"p{i}", pic)
+    assert studio.public_budget("u1") == {"left_today": None, "per_user_day": None}
+
+
 def test_dollar_caps_checked_before_the_call(studio, monkeypatch):
     monkeypatch.setenv("SKETCH_USD_DAY", "0.05")
     pic = sketch.prepare(png())
@@ -167,6 +176,16 @@ def test_refine_sends_the_last_picture_and_a_short_edit(studio):
     assert second["parent"] == first["id"]
     with pytest.raises(sketch.SketchError):
         studio.refine("u2", first["id"], "x", "lite-1k")   # not their design
+
+
+def test_edit_keeps_the_panel_and_is_named_after_the_change(studio):
+    first = studio.make("u1", "lite-1k", "a ring", None, panel="design", salt="1")
+    edited = studio.refine("u1", first["id"], "add a halo", "lite-1k")
+    assert edited["panel"] == "design" and edited["meta"]["label"] == "Edited: add a halo"
+    again = studio.refine("u1", edited["id"], "make the band thinner", "lite-1k")   # edits chain
+    assert again["parent"] == edited["id"]
+    assert studio.row(again["id"], "u1")["meta"]["edit"] == "make the band thinner"
+    assert [x["id"] for x in studio.mine("u1", panel="design")][:2] == [again["id"], edited["id"]]
 
 
 def test_gallery_is_per_user_and_delete_hides(studio):
@@ -315,7 +334,7 @@ def test_generate_route_then_image_similar_owner_only(client):
     assert r.status_code == 200, r.text
     assert "uid" not in r.json()
     j = wait_job(client, r.json())
-    assert j["budget"]["left_today"] == j["budget"]["per_user_day"] - 1
+    assert j["budget"] == {"left_today": None, "per_user_day": None}   # no per-user limit by default
     img = client.get(j["image"])
     assert img.status_code == 200 and img.content[:4] == b"\x89PNG"
     assert "attachment" in client.get(j["image"] + "?download=1").headers["content-disposition"]
@@ -482,3 +501,42 @@ def test_local_failure_reads_plainly_and_frees_the_lock(local_on, monkeypatch):
 def test_local_switch_off(monkeypatch):
     monkeypatch.setenv("LOCAL_IMAGEGEN", "0")
     assert sketch.local_ready() is False and "local" not in sketch.connected()
+
+
+def test_ai_generation_page_holds_both_tools(client):
+    r = client.get("/ai")
+    assert r.status_code == 200 and "Sketch to design AI" in r.text and "Design variation AI" in r.text
+    assert "camera=(self)" in r.headers["permissions-policy"] and "frame-src 'self'" in r.headers["content-security-policy"]
+    for page in ("/sketch", "/variation"):
+        framed = client.get(page + "?embed=1", headers={"sec-fetch-dest": "iframe"})
+        assert framed.status_code == 200 and "frame-ancestors 'self'" in framed.headers["content-security-policy"]
+        assert framed.headers["x-frame-options"] == "SAMEORIGIN"
+    # opened directly in the browser -> the AI generation page with that tab
+    r = client.get("/variation?from=abc", headers={"sec-fetch-dest": "document"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/ai?tab=variation&from=abc"
+    # every other page still refuses to be framed
+    assert "frame-ancestors 'none'" in client.get("/").headers["content-security-policy"]
+
+
+def test_one_drawing_at_a_time_on_this_mac_across_processes(tmp_path, monkeypatch):
+    """A second process (another server, a test copy) waits for the Mac-wide drawing lock."""
+    import subprocess as sp
+    import sys
+    lock = tmp_path / "drawing.lock"
+    monkeypatch.setattr(sketch, "DRAW_LOCK_FILE", lock)
+    monkeypatch.setattr(sketch, "LOCAL_TIMEOUT", 3)
+    holder = sp.Popen([sys.executable, "-c", f"import fcntl,time; f=open({str(lock)!r},'a+'); "
+                       "fcntl.flock(f, fcntl.LOCK_EX); print('held', flush=True); time.sleep(30)"], stdout=sp.PIPE, text=True)
+    try:
+        assert holder.stdout.readline().strip() == "held"
+        with pytest.raises(sketch.SketchError) as e:
+            with sketch.drawing("test"):
+                pass
+        assert e.value.status == 429 and not sketch.LOCAL_LOCK.locked()
+    finally:
+        holder.kill()
+        holder.wait()
+    monkeypatch.setattr(sketch, "free_memory_gb", lambda: 8.0)
+    with sketch.drawing("test") as d:          # free again: it gets its turn
+        assert sketch.LOCAL_LOCK.locked() and d.mac.fh is not None
+    assert not sketch.LOCAL_LOCK.locked()

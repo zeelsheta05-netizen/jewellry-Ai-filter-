@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Generator · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #2f7a3f;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost.small { padding: 5px 12px; font-size: 12px; }
+.ghost:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 999px;
+  border: 1px solid var(--tone2); background: var(--btn); color: var(--accent-ink); font-weight: 700; letter-spacing: .02em;
+  transition: transform .3s var(--ease), box-shadow .3s; white-space: nowrap; }
+.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px -14px var(--glow); }
+.primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 26px 28px 120px; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 36px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 6px; }
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 780px; }
+h2 { font: 500 20px/1.25 var(--serif); margin: 0 0 10px; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.err { color: var(--danger); font-size: 13.5px; font-weight: 600; margin: 10px 0 0; }
+.err:empty { display: none; }
+.card { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+
+.mode { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line-strong); background: var(--chip); border-radius: 16px;
+  padding: 12px 16px; margin: 0 0 20px; font-size: 13.5px; }
+.mode b { color: var(--accent-ink); }
+.mode .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--tone1); margin-top: 6px; flex: none; }
+.mode.live .dot { background: var(--ok); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 22px; align-items: start; }
+
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.tab { border: 1px solid var(--line-strong); background: #fff; border-radius: 14px; padding: 11px 8px; font-weight: 600; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .25s, transform .3s var(--ease); }
+.tab svg { width: 18px; height: 18px; }
+.tab[aria-selected="true"] { background: var(--btn); border-color: var(--tone2); color: var(--accent-ink); }
+.tab:hover { transform: translateY(-1px); }
+
+.stage { position: relative; border: 1.5px dashed var(--line-strong); border-radius: 18px; background: #fffdf8; aspect-ratio: 1 / 1;
+  overflow: hidden; display: grid; place-items: center; }
+.stage.drag { border-color: var(--tone2); background: var(--chip); }
+.drop { text-align: center; padding: 20px; }
+.drop .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.picked { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.stage .remove { position: absolute; top: 10px; right: 10px; z-index: 3; }
+video.cam { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #111; }
+.cam-bar { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; z-index: 2; }
+
+canvas.pad { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; background: #fff; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.tool { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line-strong); background: #fff; display: grid; place-items: center; }
+.tool svg { width: 18px; height: 18px; }
+.tool[aria-pressed="true"] { background: var(--btn); border-color: var(--tone2); }
+.swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line-strong); }
+.swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--tone2); }
+.tools input[type=range] { width: 110px; accent-color: var(--tone2); }
+.sep { width: 1px; height: 26px; background: var(--line); margin: 0 2px; }
+
+label.f { display: block; font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
+label.f span { font-weight: 500; color: var(--muted); }
+select, textarea, input[type=text] { width: 100%; border: 1px solid var(--line-strong); border-radius: 12px; padding: 11px 14px; background: #fff; }
+textarea { resize: vertical; min-height: 84px; }
+.check { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--tone2); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+
+.result .frame { position: relative; border-radius: 18px; border: 1px solid var(--line); background: #faf8f3; aspect-ratio: 1 / 1; overflow: hidden;
+  display: grid; place-items: center; }
+.result .frame img { width: 100%; height: 100%; object-fit: contain; }
+.empty { color: var(--muted); text-align: center; padding: 30px; font-size: 14px; }
+.making { display: grid; place-items: center; gap: 14px; color: var(--muted); font-size: 14px; }
+.shine { width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--tone2); animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.tag { font-size: 11px; font-weight: 700; color: var(--accent-ink); background: var(--chip); border: 1px solid var(--line-strong); padding: 2px 9px; border-radius: 999px; }
+.refine { display: flex; gap: 8px; margin-top: 12px; }
+.refine input { flex: 1; min-width: 0; }
+
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+.mini { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; text-decoration: none; color: var(--ink); position: relative;
+  transition: transform .3s var(--ease), box-shadow .3s; }
+.mini:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.mini img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #faf8f3; }
+.mini .cap { padding: 7px 10px; font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; }
+.mini button.x { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-strong);
+  background: rgba(255,255,255,.92); font-size: 14px; line-height: 1; }
+section.block { margin-top: 26px; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .wrap { padding: 18px 16px 100px; }
+  h1 { font-size: 28px; }
+  .topbar { padding: 10px 16px; }
+  .brand small { display: none; }
+  .tab { font-size: 13px; }
+}
+.wrap { max-width: 980px; }
+.seg-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 18px;
+  background: var(--chip); padding: 14px 18px; margin: 0 0 18px; }
+.seg-card .k { font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.seg-card .v { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.seg { display: inline-flex; background: #fff; border: 1px solid var(--line-strong); border-radius: 999px; padding: 4px; gap: 4px; }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 8px 18px; font-weight: 600; font-size: 13.5px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--btn); color: var(--accent-ink); box-shadow: 0 4px 14px -8px var(--glow); }
+.fold { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); box-shadow: var(--shadow); }
+.fold > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 16px 22px; cursor: pointer; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary b { font-size: 15px; } .fold > summary small { display: block; color: var(--muted); font-size: 12.5px; }
+.fold > summary svg { width: 18px; height: 18px; transition: transform .3s var(--ease); color: var(--muted); }
+.fold:not([open]) > summary svg { transform: rotate(180deg); }
+.fold .body { padding: 0 22px 22px; }
+.sec { border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px 18px; margin-top: 14px; background: #fffdf8; }
+.sec-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sec-h h3 { font: 600 15px/1.3 var(--sans); margin: 0; } .sec-h h3 span { font-weight: 500; color: var(--muted); font-size: 12px; }
+.row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fld label { display: block; font-size: 12.5px; font-weight: 700; margin: 12px 0 5px; }
+.fld label .req { color: var(--danger); } .fld label span { font-weight: 500; color: var(--muted); }
+input[type=number], input[type=url], input[type=search] { width: 100%; border: 1px solid var(--line-strong); border-radius: 12px; padding: 11px 14px; background: #fff; }
+input:invalid:not(:placeholder-shown) { border-color: var(--danger); }
+.stone { border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px 14px; margin-top: 12px; background: #fff; }
+.stone-h { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 13.5px; }
+.stone-h button { border: 0; background: none; color: var(--muted); font-size: 12.5px; text-decoration: underline; }
+.inv-info { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.inv-info b { color: var(--ink); }
+.adv-toggle { display: flex; align-items: center; gap: 12px; margin: 18px 0 4px; color: var(--muted); font-size: 13px; }
+.adv-toggle::before, .adv-toggle::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.adv-toggle button { border: 0; background: none; color: var(--accent-ink); font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+.counter { text-align: right; font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.gen { width: 100%; margin-top: 18px; }
+.why { font-size: 12.5px; color: var(--muted); text-align: center; margin-top: 8px; }
+.q-empty { color: var(--muted); font-size: 13.5px; margin: 18px 2px; }
+.qitem { border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 14px 16px; margin-top: 12px; box-shadow: var(--shadow); }
+.qhead { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.qhead .s { font-weight: 600; font-size: 14px; }
+.qhead .m { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--chip); color: var(--accent-ink); white-space: nowrap; }
+.badge.done { background: #eaf5ec; border-color: #b7dcbf; color: var(--ok); }
+.badge.error { background: #fdecea; border-color: #f3c0bb; color: var(--danger); }
+.badge.cancelled { color: var(--muted); }
+.qnotes { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--muted); }
+.qres { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+.res { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #faf8f3; }
+.res img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; cursor: zoom-in; }
+.res .chk { padding: 8px 10px 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.res .chk span { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: #fff; }
+.res .chk .y { color: var(--ok); border-color: #b7dcbf; } .res .chk .n { color: var(--danger); border-color: #f3c0bb; } .res .chk .u { color: var(--muted); }
+.res .acts { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px 10px; }
+.res .acts a, .res .acts button { font-size: 12px; padding: 5px 11px; }
+.res .note { font-size: 11.5px; color: var(--muted); padding: 4px 10px 0; }
+.res .edit { display: flex; gap: 6px; padding: 8px 10px 0; }
+.res .edit input { flex: 1; min-width: 0; font-size: 12.5px; padding: 7px 10px; border-radius: 10px; }
+.res .edit button { font-size: 12px; padding: 5px 11px; }
+.res .ehint { font-size: 11.5px; color: var(--muted); padding: 4px 10px 0; }
+.res .ehint.err { color: var(--danger); }
+.qmaking { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: var(--muted); font-size: 13px; }
+.qmaking .shine { width: 22px; height: 22px; border-width: 2px; }
+.inv table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+.inv th, .inv td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+.inv th { font-size: 11.5px; color: var(--muted); font-weight: 700; }
+.inv td button { font-size: 12px; border: 0; background: none; text-decoration: underline; color: var(--accent-ink); padding: 0 4px; }
+.inv .tablewrap { overflow-x: auto; }
+.inv form .row3 { margin-top: 4px; }
+.zoom { position: fixed; inset: 0; z-index: 100; background: rgba(28, 22, 14, .82); display: grid; place-items: center; padding: 20px; cursor: zoom-out; }
+.zoom img { max-width: 100%; max-height: 100%; border-radius: 12px; background: #fff; }
+@media (max-width: 700px) { .row3, .row2 { grid-template-columns: 1fr; } .seg-card { flex-direction: column; align-items: flex-start; } }
+</style>
+<script>
+// This tool is a tab of the AI generation page (/ai). Opened on its own, go there.
+const IN_AI = window.top !== window.self;
+if (!IN_AI) {
+  const q = new URLSearchParams(location.search); q.delete("embed"); q.set("tab", "design");
+  location.replace("/ai?" + q);
+} else document.documentElement.classList.add("embed");
+const aiTab = (tab, from) => window.parent.postMessage({ ai: "tab", tab, from: from || "" }, location.origin);
+const toLogin = () => { window.top.location.href = "/login?next=" + encodeURIComponent("/ai?tab=design"); };
+</script>
+<style>.embed .topbar { display: none; }</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Design generator</small></div>
+  </a>
+  <a class="ghost" href="/">← Catalogue</a>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">AI design studio</div>
+  <h1>Design Generator</h1>
+  <p class="lead">Generate realistic jewellery designs from exact specifications: category, metal, stones and your own style direction. Each design is checked against your details before it is shown.</p>
+
+  <div class="mode" id="mode"><span class="dot"></span><div id="modeText">Loading…</div></div>
+
+  <div class="seg-card">
+    <div><div class="k">Stone input mode</div><div class="v" id="modeHint">Freestyle: type each stone's details yourself.</div></div>
+    <div class="seg" role="group" aria-label="Stone input mode">
+      <button type="button" data-mode="freestyle" aria-pressed="true">Freestyle</button>
+      <button type="button" data-mode="inventory" aria-pressed="false">From Inventory</button>
+    </div>
+  </div>
+
+  <details class="fold" id="fold" open>
+    <summary><div><b>New Design</b><small>Configure a fresh design request</small></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></summary>
+    <div class="body">
+      <form id="f" novalidate autocomplete="off">
+        <div class="sec">
+          <div class="sec-h"><h3>Jewellery Category</h3></div>
+          <div class="fld"><label for="category">Category <span class="req">*</span></label>
+            <select id="category" required><option value="">Select category</option></select></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h3>Metal Specifications</h3></div>
+          <div class="row3">
+            <div class="fld"><label for="metalType">Type</label><input type="text" id="metalType" list="dlMetal" placeholder="e.g. 18k white gold" maxlength="80"></div>
+            <div class="fld"><label for="plating">Plating</label><input type="text" id="plating" list="dlPlating" placeholder="e.g. rhodium" maxlength="60"></div>
+            <div class="fld"><label for="weight">Weight (g)</label><input type="number" id="weight" min="0.2" max="2000" step="0.01" placeholder="e.g. 5.2"></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h3>Stone Specifications <span id="maxStones">(max 3 types)</span></h3>
+            <button type="button" class="ghost small" id="addStone">+ Add Stone</button></div>
+          <div id="stones"></div>
+          <p class="hint" id="stoneHint">No stones = a plain metal design.</p>
+        </div>
+
+        <div class="adv-toggle"><button type="button" id="advBtn" aria-expanded="false" aria-controls="adv">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          <span>Show Advanced Parameters</span></button></div>
+
+        <div class="sec" id="adv" hidden>
+          <div class="fld"><label for="style">Design Style Prompt</label>
+            <textarea id="style" maxlength="5000" placeholder="e.g. Art deco solitaire engagement ring with vintage-inspired detailing"></textarea>
+            <div class="counter"><span id="styleN">0</span>/5000</div></div>
+          <div class="fld"><label for="placement">Stone Placement</label>
+            <textarea id="placement" maxlength="1000" placeholder="e.g. Central solitaire with pavé band"></textarea></div>
+          <div class="row2">
+            <div class="fld"><label for="regional">Regional Style</label><input type="text" id="regional" maxlength="80" placeholder="e.g. Italian, Indian"></div>
+            <div class="fld"><label for="gross">Gross Weight (g)</label><input type="number" id="gross" min="0.2" max="2000" step="0.01" placeholder="e.g. 12.5"></div>
+          </div>
+          <div class="fld"><label for="refUrl">Reference Image URL <span>(a picture link or a shop's product page)</span></label>
+            <input type="url" id="refUrl" maxlength="2000" placeholder="https://..."></div>
+          <div class="row3">
+            <div class="fld"><label for="designs">Designs per request</label>
+              <select id="designs"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+            <div class="fld"><label for="model">Model / quality</label><select id="model"></select></div>
+            <div class="fld"><label for="background">Background</label><select id="background"></select></div>
+          </div>
+        </div>
+
+        <button type="submit" class="primary gen" id="go" disabled>Generate Designs</button>
+        <p class="why" id="why"></p>
+        <p class="err" id="err" role="alert"></p>
+      </form>
+    </div>
+  </details>
+
+  <section class="block card inv" id="invBlock" hidden>
+    <div class="sec-h"><h2 style="margin:0">Stone inventory</h2><span class="hint" id="invCount"></span></div>
+    <p class="hint" id="invHint">Stones the team has in stock. Pick them in the stone rows above.</p>
+    <div class="tablewrap"><table><thead><tr><th>Code</th><th>Stone</th><th>Shape</th><th>Colour</th><th>Size</th><th>Clarity</th><th>In stock</th><th></th></tr></thead>
+      <tbody id="invRows"></tbody></table></div>
+    <div id="invManage" hidden>
+      <h3 style="margin:18px 0 0;font-size:14px" id="invFormTitle">Add a stone</h3>
+      <form id="invForm" novalidate autocomplete="off">
+        <div class="row3">
+          <div class="fld"><label for="iCode">Code</label><input type="text" id="iCode" maxlength="60" placeholder="e.g. RD-650-VVS"></div>
+          <div class="fld"><label for="iType">Type <span class="req">*</span></label><input type="text" id="iType" list="dlStone" maxlength="60" placeholder="e.g. diamond"></div>
+          <div class="fld"><label for="iShape">Shape <span class="req">*</span></label><select id="iShape"></select></div>
+          <div class="fld"><label for="iColor">Colour <span class="req">*</span></label><input type="text" id="iColor" list="dlColor" maxlength="60" placeholder="e.g. white"></div>
+          <div class="fld"><label for="iSize">Size (mm) <span class="req">*</span></label><input type="number" id="iSize" min="0.5" max="40" step="0.01" placeholder="e.g. 1.5"></div>
+          <div class="fld"><label for="iClarity">Clarity</label><input type="text" id="iClarity" list="dlClarity" maxlength="30" placeholder="e.g. VS1"></div>
+          <div class="fld"><label for="iQty">Quantity <span class="req">*</span></label><input type="number" id="iQty" min="0" step="1" placeholder="e.g. 120"></div>
+          <div class="fld" style="grid-column: span 2"><label for="iNote">Note</label><input type="text" id="iNote" maxlength="200" placeholder="optional"></div>
+        </div>
+        <div class="actions"><button type="submit" class="ghost" id="iSave">Add stone</button><button type="button" class="ghost" id="iCancel" hidden>Cancel edit</button></div>
+      </form>
+      <details style="margin-top:14px"><summary class="hint" style="cursor:pointer">Import many stones from a CSV</summary>
+        <p class="hint">First line: <b>code,type,shape,color,size_mm,clarity,qty,note</b>. Nothing is added if any line is wrong.</p>
+        <textarea id="csv" placeholder="code,type,shape,color,size_mm,clarity,qty,note&#10;RD-150,diamond,round,white,1.5,VS1,400,"></textarea>
+        <div class="actions"><button type="button" class="ghost" id="csvGo">Import</button></div>
+      </details>
+      <p class="err" id="invErr" role="alert"></p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Queue</h2>
+    <div id="queue"><p class="q-empty">Submit a design request to start your queue stack.</p></div>
+  </section>
+
+  <section class="block" id="pastBlock" hidden>
+    <h2>Earlier designs</h2>
+    <div class="cards" id="past"></div>
+  </section>
+</main>
+
+<datalist id="dlMetal"></datalist><datalist id="dlPlating"></datalist><datalist id="dlStone"></datalist>
+<datalist id="dlColor"></datalist><datalist id="dlClarity"></datalist>
+<div class="zoom" id="zoom" hidden><img alt="Design, large"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let opts = null, mode = "freestyle", inventory = [], editing = null, polling = null, sending = false;
+
+async function api(url, init = {}) {
+  const r = await fetch(url, { credentials: "same-origin", ...init });
+  if (r.status === 401) { toLogin(); throw new Error("Sign in required"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : `Something went wrong (${r.status})`);
+  return data;
+}
+const send = (method, url, body) => api(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body ?? {}) });
+const num = v => (v === "" || v == null) ? null : Number(v);
+const fmtTime = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+
+/* ---------- options ---------- */
+async function loadOptions() {
+  opts = await api("/api/generator/options");
+  $("#category").insertAdjacentHTML("beforeend", opts.categories.map(c => `<option value="${c.key}">${esc(c.label)}</option>`).join(""));
+  $("#model").innerHTML = opts.models.map(m => `<option value="${m.key}">${esc(m.label)} · ${esc(m.note)}</option>`).join("");
+  if (opts.default_model) $("#model").value = opts.default_model;
+  $("#background").innerHTML = opts.backgrounds.map(b => `<option value="${b.key}">${esc(b.label)}</option>`).join("");
+  $("#background").value = "white";
+  $("#iShape").innerHTML = opts.shapes.map(s => `<option value="${s.key}">${esc(s.label)}</option>`).join("");
+  const dl = (id, list) => { $(id).innerHTML = list.map(v => `<option value="${esc(v)}">`).join(""); };
+  dl("#dlMetal", opts.suggest.metal_types); dl("#dlPlating", opts.suggest.platings); dl("#dlStone", opts.suggest.stone_types);
+  dl("#dlColor", opts.suggest.colors); dl("#dlClarity", opts.suggest.clarities);
+  $("#maxStones").textContent = `(max ${opts.max_stones} types)`;
+  const live = opts.live && opts.models.length;
+  $("#mode").classList.toggle("live", !!live);
+  $("#modeText").innerHTML = live
+    ? `<b>AI is on.</b> ${leftText(opts.budget)}Requests wait in your queue and are made one after another.`
+    : "<b>AI picture making isn't connected on this server yet.</b> You can fill in the form, but designs can't be made.";
+  $("#invManage").hidden = !opts.staff;
+  addStone();
+  validate();
+}
+
+/* ---------- stones ---------- */
+function shapeOptions(sel) {
+  return `<option value="">Select shape</option>` + opts.shapes.map(s => `<option value="${s.key}"${s.key === sel ? " selected" : ""}>${esc(s.label)}</option>`).join("");
+}
+function invOptions(sel) {
+  if (!inventory.length) return `<option value="">No stones in the inventory yet</option>`;
+  return `<option value="">Select a stone from stock</option>` + inventory.map(s =>
+    `<option value="${s.id}"${s.id === sel ? " selected" : ""}${s.qty ? "" : " disabled"}>${esc([s.code, s.type, s.shape_label, s.color, s.size_mm + " mm", s.clarity].filter(Boolean).join(" · "))} (${s.qty} in stock)</option>`).join("");
+}
+function stoneHtml(i, v = {}) {
+  const head = `<div class="stone-h"><span>Stone ${i + 1}</span>${i ? `<button type="button" data-remove>Remove</button>` : ""}</div>`;
+  if (mode === "inventory") return `<div class="stone" data-i="${i}">${head}
+    <div class="row2">
+      <div class="fld"><label>Stone from inventory <span class="req">*</span></label><select data-k="inventory_id">${invOptions(v.inventory_id)}</select></div>
+      <div class="fld"><label>Count <span class="req">*</span></label><input type="number" data-k="count" min="1" max="999" step="1" value="${esc(v.count ?? 1)}"></div>
+    </div><div class="inv-info" data-info></div></div>`;
+  return `<div class="stone" data-i="${i}">${head}
+    <div class="row2">
+      <div class="fld"><label>Type <span class="req">*</span></label><input type="text" data-k="type" list="dlStone" maxlength="60" placeholder="e.g. diamond, ruby" value="${esc(v.type ?? "")}"></div>
+      <div class="fld"><label>Count <span class="req">*</span></label><input type="number" data-k="count" min="1" max="999" step="1" value="${esc(v.count ?? 1)}"></div>
+      <div class="fld"><label>Color <span class="req">*</span></label><input type="text" data-k="color" list="dlColor" maxlength="60" placeholder="e.g. white, blue" value="${esc(v.color ?? "")}"></div>
+      <div class="fld"><label>Shape <span class="req">*</span></label><select data-k="shape">${shapeOptions(v.shape)}</select></div>
+      <div class="fld"><label>Size (mm) <span class="req">*</span></label><input type="number" data-k="size_mm" min="0.5" max="40" step="0.01" placeholder="e.g. 1.5" value="${esc(v.size_mm ?? "")}"></div>
+      <div class="fld"><label>Clarity</label><input type="text" data-k="clarity" list="dlClarity" maxlength="30" placeholder="e.g. VVS1, SI1" value="${esc(v.clarity ?? "")}"></div>
+    </div></div>`;
+}
+function readStones() {
+  return [...document.querySelectorAll("#stones .stone")].map(el => {
+    const o = {};
+    el.querySelectorAll("[data-k]").forEach(f => { o[f.dataset.k] = f.value.trim(); });
+    return o;
+  });
+}
+function drawStones(list) {
+  $("#stones").innerHTML = list.map((v, i) => stoneHtml(i, v)).join("");
+  $("#addStone").disabled = list.length >= (opts?.max_stones || 3);
+  showInvInfo();
+  validate();
+}
+function addStone() { const l = readStones(); if (l.length < (opts?.max_stones || 3)) drawStones([...l, { count: 1 }]); }
+$("#addStone").onclick = addStone;
+$("#stones").addEventListener("click", e => {
+  if (!e.target.matches("[data-remove]")) return;
+  const i = +e.target.closest(".stone").dataset.i;
+  drawStones(readStones().filter((_, k) => k !== i));
+});
+function showInvInfo() {
+  document.querySelectorAll("#stones .stone").forEach(el => {
+    const info = el.querySelector("[data-info]");
+    if (!info) return;
+    const s = inventory.find(x => x.id === el.querySelector("[data-k=inventory_id]").value);
+    const n = +el.querySelector("[data-k=count]").value || 0;
+    info.innerHTML = s ? `<b>${esc(s.type)}</b> · ${esc(s.shape_label)} · ${esc(s.color)} · ${s.size_mm} mm${s.clarity ? " · " + esc(s.clarity) : ""} · ${s.qty} in stock`
+      + (n > s.qty ? ` · <span style="color:var(--danger)">more than in stock</span>` : "") : "";
+  });
+}
+
+/* ---------- mode ---------- */
+function setMode(m) {
+  if (m === mode) return;
+  mode = m;
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  $("#modeHint").textContent = m === "freestyle" ? "Freestyle: type each stone's details yourself."
+    : "From Inventory: pick stones the team has in stock. Their details come from the stock record.";
+  $("#invBlock").hidden = m !== "inventory";
+  drawStones([{ count: 1 }]);
+  if (m === "inventory") loadInventory().catch(e => showErr(e.message));
+}
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+
+/* ---------- validation ---------- */
+function body() {
+  const stones = readStones().map(s => mode === "inventory"
+    ? { inventory_id: s.inventory_id, count: +s.count || 0 }
+    : { type: s.type, count: +s.count || 0, color: s.color, shape: s.shape, size_mm: num(s.size_mm) ?? 0, clarity: s.clarity });
+  return {
+    mode, category: $("#category").value, metal_type: $("#metalType").value.trim(), plating: $("#plating").value.trim(),
+    weight_g: num($("#weight").value), stones, style: $("#style").value.trim(), placement: $("#placement").value.trim(),
+    regional: $("#regional").value.trim(), gross_weight_g: num($("#gross").value), reference_url: $("#refUrl").value.trim(),
+    background: $("#background").value || "white", designs: +$("#designs").value || 1, model: $("#model").value || "",
+  };
+}
+function problems(b) {
+  const out = [];
+  if (!b.category) out.push("pick a category");
+  for (const [w, n] of [[b.weight_g, "metal weight"], [b.gross_weight_g, "gross weight"]])
+    if (w != null && !(w >= 0.2 && w <= 2000)) out.push(`${n} 0.2-2000 g`);
+  b.stones.forEach((s, i) => {
+    const miss = mode === "inventory" ? [!s.inventory_id && "stone"] :
+      [!s.type && "type", !s.color && "colour", !s.shape && "shape", !(s.size_mm >= 0.5 && s.size_mm <= 40) && "size 0.5-40 mm"];
+    if (!(s.count >= 1 && s.count <= 999 && Number.isInteger(s.count))) miss.push("count 1-999");
+    if (mode === "inventory") { const r = inventory.find(x => x.id === s.inventory_id); if (r && s.count > r.qty) miss.push(`at most ${r.qty}`); }
+    const m = miss.filter(Boolean);
+    if (m.length) out.push(`stone ${i + 1}: ${m.join(", ")}`);
+  });
+  if (b.reference_url && !/^https?:\/\//i.test(b.reference_url)) out.push("the reference link must start with http");
+  return out;
+}
+function validate() {
+  if (!opts) return;
+  const p = problems(body());
+  const live = opts.live && opts.models.length;
+  $("#go").disabled = !!p.length || !live || sending;
+  $("#why").textContent = p.length ? "To generate: " + p.join(" · ") + "." : "";
+  const pair = opts.categories.find(c => c.key === $("#category").value)?.pair;
+  $("#stoneHint").textContent = (pair ? "For a pair, count the stones of both pieces together. " : "") + "No stones = a plain metal design.";
+}
+$("#f").addEventListener("input", () => { validate(); showInvInfo(); });
+$("#f").addEventListener("change", () => { validate(); showInvInfo(); });
+$("#style").addEventListener("input", () => { $("#styleN").textContent = $("#style").value.length; });
+$("#advBtn").onclick = () => {
+  const open = $("#adv").hidden;
+  $("#adv").hidden = !open;
+  $("#advBtn").setAttribute("aria-expanded", String(open));
+  $("#advBtn span").textContent = open ? "Hide Advanced Parameters" : "Show Advanced Parameters";
+  $("#advBtn svg").style.transform = open ? "rotate(180deg)" : "";
+};
+function showErr(m) { $("#err").textContent = m || ""; }
+
+/* ---------- submit + queue ---------- */
+$("#f").addEventListener("submit", async e => {
+  e.preventDefault();
+  const b = body();
+  if (problems(b).length || sending) return;
+  sending = true; validate(); showErr("");
+  $("#go").textContent = b.reference_url ? "Reading the reference picture…" : "Adding to the queue…";
+  try {
+    const r = await send("POST", "/api/generator/generate", b);
+    drawQueue(r.items); updateBudget(r.budget); poll();
+    document.querySelector("#queue").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) { showErr(err.message); }
+  finally { sending = false; $("#go").textContent = "Generate Designs"; validate(); }
+});
+
+function statusText(it, pos) {
+  if (it.status === "queued") return pos ? `Waiting · ${pos === 1 ? "next" : "#" + pos + " in line"}` : "Waiting";
+  if (it.status === "making") return `${it.stage === "remaking" ? "Remaking to match your details" : "Making design"} ${it.attempt} of ${it.designs} · ${fmtTime(it.elapsed || 0)}`;
+  if (it.status === "checking") return `Checking against your details · ${fmtTime(it.elapsed || 0)}`;
+  return { done: "Done", error: "Failed", cancelled: "Cancelled" }[it.status] || it.status;
+}
+function checkChips(checks) {
+  if (!checks?.length) return "";
+  return `<div class="chk">${checks.map(c => `<span class="${c.ok === true ? "y" : c.ok === false ? "n" : "u"}" title="${esc(c.detail || "")}">${c.ok === true ? "✓" : c.ok === false ? "✗" : "?"} ${esc(c.label)}${c.ok === false && c.detail ? " (" + esc(c.detail) + ")" : ""}</span>`).join("")}</div>`;
+}
+// "Change this…" edits per design, kept here so the queue can redraw while someone types or waits
+const edits = {};   // original result id -> { cur: latest edited picture, text, busy, sec, err, changes }
+function resultHtml(r, it) {
+  const e = edits[r.id] || {}, d = e.cur || r, id = esc(r.id);
+  const hint = e.busy ? `Editing${(it?.model || "").startsWith("local") ? " on our server" : ""}… ${fmtTime(e.sec || 0)}`
+    : e.err || (e.cur ? `Edited: ${(e.changes || []).join(" · ")}` : "Write a short change and the AI edits this picture.");
+  return `<div class="res"><img src="${esc(d.image)}" alt="Generated design" loading="lazy" data-zoom>
+    ${e.cur ? "" : checkChips(r.checks)}${!e.cur && r.remade ? `<div class="note">${(r.tries || 2) > 2 ? `Made ${r.tries} times; the closest to your details is shown.` : "Remade once so it matches your details more closely."}</div>` : ""}
+    <div class="edit"><input type="text" maxlength="200" data-edit-in="${id}" placeholder="Change this… e.g. make the band thinner, add a halo"${e.busy ? " disabled" : ""}>
+      <button type="button" class="ghost small" data-edit="${id}" data-model="${esc(it?.model || "")}"${e.busy ? " disabled" : ""}>Apply</button></div>
+    <div class="ehint${e.err && !e.busy ? " err" : ""}">${esc(hint)}</div>
+    <div class="acts"><a class="ghost small" href="${esc(d.image)}?download=1">Download</a>
+      <button type="button" class="ghost small" data-var="${esc(d.id)}">Variations</button>
+      <button type="button" class="ghost small" data-sk="${esc(d.id)}">Refine in sketch</button>
+      ${e.cur && !e.busy ? `<button type="button" class="ghost small" data-undo="${id}">Show original</button>` : ""}</div></div>`;
+}
+async function applyEdit(rid, model) {
+  const e = edits[rid] = edits[rid] || {};
+  if (e.busy) return;
+  const change = (e.text || "").trim();
+  if (!change) { e.err = "Write what to change."; return drawQueue(lastItems); }
+  const base = e.cur || lastItems.flatMap(i => i.results || []).find(x => x.id === rid);
+  if (!base) return;
+  Object.assign(e, { busy: true, sec: 0, err: "" }); drawQueue(lastItems);
+  try {
+    let job = await send("POST", `/api/sketch/${base.id}/refine`, { change, model });
+    const t0 = Date.now();
+    while (job.status === "running") {
+      await new Promise(ok => setTimeout(ok, 3000));
+      job = await api(`/api/sketch/job/${job.id}`);
+      e.sec = Math.round((Date.now() - t0) / 1000); drawQueue(lastItems);
+    }
+    if (job.status === "error") throw new Error(job.error);
+    e.cur = job.result; e.changes = [...(e.changes || []), change]; e.text = "";
+    updateBudget(job.result.budget); loadPast();
+  } catch (err) { e.err = err.message; }
+  finally { e.busy = false; drawQueue(lastItems); }
+}
+let lastItems = [];
+function drawQueue(items) {
+  lastItems = items || [];
+  const f = document.activeElement?.dataset?.editIn, caret = f ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+  if (!lastItems.length) { $("#queue").innerHTML = `<p class="q-empty">Submit a design request to start your queue stack.</p>`; return; }
+  const waiting = lastItems.filter(i => i.status === "queued").map(i => i.id).reverse();
+  $("#queue").innerHTML = lastItems.map(it => {
+    const pos = waiting.indexOf(it.id) + 1;
+    const active = ["queued", "making", "checking"].includes(it.status);
+    return `<div class="qitem"><div class="qhead"><div><div class="s">${esc(it.summary)}</div>
+        <div class="m">${esc(it.model_label)} · ${it.designs} design${it.designs > 1 ? "s" : ""} · ${new Date(it.ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div></div>
+        <span class="badge ${it.status}">${esc(statusText(it, pos))}</span></div>
+      ${it.notes?.length ? `<ul class="qnotes">${it.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+      ${it.error ? `<p class="err">${esc(it.error)}</p>` : ""}
+      ${it.status === "making" || it.status === "checking" ? `<div class="qmaking"><div class="shine"></div><span>${it.done} of ${it.designs} ready${(opts?.models.find(m => m.key === it.model)?.key || "").startsWith("local") ? " · about 5-7 minutes per design on our server" : ""}</span></div>` : ""}
+      ${it.results?.length ? `<div class="qres">${it.results.map(r => resultHtml(r, it)).join("")}</div>` : ""}
+      <div class="actions" style="margin-top:10px">
+        ${it.status === "queued" ? `<button type="button" class="ghost small" data-cancel="${esc(it.id)}">Cancel</button>` : ""}
+        ${!active ? `<button type="button" class="ghost small" data-again="${esc(it.id)}">Edit &amp; resubmit</button>` : ""}
+      </div></div>`;
+  }).join("");
+  $("#queue").querySelectorAll("[data-edit-in]").forEach(el => {
+    el.value = edits[el.dataset.editIn]?.text || "";
+    if (el.dataset.editIn === f && !el.disabled) { el.focus(); el.setSelectionRange(...caret); }
+  });
+}
+function leftText(b) { return b && b.left_today != null ? `You can make ${b.left_today} more designs today. ` : ""; }
+function updateBudget(b) {
+  if (!b || !opts) return;
+  opts.budget = b;
+  if (opts.live && opts.models.length) $("#modeText").innerHTML = `<b>AI is on.</b> ${leftText(b)}Requests wait in your queue and are made one after another.`;
+}
+async function refresh() {
+  const r = await api("/api/generator/queue");
+  const wasActive = lastItems.some(i => ["queued", "making", "checking"].includes(i.status));
+  drawQueue(r.items); updateBudget(r.budget);
+  const active = r.items.some(i => ["queued", "making", "checking"].includes(i.status));
+  if (wasActive && !active) loadPast();
+  return active;
+}
+function poll() {
+  if (polling) return;
+  polling = setInterval(async () => {
+    try { if (!(await refresh())) { clearInterval(polling); polling = null; } } catch (e) { /* keep trying */ }
+  }, 4000);
+}
+$("#queue").addEventListener("click", async e => {
+  const t = e.target;
+  if (t.matches("[data-zoom]")) { $("#zoom img").src = t.src; $("#zoom").hidden = false; return; }
+  if (t.dataset.edit) return applyEdit(t.dataset.edit, t.dataset.model);
+  if (t.dataset.undo) { delete edits[t.dataset.undo]; return drawQueue(lastItems); }
+  if (t.dataset.var) return aiTab("variation", t.dataset.var);
+  if (t.dataset.sk) return aiTab("sketch", t.dataset.sk);
+  if (t.dataset.cancel) {
+    try { await send("POST", `/api/generator/queue/${t.dataset.cancel}/cancel`); await refresh(); } catch (err) { showErr(err.message); }
+    return;
+  }
+  if (t.dataset.again) {
+    const it = lastItems.find(i => i.id === t.dataset.again);
+    if (it) fillForm(it.spec, it.model, it.designs);
+  }
+});
+$("#queue").addEventListener("input", e => {
+  const id = e.target.dataset.editIn;
+  if (id) { const x = edits[id] = edits[id] || {}; x.text = e.target.value; if (x.err && !x.busy) { x.err = ""; } }
+});
+$("#queue").addEventListener("keydown", e => {
+  const id = e.target.dataset.editIn;
+  if (id && e.key === "Enter") { e.preventDefault(); applyEdit(id, e.target.closest(".res").querySelector("[data-edit]").dataset.model); }
+});
+$("#zoom").onclick = () => { $("#zoom").hidden = true; };
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#zoom").hidden = true; });
+
+function fillForm(s, model, designs) {
+  const inv = s.stones.length && s.stones.every(x => x.inventory_id);
+  if ((inv ? "inventory" : "freestyle") !== mode) setMode(inv ? "inventory" : "freestyle");
+  $("#category").value = s.category; $("#metalType").value = s.metal_type || ""; $("#plating").value = s.plating || "";
+  $("#weight").value = s.weight_g ?? ""; $("#style").value = s.style || ""; $("#styleN").textContent = (s.style || "").length;
+  $("#placement").value = s.placement || ""; $("#regional").value = s.regional || ""; $("#gross").value = s.gross_weight_g ?? "";
+  $("#refUrl").value = s.reference_url || ""; $("#background").value = s.background || "white";
+  $("#designs").value = String(designs || 1); if (model && [...$("#model").options].some(o => o.value === model)) $("#model").value = model;
+  drawStones(s.stones.length ? s.stones : [{ count: 1 }]);
+  if ((s.style || s.placement || s.regional || s.gross_weight_g || s.reference_url) && $("#adv").hidden) $("#advBtn").click();
+  $("#fold").open = true;
+  $("#fold").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---------- earlier designs ---------- */
+async function loadPast() {
+  const r = await api("/api/sketch/mine?panel=design");
+  $("#pastBlock").hidden = !r.items.length;
+  $("#past").innerHTML = r.items.map(d => `<div class="mini"><img loading="lazy" src="${esc(d.image)}" alt="Earlier design" data-zoom>
+    <div class="cap"><span>${esc(d.meta?.design?.summary || d.meta?.label || "Design")}</span></div></div>`).join("");
+}
+$("#past").addEventListener("click", e => { if (e.target.matches("[data-zoom]")) { $("#zoom img").src = e.target.src; $("#zoom").hidden = false; } });
+
+/* ---------- inventory ---------- */
+async function loadInventory() {
+  inventory = (await api("/api/generator/inventory")).items;
+  $("#invCount").textContent = `${inventory.length} stone${inventory.length === 1 ? "" : "s"}`;
+  $("#invHint").textContent = inventory.length ? "Stones the team has in stock. Pick them in the stone rows above."
+    : opts?.staff ? "The inventory is empty. Add your stones below, or import a CSV." : "The inventory is empty. Ask an admin or jeweler to add the stones in stock.";
+  $("#invRows").innerHTML = inventory.map(s => `<tr><td>${esc(s.code)}</td><td>${esc(s.type)}</td><td>${esc(s.shape_label)}</td><td>${esc(s.color)}</td>
+    <td>${s.size_mm} mm</td><td>${esc(s.clarity)}</td><td>${s.qty}</td>
+    <td>${opts?.staff ? `<button type="button" data-edit="${s.id}">Edit</button><button type="button" data-del="${s.id}">Delete</button>` : ""}</td></tr>`).join("");
+  const keep = readStones();
+  if (mode === "inventory") drawStones(keep.length ? keep : [{ count: 1 }]);
+}
+function invForm(s) {
+  editing = s ? s.id : null;
+  $("#iCode").value = s?.code || ""; $("#iType").value = s?.type || ""; $("#iShape").value = s?.shape || "round";
+  $("#iColor").value = s?.color || ""; $("#iSize").value = s?.size_mm ?? ""; $("#iClarity").value = s?.clarity || "";
+  $("#iQty").value = s?.qty ?? ""; $("#iNote").value = s?.note || "";
+  $("#invFormTitle").textContent = s ? "Edit stone" : "Add a stone";
+  $("#iSave").textContent = s ? "Save changes" : "Add stone";
+  $("#iCancel").hidden = !s;
+}
+$("#invRows").addEventListener("click", async e => {
+  const t = e.target;
+  if (t.dataset.edit) { invForm(inventory.find(s => s.id === t.dataset.edit)); $("#invForm").scrollIntoView({ behavior: "smooth", block: "center" }); }
+  if (t.dataset.del) {
+    if (!confirm("Delete this stone from the inventory?")) return;
+    try { await api(`/api/generator/inventory/${t.dataset.del}`, { method: "DELETE" }); await loadInventory(); } catch (err) { $("#invErr").textContent = err.message; }
+  }
+});
+$("#iCancel").onclick = () => invForm(null);
+$("#invForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("#invErr").textContent = "";
+  const b = { code: $("#iCode").value.trim(), type: $("#iType").value.trim(), shape: $("#iShape").value, color: $("#iColor").value.trim(),
+              size_mm: num($("#iSize").value) ?? 0, clarity: $("#iClarity").value.trim(), qty: Math.round(num($("#iQty").value) ?? -1), note: $("#iNote").value.trim() };
+  if (!b.type || !b.color || !(b.size_mm >= 0.5 && b.size_mm <= 40) || b.qty < 0) { $("#invErr").textContent = "Fill in type, colour, a size of 0.5-40 mm and a quantity."; return; }
+  try {
+    await send(editing ? "PUT" : "POST", editing ? `/api/generator/inventory/${editing}` : "/api/generator/inventory", b);
+    invForm(null); await loadInventory();
+  } catch (err) { $("#invErr").textContent = err.message; }
+});
+$("#csvGo").onclick = async () => {
+  $("#invErr").textContent = "";
+  try { const r = await send("POST", "/api/generator/inventory/import", { csv: $("#csv").value }); $("#csv").value = ""; await loadInventory(); $("#invErr").textContent = ""; $("#invHint").textContent = `${r.added} stones imported.`; }
+  catch (err) { $("#invErr").textContent = err.message; }
+};
+
+loadOptions().then(() => refresh().then(active => { if (active) poll(); })).catch(e => showErr(e.message));
+loadPast().catch(() => {});
+</script>
+</body>
+</html>

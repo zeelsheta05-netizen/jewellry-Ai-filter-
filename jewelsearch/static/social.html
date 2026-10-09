@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Social post · Design Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --surface: rgba(255, 255, 255, .9); --surface-solid: #ffffff;
+  --line: #f0e2c4; --line-strong: #dfc07a;
+  --ink: #2a2116; --muted: #7a6d5c; --accent: #b8862b; --accent-ink: #5f400c;
+  --tone1: #e0b654; --tone2: #b8862b; --tone3: #7c5514;
+  --btn: linear-gradient(135deg, #fcf0cf, #eed18c); --btn-hover: #f2d990;
+  --chip: #fcf7ec; --glow: rgba(184, 134, 43, .22); --danger: #b42318; --ok: #2f7a3f;
+  --shadow: 0 14px 34px -22px rgba(90, 65, 20, .28);
+  --serif: Outfit, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); overflow-x: hidden; }
+button, input, select, textarea { font: inherit; color: var(--ink); }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--tone2); outline-offset: 3px; }
+
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 24px; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand svg { width: 40px; height: 40px; flex: none; }
+.brand b { font: 500 17px/1 var(--serif); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; }
+.brand small { display: block; font-size: 10px; letter-spacing: .32em; color: var(--muted); text-transform: uppercase; margin-top: 3px; }
+.ghost { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600; color: var(--accent-ink); text-decoration: none; white-space: nowrap;
+  transition: background .3s, transform .35s var(--ease); }
+.ghost:hover:not(:disabled) { background: var(--btn-hover); transform: translateY(-2px); }
+.ghost.small { padding: 5px 12px; font-size: 12px; }
+.ghost:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 999px;
+  border: 1px solid var(--tone2); background: var(--btn); color: var(--accent-ink); font-weight: 700; letter-spacing: .02em;
+  transition: transform .3s var(--ease), box-shadow .3s; white-space: nowrap; }
+.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px -14px var(--glow); }
+.primary:disabled { opacity: .5; cursor: not-allowed; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 26px 28px 120px; }
+.eyebrow { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--tone2); font-weight: 700; }
+h1 { font: 400 36px/1.1 var(--serif); letter-spacing: -.02em; margin: 6px 0 6px; }
+.lead { color: var(--muted); margin: 0 0 20px; max-width: 780px; }
+h2 { font: 500 20px/1.25 var(--serif); margin: 0 0 10px; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.err { color: var(--danger); font-size: 13.5px; font-weight: 600; margin: 10px 0 0; }
+.err:empty { display: none; }
+.card { border: 1px solid var(--line); border-radius: 22px; background: var(--surface-solid); padding: 20px 22px; box-shadow: var(--shadow); min-width: 0; }
+.grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 22px; align-items: start; }
+
+.stage { position: relative; border: 1.5px dashed var(--line-strong); border-radius: 18px; background: #fffdf8; aspect-ratio: 4 / 3;
+  overflow: hidden; display: grid; place-items: center; }
+.stage.drag { border-color: var(--tone2); background: var(--chip); }
+.drop { text-align: center; padding: 20px; color: var(--muted); font-size: 14px; }
+.drop svg { width: 38px; height: 38px; color: var(--tone2); }
+.drop .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.picked { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.stage .remove { position: absolute; top: 10px; right: 10px; z-index: 3; }
+
+.mine { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin-top: 10px; max-height: 160px; overflow-y: auto; }
+.mine button { padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; aspect-ratio: 1 / 1; }
+.mine button[aria-pressed="true"] { border-color: var(--tone2); box-shadow: 0 0 0 2px var(--tone1); }
+.mine img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+label.f { display: block; font-size: 13px; font-weight: 700; margin: 16px 0 6px; }
+label.f span { font-weight: 500; color: var(--muted); }
+select, textarea, input[type=text] { width: 100%; border: 1px solid var(--line-strong); border-radius: 12px; padding: 10px 13px; background: #fff; }
+textarea { resize: vertical; min-height: 70px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.row2 label.f { margin-top: 14px; }
+
+.plats { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); background: #fff; border-radius: 999px;
+  padding: 7px 14px; font-size: 13px; font-weight: 600; color: var(--accent-ink); transition: background .2s; }
+.chip svg { width: 15px; height: 15px; }
+.chip[aria-pressed="true"] { background: var(--btn); border-color: var(--tone2); }
+.chip.ghosty { border-style: dashed; color: var(--muted); font-weight: 500; }
+.trend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.trend .chip { padding: 4px 11px; font-size: 12px; }
+.check { display: flex; align-items: center; gap: 10px; margin: 16px 0 0; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--tone2); }
+.gen { width: 100%; margin-top: 20px; }
+
+.empty { color: var(--muted); text-align: center; padding: 50px 20px; font-size: 14px; }
+.empty svg { width: 46px; height: 46px; color: var(--line-strong); display: block; margin: 0 auto 10px; }
+.making { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; }
+.shine { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--tone2); animation: spin 1s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.seen { border: 1px solid var(--line); background: var(--chip); border-radius: 16px; padding: 12px 16px; font-size: 13.5px; }
+.seen b { color: var(--accent-ink); }
+.kw { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.kw span { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); }
+.kw span.main { border-color: var(--tone2); font-weight: 700; color: var(--accent-ink); }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 4px; }
+
+.post { border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 14px 16px 16px; margin-top: 14px; box-shadow: var(--shadow); }
+.post-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.post-h .name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+.post-h .name svg { width: 20px; height: 20px; color: var(--tone3); }
+.post-h .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.post .lbl { font-size: 11.5px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 12px 0 4px; }
+.post textarea { min-height: 150px; font-size: 14px; line-height: 1.55; }
+.post input[type=text] { font-size: 14px; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.stats span { font-size: 11.5px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--muted); }
+.stats .y { color: var(--ok); border-color: #b7dcbf; } .stats .n { color: var(--danger); border-color: #f3c0bb; }
+.post .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.post.wait { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13.5px; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .wrap { padding: 18px 16px 100px; }
+  h1 { font-size: 28px; }
+  .topbar { padding: 10px 16px; }
+  .brand small { display: none; }
+}
+@media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } .card { padding: 16px; } }
+</style>
+<script>
+// This tool is a tab of the AI generation page (/ai). Opened on its own, go there.
+const IN_AI = window.top !== window.self;
+if (!IN_AI) {
+  const q = new URLSearchParams(location.search); q.delete("embed"); q.set("tab", "social");
+  location.replace("/ai?" + q);
+} else document.documentElement.classList.add("embed");
+const toLogin = () => { window.top.location.href = "/login?next=" + encodeURIComponent("/ai?tab=social"); };
+</script>
+<style>.embed .topbar { display: none; }</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Design Finder home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="lgGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e6b0"/><stop offset=".45" stop-color="#b8862b"/><stop offset="1" stop-color="#7c5514"/></linearGradient>
+        <linearGradient id="lgGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f4e7c4"/></linearGradient>
+      </defs>
+      <ellipse cx="24" cy="32" rx="13" ry="11.5" stroke="url(#lgGold)" stroke-width="3.2"/>
+      <path d="M16.5 11.5 20.5 5.5h7l4 6-7.5 9.5z" fill="url(#lgGem)" stroke="url(#lgGold)" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M16.5 11.5h15M20.5 5.5l2 6 1.5 9.5 1.5-9.5 2-6" stroke="url(#lgGold)" stroke-width=".7"/>
+    </svg>
+    <div><b>Design Finder</b><small>Social post</small></div>
+  </a>
+  <a class="ghost" href="/">← Catalogue</a>
+</header>
+
+<main class="wrap">
+  <div class="eyebrow">AI social studio</div>
+  <h1>Social post</h1>
+  <p class="lead">Upload a jewellery picture, pick your platforms and get a ready caption for each one. Every caption follows that platform's length and hashtag rules, leads with a search-friendly keyword and uses the festival or season people are shopping for right now.</p>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="h-in">
+      <h2 id="h-in">1. Picture</h2>
+      <div class="stage" id="stage">
+        <div class="drop" id="drop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>
+          <div>Drop a picture here, paste it, or</div>
+          <div class="row">
+            <button type="button" class="ghost" id="pickBtn">Upload picture</button>
+          </div>
+          <div class="hint">JPG, PNG or WebP, under 8 MB.</div>
+        </div>
+        <img class="picked" id="picked" alt="Chosen jewellery picture" hidden>
+        <button type="button" class="ghost small remove" id="removeBtn" hidden>Remove</button>
+      </div>
+      <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
+      <div id="mineWrap" hidden>
+        <label class="f">Or pick one of your AI designs</label>
+        <div class="mine" id="mine"></div>
+      </div>
+
+      <h2 style="margin-top:22px">2. Platforms</h2>
+      <div class="plats" id="plats" role="group" aria-label="Platforms"></div>
+      <div class="hint" id="platHint"></div>
+
+      <h2 style="margin-top:22px">3. About the post</h2>
+      <label class="f" for="details">Details to mention <span>(optional: metal purity, carat, hallmark, collection name…)</span></label>
+      <textarea id="details" maxlength="400" placeholder="e.g. 18k rose gold, 0.50 ct diamonds, BIS hallmarked, from our Bloom collection"></textarea>
+      <div class="hint">Only these details and what is seen in the picture are used. Claims like prices, discounts or certificates appear only if you type them here.</div>
+      <div class="row2">
+        <div><label class="f" for="brand">Brand name <span>(optional)</span></label><input type="text" id="brand" maxlength="60" placeholder="e.g. Shree Jewels"></div>
+        <div><label class="f" for="city">City <span>(optional, for local search)</span></label><input type="text" id="city" maxlength="40" placeholder="e.g. Surat"></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="tone">Tone</label><select id="tone"></select></div>
+        <div><label class="f" for="goal">Goal</label><select id="goal"></select></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="cta">Call to action</label><select id="cta"></select></div>
+        <div><label class="f" for="market">Audience</label><select id="market"></select></div>
+      </div>
+      <input type="text" id="ctaText" maxlength="120" placeholder="Your own call to action, e.g. Book a try-on at our store" hidden style="margin-top:8px">
+      <label class="f" for="occasion">Trending angle</label>
+      <select id="occasion"></select>
+      <div class="trend" id="trend"></div>
+      <label class="check"><input type="checkbox" id="emojis" checked> Use emojis</label>
+
+      <button type="button" class="primary gen" id="go">Create captions</button>
+      <p class="err" id="err" role="alert"></p>
+    </section>
+
+    <section class="card" aria-labelledby="h-out" aria-live="polite">
+      <h2 id="h-out">Captions</h2>
+      <div id="out">
+        <div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg>
+          Your captions appear here, one per platform, ready to copy.
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = { get(k, d) { try { const v = localStorage.getItem("social." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+                set(k, v) { try { localStorage.setItem("social." + k, JSON.stringify(v)); } catch {} } };
+let opts = null, image = null, gid = "", job = null, timer = null, busy = false;
+const variants = {};
+const chosen = new Set(store.get("platforms", ["instagram", "facebook", "x"]));
+
+const ICONS = {
+  instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
+  facebook: '<path d="M14 21v-7h3l.5-4H14V8.5c0-1 .4-1.5 1.6-1.5H18V3.6A20 20 0 0 0 15.4 3.5C12.8 3.5 11 5 11 8v2H8v4h3v7"/>',
+  x: '<path d="M4 4l16 16M20 4 4 20"/>',
+  threads: '<path d="M16.5 11.2c-.3-2.6-2-3.9-4.3-3.9-2.6 0-4.2 1.9-4.2 4.7 0 3 1.8 5 4.6 5 2.3 0 3.9-1.3 3.9-3.2 0-1.8-1.5-2.8-3.6-2.8-1.7 0-2.8.8-2.8 2 0 1.1 1 1.8 2.2 1.8"/><circle cx="12" cy="12" r="9"/>',
+  linkedin: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
+  pinterest: '<circle cx="12" cy="12" r="9"/><path d="M11 8.5c2.5-.8 5 .5 5 3 0 2.2-1.5 3.8-3.3 3.8-1 0-1.6-.6-1.6-.6L10 21"/>',
+  youtube: '<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="m10 9 5 3-5 3z" fill="currentColor"/>',
+  google: '<path d="M3 9h18l-1.5-5h-15z"/><path d="M4 9v11h16V9M9 20v-6h6v6"/>',
+};
+const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ""}</svg>`;
+
+async function api(url, init = {}) {
+  const r = await fetch(url, { credentials: "same-origin", ...init });
+  if (r.status === 401) { toLogin(); throw new Error("Sign in required"); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : `Something went wrong (${r.status})`);
+  return data;
+}
+const send = (url, body) => api(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+const fmtDay = iso => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
+
+/* ---------- options ---------- */
+async function load() {
+  opts = await api("/api/social/options");
+  const fill = (sel, list, val) => { $(sel).innerHTML = list.map(o => `<option value="${o.key}">${esc(o.label)}</option>`).join(""); if (val) $(sel).value = val; };
+  fill("#tone", opts.tones, store.get("tone", "elegant"));
+  fill("#goal", opts.goals, store.get("goal", "sell"));
+  fill("#cta", opts.ctas.map(c => c.key === "custom" ? { key: "custom", label: "Write my own…" } : c), store.get("cta", "dm"));
+  fill("#market", opts.markets, store.get("market", "in"));
+  $("#brand").value = store.get("brand", ""); $("#city").value = store.get("city", "");
+  $("#ctaText").value = store.get("ctaText", ""); $("#ctaText").hidden = $("#cta").value !== "custom";
+  $("#emojis").checked = store.get("emojis", true);
+  renderPlats(); renderOccasions();
+  if (opts.designs.length) {
+    $("#mineWrap").hidden = false;
+    $("#mine").innerHTML = opts.designs.map(d => `<button type="button" data-id="${esc(d.id)}" aria-pressed="false" aria-label="Use this AI design"><img src="${esc(d.image)}" alt="" loading="lazy"></button>`).join("");
+  }
+  const from = new URLSearchParams(location.search).get("from");
+  if (from && opts.designs.some(d => d.id === from)) pickDesign(from);
+}
+
+function renderPlats() {
+  $("#plats").innerHTML = opts.platforms.map(p => `<button type="button" class="chip" data-p="${p.key}" aria-pressed="${chosen.has(p.key)}">${icon(p.key)}${esc(p.label)}</button>`).join("")
+    + `<button type="button" class="chip ghosty" id="allBtn">${chosen.size === opts.platforms.length ? "Clear all" : "Select all"}</button>`;
+  $("#platHint").textContent = chosen.size ? `${chosen.size} selected` : "Choose at least one platform.";
+}
+$("#plats").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "allBtn") { if (chosen.size === opts.platforms.length) chosen.clear(); else opts.platforms.forEach(p => chosen.add(p.key)); }
+  else chosen.has(b.dataset.p) ? chosen.delete(b.dataset.p) : chosen.add(b.dataset.p);
+  store.set("platforms", [...chosen]); renderPlats();
+});
+
+function renderOccasions() {
+  const m = $("#market").value, trend = opts.trending[m] || [];
+  const keep = $("#occasion").value || "auto";
+  const auto = trend.length ? `Auto: ${trend[0].label} (trending now)` : "Auto: no festival right now";
+  $("#occasion").innerHTML = `<option value="auto">${esc(auto)}</option><option value="none">No occasion</option>`
+    + `<optgroup label="Upcoming">` + opts.occasions.map(o => `<option value="${o.key}">${esc(o.label)} · ${fmtDay(o.day)}</option>`).join("") + `</optgroup>`;
+  $("#occasion").value = [...$("#occasion").options].some(o => o.value === keep) ? keep : "auto";
+  $("#trend").innerHTML = trend.length
+    ? `<span>Trending now:</span>` + trend.map(o => `<button type="button" class="chip" data-o="${o.key}" aria-pressed="${$("#occasion").value === o.key}">${esc(o.label)}</button>`).join("")
+    : "";
+}
+$("#market").addEventListener("change", () => { store.set("market", $("#market").value); renderOccasions(); });
+$("#occasion").addEventListener("change", renderOccasions);
+$("#trend").addEventListener("click", e => {
+  const b = e.target.closest("button[data-o]"); if (!b) return;
+  $("#occasion").value = $("#occasion").value === b.dataset.o ? "auto" : b.dataset.o; renderOccasions();
+});
+$("#cta").addEventListener("change", () => { $("#ctaText").hidden = $("#cta").value !== "custom"; if (!$("#ctaText").hidden) $("#ctaText").focus(); });
+
+/* ---------- picture ---------- */
+function showPicture(src) {
+  $("#picked").src = src; $("#picked").hidden = false; $("#removeBtn").hidden = false; $("#drop").hidden = true;
+}
+function clearPicture() {
+  image = null; gid = ""; $("#picked").hidden = true; $("#picked").removeAttribute("src"); $("#removeBtn").hidden = true; $("#drop").hidden = false;
+  document.querySelectorAll("#mine button").forEach(b => b.setAttribute("aria-pressed", "false"));
+}
+function readFile(f) {
+  $("#err").textContent = "";
+  if (!f || !/^image\/(jpeg|png|webp)$/.test(f.type)) { $("#err").textContent = "Use a JPG, PNG or WebP picture."; return; }
+  if (f.size > 25e6) { $("#err").textContent = "That picture is too large."; return; }
+  const url = URL.createObjectURL(f), im = new Image();
+  im.onload = () => {   // shrink in the browser: quicker upload, same caption
+    const s = Math.min(1, 1280 / Math.max(im.width, im.height));
+    const c = document.createElement("canvas"); c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+    image = c.toDataURL("image/jpeg", .9); gid = ""; URL.revokeObjectURL(url); showPicture(image);
+    document.querySelectorAll("#mine button").forEach(b => b.setAttribute("aria-pressed", "false"));
+  };
+  im.onerror = () => { $("#err").textContent = "That picture couldn't be opened."; URL.revokeObjectURL(url); };
+  im.src = url;
+}
+function pickDesign(id) {
+  gid = id; image = null;
+  document.querySelectorAll("#mine button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
+  showPicture(opts.designs.find(d => d.id === id).image);
+}
+$("#pickBtn").addEventListener("click", () => $("#file").click());
+$("#file").addEventListener("change", e => { readFile(e.target.files[0]); e.target.value = ""; });
+$("#removeBtn").addEventListener("click", clearPicture);
+$("#mine").addEventListener("click", e => { const b = e.target.closest("button[data-id]"); if (b) pickDesign(b.dataset.id); });
+const stage = $("#stage");
+["dragenter", "dragover"].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.add("drag"); }));
+["dragleave", "drop"].forEach(t => stage.addEventListener(t, e => { e.preventDefault(); stage.classList.remove("drag"); }));
+stage.addEventListener("drop", e => readFile(e.dataTransfer.files[0]));
+document.addEventListener("paste", e => {
+  if (e.target.matches("input, textarea")) return;
+  const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith("image/")); if (f) readFile(f);
+});
+
+/* ---------- create ---------- */
+$("#go").addEventListener("click", async () => {
+  $("#err").textContent = "";
+  if (!image && !gid) { $("#err").textContent = "Add a picture of the jewellery first."; return; }
+  if (!chosen.size) { $("#err").textContent = "Choose at least one platform."; return; }
+  if (busy) return;
+  const body = {
+    image, gid, platforms: opts.platforms.map(p => p.key).filter(k => chosen.has(k)),
+    details: $("#details").value.trim(), brand: $("#brand").value.trim(), city: $("#city").value.trim(),
+    tone: $("#tone").value, goal: $("#goal").value, cta: $("#cta").value, cta_text: $("#ctaText").value.trim(),
+    market: $("#market").value, occasion: $("#occasion").value, emojis: $("#emojis").checked,
+  };
+  ["brand", "city", "tone", "goal", "cta", "ctaText", "emojis"].forEach(k => store.set(k, k === "ctaText" ? body.cta_text : k === "emojis" ? body.emojis : body[k]));
+  busy = true; $("#go").disabled = true; $("#go").textContent = "Writing…";
+  try {
+    job = await send("/api/social/start", body);
+    Object.keys(variants).forEach(k => delete variants[k]);
+    render(); poll();
+  } catch (e) { $("#err").textContent = e.message; done(); }
+});
+function done() { busy = false; $("#go").disabled = false; $("#go").textContent = "Create captions"; }
+function poll() {
+  clearTimeout(timer);
+  if (!job || job.status !== "running") { done(); return; }
+  timer = setTimeout(async () => {
+    try { job = await api(`/api/social/job/${job.id}`); render(); }
+    catch (e) { $("#err").textContent = e.message; job = null; done(); return; }
+    poll();
+  }, 1500);
+}
+
+/* ---------- results ---------- */
+function render() {
+  if (!job) return;
+  const out = $("#out"), f = job.facts;
+  let html = "";
+  if (!f) html += `<div class="making"><span class="shine"></span>Reading the picture…</div>`;
+  else {
+    const what = [f.keyword, f.stone_style && f.stone_style !== "no stones" ? f.stone_style : "", ...(f.traits || []).slice(0, 3)].filter(Boolean).join(" · ");
+    html += `<div class="seen">Seen in the picture: <b>${esc(what)}</b>${f.sure ? "" : " <span class='hint'>(not fully sure: add the piece type in Details if this is wrong)</span>"}`
+      + (job.trends?.length ? `<div class="hint">Angle: ${esc(job.trends[0].label)}</div>` : "")
+      + `<div class="kw">${(job.keywords || []).map((k, i) => `<span class="${i ? "" : "main"}">${esc(k)}</span>`).join("")}</div></div>`;
+  }
+  if (job.status === "error") html += `<p class="err">${esc(job.error)}</p>`;
+  const ready = job.order.filter(k => job.posts[k]);
+  if (ready.length > 1) html += `<div class="bar"><span class="hint">${ready.length} of ${job.order.length} ready</span><button type="button" class="ghost small" id="copyAll">Copy all</button></div>`;
+  for (const k of job.order) html += job.posts[k] ? postCard(job.posts[k]) : (job.status === "running"
+    ? `<div class="post wait"><span class="shine"></span>Writing the ${esc(opts.platforms.find(p => p.key === k)?.label || k)} caption…</div>` : "");
+  // keep what the user typed in the boxes across redraws
+  const typed = {};
+  out.querySelectorAll("[data-edit]").forEach(el => { typed[el.dataset.edit] = el.value; });
+  out.innerHTML = html;
+  out.querySelectorAll("[data-edit]").forEach(el => { if (typed[el.dataset.edit] != null && el.dataset.fresh !== "1") el.value = typed[el.dataset.edit]; count(el); });
+}
+function postCard(p) {
+  const hook = p.hook ? `<span class="${p.hook_ok ? "y" : "n"}">${p.hook_ok ? "Hook fits before “more”" : "First line is long"}</span>` : "";
+  const fresh = variants["fresh:" + p.platform] ? "1" : "0"; delete variants["fresh:" + p.platform];
+  return `<article class="post" data-p="${p.platform}">
+    <div class="post-h"><div class="name">${icon(p.platform)}${esc(p.label)}</div>
+      <div class="acts"><button type="button" class="ghost small" data-act="copy">Copy</button>
+        <button type="button" class="ghost small" data-act="rewrite">Rewrite</button></div></div>
+    ${p.title_limit ? `<div class="lbl">Title</div><input type="text" data-edit="${p.platform}:title" data-fresh="${fresh}" data-limit="${p.title_limit}" value="${esc(p.title)}">` : ""}
+    <div class="lbl">${p.title_limit ? "Description" : "Caption"}</div>
+    <textarea data-edit="${p.platform}:text" data-fresh="${fresh}" data-limit="${p.limit}">${esc(p.text)}</textarea>
+    <div class="stats"><span class="cnt"></span>${p.keyword_in_start ? `<span class="y">Keyword up front</span>` : ""}${hook}
+      ${p.hashtags.length ? `<span>${p.hashtags.length} hashtag${p.hashtags.length > 1 ? "s" : ""}</span>` : ""}</div>
+    ${p.writer === "template" ? `<div class="note">Quick draft: the AI writer was busy. Press Rewrite for an AI-written version.</div>` : ""}
+    ${p.dropped?.length ? `<div class="note">Left out ${p.dropped.length} line${p.dropped.length > 1 ? "s" : ""} with claims not in your details.</div>` : ""}
+  </article>`;
+}
+function count(el) {
+  const c = el.closest(".post")?.querySelector(".cnt"); if (!c || !el.matches("textarea")) return;
+  const n = [...el.value].length, lim = +el.dataset.limit;
+  c.textContent = `${n} / ${lim} characters`; c.className = "cnt " + (n > lim ? "n" : "");
+}
+$("#out").addEventListener("input", e => { if (e.target.matches("[data-edit]")) count(e.target); });
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch { const t = document.createElement("textarea"); t.value = text; document.body.append(t); t.select(); document.execCommand("copy"); t.remove(); }
+  const was = btn.textContent; btn.textContent = "Copied"; setTimeout(() => { btn.textContent = was; }, 1400);
+}
+const postText = card => {
+  const t = card.querySelector("input[data-edit]")?.value.trim();
+  return (t ? t + "\n\n" : "") + card.querySelector("textarea").value.trim();
+};
+$("#out").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.id === "copyAll") {
+    const all = [...document.querySelectorAll(".post[data-p]")].map(c => `— ${c.querySelector(".name").textContent.trim()} —\n${postText(c)}`).join("\n\n");
+    return copy(all, b);
+  }
+  const card = b.closest(".post"); if (!card) return;
+  if (b.dataset.act === "copy") return copy(postText(card), b);
+  if (b.dataset.act === "rewrite") {
+    const k = card.dataset.p; variants[k] = (variants[k] || 0) + 1;
+    b.disabled = true; b.textContent = "Rewriting…";
+    try {
+      const p = await send(`/api/social/job/${job.id}/rewrite`, { platform: k, variant: variants[k] });
+      job.posts[k] = p; variants["fresh:" + k] = 1; render();
+    } catch (err) { b.disabled = false; b.textContent = "Rewrite"; $("#err").textContent = err.message; }
+  }
+});
+
+load().catch(e => { $("#err").textContent = e.message; });
+</script>
+</body>
+</html>

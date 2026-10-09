@@ -19,3 +19,12 @@ def _no_real_bucket(monkeypatch):
     for k in _REAL_S3:
         monkeypatch.delenv(k, raising=False)
     monkeypatch.setenv("LOCAL_IMAGEGEN", "0")   # tests never start the real on-Mac image generator
+
+
+@pytest.fixture(autouse=True)
+def _private_drawing_lock(monkeypatch, tmp_path):
+    """Tests take their own Mac-wide drawing lock (never the live app's) and don't look for
+    real FLUX runs on this Mac (tests replace subprocess.run with stand-ins)."""
+    from jewelsearch import sketch
+    monkeypatch.setattr(sketch, "DRAW_LOCK_FILE", tmp_path / "drawing.lock")
+    monkeypatch.setattr(sketch, "_other_drawing", lambda: False)

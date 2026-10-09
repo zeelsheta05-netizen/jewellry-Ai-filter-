@@ -31,14 +31,13 @@ def _checks(files, data, bump=0):
 
 def test_before_any_check_every_model_is_offered():
     assert tryon.model_for(RING) == "r1-abc"
-    assert tryon.part_for(EARRING) == "face"
+    assert tryon.part_for(EARRING) is None   # no catalogue picture: nothing for the AI to draw from
 
 
 def test_only_models_that_passed_are_offered(files):
     _checks(files, {"r1-abc": {"sim": 0.83, "pass": True}, "e1-def": {"sim": 0.70, "pass": False}})
     assert tryon.model_for(RING) == "r1-abc"
     assert tryon.model_for(EARRING) is None
-    assert tryon.part_for(EARRING) is None
 
 
 def test_a_model_added_after_the_check_waits_for_it(files):
@@ -64,3 +63,14 @@ def test_a_model_converted_again_after_its_check_waits_for_a_new_check(files, mo
     assert tryon.model_for(RING) == "r1-abc"
     os.utime(glb, (mtime + 60, mtime + 60))
     assert tryon.model_for(RING) is None
+
+
+def test_every_design_with_a_front_picture_can_be_tried_on(files):
+    """The model try-on draws the design from its catalogue front picture, so the
+    button doesn't depend on a 3D model or its check."""
+    _checks(files, {"r1-abc": {"pass": False}, "e1-def": {"pass": False}})
+    with_pic = {**EARRING, "images": {"yellow_gold": {"4": "Earrings/E1/E1_YG_4.png"}}, "front_view": "4"}
+    assert tryon.part_for(with_pic) == "face"
+    pendant = {"design_id": "P1", "folders": ["Pendants/P1"], "category": "pendant",
+               "images": {"rose_gold": {"4": "Pendants/P1/P1_RG_4.png"}}}
+    assert tryon.part_for(pendant) == "neck"

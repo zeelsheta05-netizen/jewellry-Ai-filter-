@@ -44,6 +44,7 @@ from pathlib import Path
 import httpx
 from PIL import Image, ImageOps, ImageStat, UnidentifiedImageError
 
+from . import memory
 from .config import DATA, ROOT
 
 DIR = DATA / "sketch"
@@ -153,7 +154,7 @@ def _env_float(name: str, default: float) -> float:
 
 
 def limits() -> dict:
-    return {"per_user_day": int(_env_float("SKETCH_PER_USER_DAY", 20)),
+    return {"per_user_day": int(_env_float("SKETCH_PER_USER_DAY", 0)),   # 0 = no per-user daily limit
             "usd_day": _env_float("SKETCH_USD_DAY", 2.0),
             "usd_month": _env_float("SKETCH_USD_MONTH", 10.0),
             "inr_per_usd": _env_float("SKETCH_INR_PER_USD", 88.0)}
@@ -445,51 +446,130 @@ def free_memory_gb() -> float:
     return total * page / 1e9
 
 
+DRAW_LOCK_FILE = DIR / "drawing.lock"
+
+
+class _MacLock:
+    """One drawing at a time on this whole Mac, across processes (a second server, a
+    library build, a test copy): two FLUX runs at once push a 16 GB Mac deep into swap
+    and each takes several times longer (measured 2026-10-09)."""
+
+    def __init__(self, path: Path):
+        self.path, self.fh = path, None
+
+    def acquire(self, timeout: float) -> bool:
+        import fcntl
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        fh = open(self.path, "a+")
+        end = time.time() + timeout
+        while True:
+            try:
+                fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.fh = fh
+                return True
+            except BlockingIOError:
+                if time.time() >= end:
+                    fh.close()
+                    return False
+                time.sleep(2)
+
+    def release(self):
+        import fcntl
+        if self.fh is not None:
+            fcntl.flock(self.fh, fcntl.LOCK_UN)
+            self.fh.close()
+            self.fh = None
+
+
+def _other_drawing() -> bool:
+    """A FLUX run started outside the lock (a script run by hand)."""
+    r = subprocess.run(["pgrep", "-f", r"Python.*bin/mflux-generate"], capture_output=True)
+    return r.returncode == 0
+
+
+class drawing:
+    """Everything a local drawing needs around it, for every tool (sketch, variations,
+    Design Generator, try-on): its turn on this Mac, the app's idle models out of memory
+    (memory.py), enough free memory, and a timing line in the log."""
+
+    def __init__(self, label: str, busy_message: str = "The design studio is busy with other designs. "
+                                                         "Try again in a few minutes."):
+        self.label, self.busy = label, busy_message
+        self.mac = _MacLock(DRAW_LOCK_FILE)   # read at each drawing (tests point it elsewhere)
+
+    def __enter__(self):
+        t = time.time()
+        if not LOCAL_LOCK.acquire(timeout=LOCAL_TIMEOUT):
+            raise SketchError(self.busy, 429)
+        if not self.mac.acquire(timeout=max(1.0, LOCAL_TIMEOUT - (time.time() - t))):
+            LOCAL_LOCK.release()
+            raise SketchError(self.busy, 429)
+        try:
+            for _ in range(int(LOCAL_TIMEOUT / 5)):   # a FLUX run outside the lock: let it finish first
+                if not _other_drawing():
+                    break
+                time.sleep(5)
+            memory.drawing_starts()   # the app's big idle models let go of their memory meanwhile
+            need = float(os.environ.get("LOCAL_MIN_FREE_GB", "2.0"))
+            for _ in range(12):   # up to 2 min for memory to free up
+                if free_memory_gb() >= need:
+                    break
+                time.sleep(10)
+            else:
+                raise SketchError("The design studio is busy right now. Try again in a few minutes.", 429)
+        except BaseException:
+            self._release()
+            raise
+        self.waited, self.t0 = time.time() - t, time.time()
+        return self
+
+    def _release(self):
+        memory.drawing_ends()
+        self.mac.release()
+        LOCAL_LOCK.release()
+
+    def __exit__(self, *exc):
+        print(f"local imagegen: {self.label} {time.time() - self.t0:.0f} s (waited {self.waited:.0f} s)", flush=True)
+        self._release()
+        return False
+
+
 def call_local(model: Model, prompt: str, picture: bytes | None) -> tuple[bytes, str]:
     """FLUX.2 Klein on this Mac, as a separate process that only exists while it draws
     (measured next to the live app: 768 px 5.8 GB / ~3.5 min, 1024 px 10.3 GB / ~6 min)."""
     if not local_ready():
         raise SketchError("The design studio on our server is not installed.", 503)
-    if not LOCAL_LOCK.acquire(timeout=LOCAL_TIMEOUT):
-        raise SketchError("The design studio is busy with other designs. Try again in a few minutes.", 429)
-    try:
-        need = float(os.environ.get("LOCAL_MIN_FREE_GB", "2.0"))
-        for _ in range(12):   # up to 2 min for memory to free up
-            if free_memory_gb() >= need:
-                break
-            time.sleep(10)
-        else:
-            raise SketchError("The design studio is busy right now. Try again in a few minutes.", 429)
+    with drawing(f"{model.key}{' edit' if picture else ''}"):
         tmp = DIR / "tmp"
         tmp.mkdir(parents=True, exist_ok=True)
         tag = secrets.token_hex(6)
         src, out, txt = tmp / f"{tag}-in.jpg", tmp / f"{tag}-out.png", tmp / f"{tag}-prompt.txt"
-        txt.write_text(prompt)
-        size = int(model.size)
-        cmd = [str(LOCAL_BIN / ("mflux-generate-flux2-edit" if picture else "mflux-generate-flux2")), "--low-ram",
-               "--model", LOCAL_WEIGHTS, "--base-model", model.api, "--prompt-file", str(txt),
-               "--width", str(size), "--height", str(size), "--steps", "4",
-               "--seed", str(secrets.randbelow(2**31)), "--output", str(out), "--no-exif"]
-        if picture:
-            with Image.open(io.BytesIO(picture)) as im:   # reference at the output size: less memory
-                im.convert("RGB").resize((size, size), Image.LANCZOS).save(src, "JPEG", quality=92)
-            cmd[2:2] = ["--image-paths", str(src)]
-        env = {**os.environ, "HF_HUB_OFFLINE": "1"}
         try:
-            r = subprocess.run(cmd, capture_output=True, text=True, timeout=LOCAL_TIMEOUT, env=env)
-        except subprocess.TimeoutExpired:
-            raise SketchError("The design took too long on our server. Try again.", 502)
-        if r.returncode != 0 or not out.is_file():
-            print(f"local imagegen failed ({r.returncode}): {r.stderr[-600:]}", flush=True)
-            raise SketchError("The design studio could not make the picture. Try again.", 502)
-        return out.read_bytes(), "image/png"
-    finally:
-        for f in DIR.glob("tmp/*"):
-            if f.is_file() and time.time() - f.stat().st_mtime > 60:
+            txt.write_text(prompt)
+            size = int(model.size)
+            cmd = [str(LOCAL_BIN / ("mflux-generate-flux2-edit" if picture else "mflux-generate-flux2")), "--low-ram",
+                   "--model", LOCAL_WEIGHTS, "--base-model", model.api, "--prompt-file", str(txt),
+                   "--width", str(size), "--height", str(size), "--steps", "4",
+                   "--seed", str(secrets.randbelow(2**31)), "--output", str(out), "--no-exif"]
+            if picture:
+                with Image.open(io.BytesIO(picture)) as im:   # reference at the output size: less memory
+                    im.convert("RGB").resize((size, size), Image.LANCZOS).save(src, "JPEG", quality=92)
+                cmd[2:2] = ["--image-paths", str(src)]
+            env = {**os.environ, "HF_HUB_OFFLINE": "1"}
+            try:
+                r = subprocess.run(cmd, capture_output=True, text=True, timeout=LOCAL_TIMEOUT, env=env)
+            except subprocess.TimeoutExpired:
+                raise SketchError("The design took too long on our server. Try again.", 502)
+            if r.returncode != 0 or not out.is_file():
+                print(f"local imagegen failed ({r.returncode}): {r.stderr[-600:]}", flush=True)
+                raise SketchError("The design studio could not make the picture. Try again.", 502)
+            return out.read_bytes(), "image/png"
+        finally:
+            for f in DIR.glob("tmp/*"):
+                if f.is_file() and time.time() - f.stat().st_mtime > 60:
+                    f.unlink(missing_ok=True)
+            for f in (src, out, txt):
                 f.unlink(missing_ok=True)
-        for f in [p for p in (locals().get("src"), locals().get("out"), locals().get("txt")) if p]:
-            f.unlink(missing_ok=True)
-        LOCAL_LOCK.release()
 
 
 def call_provider(model: Model, prompt: str, picture: bytes | None) -> tuple[bytes, str]:
@@ -548,7 +628,8 @@ class Studio:
         day_usd, _ = self.spent(self._day_start())
         month_usd, _ = self.spent(self._month_start())
         _, mine = self.spent(self._day_start(), uid)
-        return {"left_today": max(0, lim["per_user_day"] - mine), "per_user_day": lim["per_user_day"],
+        per = lim["per_user_day"] if lim["per_user_day"] > 0 else None   # None = no per-user limit
+        return {"left_today": None if per is None else max(0, per - mine), "per_user_day": per,
                 "usd_today": round(day_usd, 3), "usd_day": lim["usd_day"],
                 "usd_month_spent": round(month_usd, 3), "usd_month": lim["usd_month"]}
 
@@ -559,7 +640,7 @@ class Studio:
 
     def check_budget(self, uid: str, usd: float):
         b = self.budget(uid)
-        if b["left_today"] <= 0:
+        if b["left_today"] is not None and b["left_today"] <= 0:
             raise SketchError(f"You have made {b['per_user_day']} designs today, the daily limit. Try again tomorrow.", 429)
         if b["usd_today"] + usd > b["usd_day"]:
             raise SketchError("Today's design limit is reached. Try again tomorrow.", 429)
@@ -621,11 +702,14 @@ class Studio:
 
     # making pictures
     def _run(self, uid: str, model_key: str, prompt: str, picture: bytes | None, parent: str | None = None,
-             panel: str = "sketch") -> dict:
+             panel: str = "sketch", salt: str = "") -> dict:
         model = BY_KEY.get(model_key)
         if not model:
             raise SketchError("Pick a model from the list.")
-        cache_key = hashlib.sha256(b"\0".join([model.api.encode(), model.size.encode(), prompt.encode(), picture or b""])).hexdigest()
+        parts = [model.api.encode(), model.size.encode(), prompt.encode(), picture or b""]
+        if salt:   # a second design from the same words must be a new picture, not the stored one
+            parts.append(salt.encode())
+        cache_key = hashlib.sha256(b"\0".join(parts)).hexdigest()
         with self.lock:
             own = self.db.execute("SELECT id FROM gens WHERE cache_key=? AND uid=? AND deleted=0 ORDER BY ts DESC LIMIT 1",
                                   (cache_key, uid)).fetchone()
@@ -652,12 +736,27 @@ class Studio:
     def generate(self, uid: str, model_key: str, prompt: str, picture: bytes | None) -> dict:
         return self._run(uid, model_key, prompt, picture)
 
+    def make(self, uid: str, model_key: str, prompt: str, picture: bytes | None, panel: str, salt: str = "") -> dict:
+        """One picture for another panel (design.py): same cache, limits and ledger."""
+        return self._run(uid, model_key, prompt, picture, panel=panel, salt=salt)
+
+    def set_meta(self, gid: str, uid: str, meta: dict):
+        with self.lock:
+            self.db.execute("UPDATE gens SET meta=? WHERE id=? AND uid=?", (json.dumps(meta), gid, uid))
+            self.db.commit()
+
     def refine(self, uid: str, gid: str, change: str, model_key: str) -> dict:
         src = self.file(gid, uid)
         if src is None:
             raise SketchError("That design is no longer available.", 404)
         panel = (self.row(gid, uid) or {}).get("panel", "sketch")
-        return self._run(uid, model_key, edit_prompt(change), prepare(src.read_bytes()), parent=gid, panel=panel)
+        res = self._run(uid, model_key, edit_prompt(change), prepare(src.read_bytes()), parent=gid, panel=panel)
+        if not res.get("meta"):   # name the edit after the change, for the galleries
+            label = "Edited: " + _clean(change, 200)
+            meta = {"n": 1, "label": label[:80], "edit": _clean(change, 200)}
+            self.set_meta(res["id"], uid, meta)
+            res = {**res, "meta": meta}
+        return res
 
     # helpers for multi-call work (variation.py)
     def acquire(self, uid: str):

@@ -45,8 +45,9 @@ GAP = 12
 PAPER = (248, 243, 232)
 INK = (60, 45, 25)
 DIRECTION_MAX = 600
-DEFAULT_MODELS = ("local-klein-hd", "p-gptimage")   # our server first (no daily limit); GPT Image draws the cleanest tiles
-LOW_BALANCE_MODELS = ("local-klein-hd", "p-klein")  # when the account runs low mid-set (Auto only)
+DEFAULT_MODELS = ("local-klein", "local-klein-hd", "p-gptimage")   # our server first (no daily limit), fast size first:
+# a 2x2 tile at 768 px takes about 2 min, at 1024 px 6-7 min next to the live app; HD stays selectable
+LOW_BALANCE_MODELS = ("local-klein", "local-klein-hd", "p-klein")  # when the account runs low mid-set (Auto only)
 
 GEM_RULE = ("Keep every gemstone exactly the same — same type, cut, colour, count, size and position — "
             "unless the direction says otherwise. Vary the metalwork and the design around the stones.")
@@ -80,12 +81,17 @@ def _clean(text: str, n: int) -> str:
 
 # ---------- planning the ideas ----------
 
-def _plan_prompt(n: int, direction: str, avoid: list[str]) -> str:
+def _plan_prompt(n: int, direction: str, avoid: list[str], piece: str = "") -> str:
     lines = [
+        f"You are a senior jewellery designer. The piece: {piece}" if piece else
         "You are a senior jewellery designer. Look at the jewellery in the picture.",
-        f"Propose exactly {n} clearly different design variations of THIS piece, made for its type, shape, stones and style.",
+        f"Propose exactly {n} clearly different design variations of THIS piece, made for its type, shape, stones and style. "
+        "Every variation must stay the same kind of piece (a ring stays a ring).",
         "Each must be realistic to manufacture and wearable. Spread them widely: change silhouette, metalwork technique, "
         "motifs, setting style and proportions; no two alike, no generic filler.",
+        "Use plain, concrete jewellery words for names and briefs (band, shank, shoulders, setting, prongs, bezel, halo, "
+        "gallery, openwork, engraving, texture, milgrain): no poetic or abstract names, no scenes or objects that are not "
+        "parts of the piece.",
         GEM_RULE,
     ]
     if direction:
@@ -97,11 +103,17 @@ def _plan_prompt(n: int, direction: str, avoid: list[str]) -> str:
     return "\n".join(lines)
 
 
-def _parse_plan(text: str, n: int) -> tuple[str, list[dict]]:
+def _parse_plan(text: str, n: int, keep_all: bool = False) -> tuple[str, list[dict]]:
     m = re.search(r"\{.*\}", text or "", re.S)
     if not m:
         raise ValueError("no JSON")
-    data = json.loads(m.group(0))
+    try:
+        data = json.loads(m.group(0))
+    except ValueError:
+        # small local models often write almost-JSON (e.g. each idea in its own list): take the pairs
+        pairs = re.findall(r'"name"\s*:\s*"([^"]+)"\s*,\s*"brief"\s*:\s*"([^"]*)"', text)
+        piece = re.search(r'"piece"\s*:\s*"([^"]*)"', text)
+        data = {"piece": piece.group(1) if piece else "", "ideas": [{"name": a, "brief": b} for a, b in pairs]}
     ideas, seen = [], set()
     for it in data.get("ideas") or []:
         if not isinstance(it, dict):
@@ -113,11 +125,12 @@ def _parse_plan(text: str, n: int) -> tuple[str, list[dict]]:
             ideas.append({"name": name, "brief": brief or name})
     if len(ideas) < n:
         raise ValueError(f"only {len(ideas)} ideas")
-    return _clean(str(data.get("piece", "")), 200), ideas[:n]
+    return _clean(str(data.get("piece", "")), 200), ideas if keep_all else ideas[:n]
 
 
-def random_ideas(n: int, avoid: list[str] | None = None, rng: random.Random | None = None) -> list[dict]:
-    """Planner fallback: random technique x motif x form combinations, never the same set twice."""
+def random_ideas(n: int, avoid: list[str] | None = None, rng: random.Random | None = None, kind: str = "piece") -> list[dict]:
+    """Last fallback: random technique x motif x form combinations applied to the same
+    kind of piece, never the same set twice."""
     rng = rng or random.Random(secrets.randbits(64))
     used = {a.lower() for a in (avoid or [])}
     out = []
@@ -127,40 +140,129 @@ def random_ideas(n: int, avoid: list[str] | None = None, rng: random.Random | No
         if name.lower() in used:
             continue
         used.add(name.lower())
-        out.append({"name": name, "brief": f"{t} metalwork with {mo} motifs, {f} silhouette"})
+        out.append({"name": name, "brief": f"the same {kind}, reworked with {t} metalwork and {mo} motifs, {f}"})
         if len(out) == n:
             break
     return out
 
 
-def plan_ideas(picture: bytes, n: int, direction: str, avoid: list[str], planner=None) -> tuple[str, list[dict], bool]:
-    """(piece description, n ideas, planned by AI?)."""
+def read_piece(engine, picture: bytes) -> dict | None:
+    """The piece in words, from our own photo reading (Design DNA, local models, free):
+    {"piece": "a yellow gold ring, no gemstones, ...", "kind": "ring", "stones": False}."""
+    if engine is None:
+        return None
+    try:
+        from . import photo
+        d = engine.read_photo(photo.read(picture)).dna
+    except Exception as e:
+        print(f"variation: photo reading failed ({e!r})", flush=True)
+        return None
+    t = d.get("type") or {}
+    kind = {"earrings": "pair of earrings"}.get(t.get("value"), t.get("value") or "piece of jewellery")
+    traits = d.get("traits") or []
+    plain = any(x.get("group") == "Stones" and "no stone" in x.get("label", "").lower() for x in traits)
+    metal = ((d.get("metal") or {}).get("metal") or "").replace("_", " ")
+    words = [f"a {metal + ' ' if metal else ''}{kind}" + ("" if t.get("sure", True) else " (probably)")]
+    dd = d.get("diamonds") or {}
+    stones = [x["label"] for x in traits if x.get("group") == "Stones"]
+    stones += [dd[k]["label"] + (" centre stone" if k == "centre_cut" else "") for k in ("layout", "centre_cut") if dd.get(k)]
+    words.append("no gemstones" if plain else ", ".join(stones))
+    words += [x["label"] for x in traits if x.get("group") != "Stones"][:4]
+    words += [m["label"] for m in (d.get("motifs") or [])][:3] + [x["label"] for x in (d.get("details") or [])][:2]
+    return {"piece": ", ".join(w for w in words if w).lower(), "kind": kind, "stones": not plain}
+
+
+def local_writer(engine):
+    """The small language model the app already has loaded (Qwen3-1.7B, the jewellery
+    judge) writing a short answer: free, on this Mac, no extra memory. None if not loaded."""
+    ask = getattr(getattr(engine, "domain", None), "_judge", None)
+    ask = getattr(ask, "__wrapped__", ask)            # Judge.ask is lru_cache(Judge._ask)
+    judge = getattr(ask, "__self__", None)
+    if judge is None or not hasattr(judge, "model"):
+        return None
+
+    def write(prompt: str, max_tokens: int) -> str:
+        msgs = [{"role": "user", "content": prompt}]
+        text = judge.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
+        x = judge.tok(text, return_tensors="pt").to(judge.dev)
+        with judge.gpu, judge.torch.no_grad():
+            out = judge.model.generate(**x, max_new_tokens=max_tokens, do_sample=True, temperature=0.8, top_p=0.95)
+        return judge.tok.decode(out[0][x["input_ids"].shape[1]:], skip_special_tokens=True)
+    return write
+
+
+def plan_ideas(picture: bytes, n: int, direction: str, avoid: list[str], planner=None, engine=None,
+               writer=None) -> tuple[str, list[dict], str]:
+    """(piece description, n ideas, who planned: "ai" / "local" / "random").
+    1. Pollinations' text model, which looks at the picture (when it has credit);
+    2. our own photo reading + the local language model (free, always here);
+    3. random combinations kept to the same kind of piece."""
+    info = read_piece(engine, picture)
     use = planner or (sketch.call_pollinations_text if "pollinations" in sketch.connected() else None)
     if use is not None:
         for _ in range(2):
             try:
                 piece, ideas = _parse_plan(use(_plan_prompt(n, direction, avoid), picture, 400 + 60 * n), n)
-                return piece, ideas, True
-            except (SketchError, ValueError) as e:
+                return piece or (info or {}).get("piece", ""), ideas, "ai"
+            except SketchError as e:
+                print(f"variation planner: {e.message}", flush=True)
+                if e.reason == "balance":
+                    break   # no credit: don't ask again
+            except ValueError as e:
                 print(f"variation planner: {e}", flush=True)
-    return "", random_ideas(n, avoid), False
+    write = writer or local_writer(engine)
+    if write is not None and info:
+        ideas, seen = [], list(avoid)
+        for _ in range(6):   # asks in small batches: a small model keeps JSON tidy for ~6 ideas
+            k = min(6, n - len(ideas))
+            if k <= 0:
+                break
+            try:
+                _, got = _parse_plan(write(_plan_prompt(k, direction, seen, info["piece"]), 120 + 45 * k), 1, keep_all=True)
+            except Exception as e:
+                print(f"variation local planner: {e!r}", flush=True)
+                continue
+            for i in got:
+                if i["name"].lower() not in {x.lower() for x in seen} and len(ideas) < n:
+                    ideas.append(i)
+                    seen.append(i["name"])
+        if len(ideas) >= max(1, n // 2):
+            ideas += random_ideas(n - len(ideas), seen, kind=info["kind"])
+            return info["piece"], ideas, "local"
+    return (info or {}).get("piece", ""), random_ideas(n, avoid, kind=(info or {}).get("kind", "piece")), "random"
 
 
-def tile_prompt(ideas: list[dict], direction: str, look: str, piece: str = "") -> str:
+def effective_look(look: str, direction: str) -> str:
+    """Words in the direction win over the Look list (e.g. "realistic" with Design illustration)."""
+    if re.search(r"\b(realistic|real[- ]?life|photo\w*|lifelike)\b", direction or "", re.I):
+        return "photo"
+    if re.search(r"\b(pencil|sketch\w*|drawing)\b", direction or "", re.I) and look == "photo":
+        return "pencil"
+    return look
+
+
+NO_STONES = ("The original has no gemstones: do not add any. Vary the metalwork, surface texture and shape, "
+             "and keep it the same kind of piece.")
+
+
+def tile_prompt(ideas: list[dict], direction: str, look: str, piece: str = "", stones: bool = True) -> str:
     """One call = one 2x2 tile of up to four named variations (or one picture for a single variation)."""
-    look_words = LOOKS[look][1]
+    look_words = LOOKS[effective_look(look, direction)][1]
+    rule = GEM_RULE if stones else NO_STONES
     base = f"The original piece: {piece} " if piece else ""
     extra = f"Direction: {direction} " if direction else ""
     if len(ideas) == 1:
         i = ideas[0]
-        return (f"Using the attached jewellery picture as the base design, create one variation — {i['name']}: {i['brief']}. "
-                f"{base}{extra}{GEM_RULE} Show the complete piece, same viewpoint and framing as the original, {look_words}. "
+        return (f"Using the attached jewellery picture as the base design, create one variation: {i['brief'] or i['name']}. "
+                f"{base}{extra}{rule} Show the complete piece, same viewpoint and framing as the original, {look_words}. "
                 "One piece only. No text, no captions, no numbers.")
-    spots = "; ".join(f"{TILE_SPOTS[k]}: {i['name']} ({i['brief']})" for k, i in enumerate(ideas))
+    # the drawing model gets only the concrete brief: names are captions (a poetic name like
+    # "Nebula Niche" was drawn literally as curtains and a galaxy)
+    spots = "; ".join(f"{TILE_SPOTS[k]}: {i['brief'] or i['name']}" for k, i in enumerate(ideas))
     # the piece and the stone rule come first: smaller models weigh the start of the prompt most
     return (f"Using the attached jewellery picture as the base design, make ONE image split into a 2x2 grid of four equal "
-            f"square panels separated by clear white gutters. {base}Every panel shows this same piece with the same "
-            f"gemstones in the same places. {GEM_RULE} {extra}Panel designs — {spots}. "
+            f"square panels separated by clear white gutters. {base}Every panel shows this same kind of piece"
+            f"{' with the same gemstones in the same places' if stones else ''}. {rule} {extra}Panel designs — {spots}. "
             f"Same viewpoint and framing as the original in every panel, {look_words}. No text, no captions, no numbers.")
 
 
@@ -317,9 +419,11 @@ def compose(panels: list[Image.Image], ideas: list[dict]) -> tuple[bytes, dict]:
 class Jobs:
     """Background sets, polled by the page (memory only; finished jobs kept 1 h)."""
 
-    def __init__(self, studio: sketch.Studio, planner=None):
+    def __init__(self, studio: sketch.Studio, planner=None, engine=None, writer=None):
         self.studio = studio
-        self.planner = planner
+        self.planner = planner      # picture-reading planner (default: Pollinations' text model)
+        self.engine = engine        # our search engine: photo reading + the local language model
+        self.writer = writer
         self.lock = threading.Lock()
         self.jobs: dict[str, dict] = {}
 
@@ -374,14 +478,15 @@ class Jobs:
         cheap = next((BY_KEY[k] for k in LOW_BALANCE_MODELS if BY_KEY[k].provider in sketch.connected()), None)
         try:
             avoid = self.studio.labels_with_prefix(uid, base)   # ideas already shown for this picture
-            piece, ideas, by_ai = plan_ideas(picture, n, direction, avoid, self.planner)
-            planned_cost = sketch.PLANNER_USD if by_ai else 0.0
+            piece, ideas, planned = plan_ideas(picture, n, direction, avoid, self.planner, self.engine, self.writer)
+            planned_cost = sketch.PLANNER_USD if planned == "ai" else 0.0
+            info_stones = not (piece and "no gemstones" in piece.lower())
             self._set(job_id, stage="drawing")
             groups = [ideas] if n == 1 else [ideas[i:i + PER_CALL] for i in range(0, n, PER_CALL)]
 
             def one(group):
                 nonlocal spent
-                prompt = tile_prompt(group, direction, look, piece)
+                prompt = tile_prompt(group, direction, look, piece, info_stones)
                 for attempt in range(3):
                     use = state["model"]
                     try:
@@ -412,14 +517,15 @@ class Jobs:
                 panels += got
                 used += group[:len(got)] if len(got) == len(group) else [group[0]]
             data, meta = compose(panels, used)
-            meta.update({"look": look, "asked": n, "piece": piece, "planned": by_ai, "direction": direction,
+            meta.update({"look": effective_look(look, direction), "asked": n, "piece": piece, "planned": planned,
+                         "direction": direction,
                          "model": state["model"].key, "fell_back": state["fell_back"]})
             if len(panels) < n:
                 meta["note"] = f"{len(panels)} of {n} variations came out; the AI merged some panels."
             key = base + secrets.token_hex(8)
             mime = "image/png" if n == 1 else "image/jpeg"
             row = self.studio.save(uid, state["model"].key, spent + planned_cost, "ai", key, data, mime,
-                                   tile_prompt(groups[0], direction, look, piece), panel="variation", meta=meta)
+                                   tile_prompt(groups[0], direction, look, piece, info_stones), panel="variation", meta=meta)
             self._set(job_id, status="done", result=row)
         except SketchError as e:
             self.studio.record_lost_spend(uid, model.key, spent + planned_cost)

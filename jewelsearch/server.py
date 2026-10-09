@@ -7,6 +7,7 @@ Every route (pages, API, thumbnails, original renders, videos) goes through
 approved user. The only public routes are the sign-in page and its API.
 """
 import base64
+import io
 import json
 import os
 import re
@@ -17,8 +18,9 @@ from collections import OrderedDict
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Literal
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
+import numpy as np
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Path as PathParam, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -27,6 +29,9 @@ from starlette.concurrency import run_in_threadpool
 
 from . import (auth, brands, webarchive, favorites, history, linksearch, manual, orders, phone, photo, purchase, recommend, storage,
                sketch, suggest, tryon, uploads, variation, webproducts)
+from . import design as designgen   # "design" is a route function name below
+from . import modeltryon
+from . import social
 from .config import CATEGORIES, CROPS, METALS, thumb_name
 from .search import SearchEngine
 
@@ -39,12 +44,16 @@ manual_panel: manual.Manual | None = None
 web_pool: webproducts.WebProducts | None = None
 studio: sketch.Studio | None = None
 variation_jobs: variation.Jobs | None = None
+design_queue: designgen.Queue | None = None
+design_inventory: designgen.Inventory | None = None
+social_jobs: social.Jobs | None = None
 sketch_tasks = sketch.Tasks()
+model_jobs = modeltryon.Jobs()   # try-on on ready-made models: pictures made in the background
 
 
 @asynccontextmanager
 async def lifespan(_app):
-    global engine, suggester, recommender, manual_panel, web_pool, studio, variation_jobs
+    global engine, suggester, recommender, manual_panel, web_pool, studio, variation_jobs, design_queue, design_inventory, social_jobs
     engine = SearchEngine()
     if os.environ.get("JEWEL_JUDGE", "1") == "0":   # small servers (Render): words + picture check only
         engine.domain._judge = None
@@ -56,7 +65,10 @@ async def lifespan(_app):
     manual_panel = manual.Manual(engine)
     web_pool = webproducts.WebProducts(engine)   # "From the web" panel (demo); empty until its build script ran
     studio = sketch.Studio()                     # Sketch to Design (Pollinations / Google wrapper); data/sketch
-    variation_jobs = variation.Jobs(studio)      # Design Variations: same wrapper, sets made in the background
+    variation_jobs = variation.Jobs(studio, engine=engine)      # Design Variations: same wrapper, sets made in the background
+    design_inventory = designgen.Inventory()        # Design Generator: the team's loose stones (data/design)
+    design_queue = designgen.Queue(studio, designgen.reader_from_engine(engine, photo))   # specs -> checked pictures
+    social_jobs = social.Jobs(engine)               # Social post: captions per platform, written in the background
     yield
 
 
@@ -82,7 +94,7 @@ def _storage_origin() -> str:
 
 MEDIA_ORIGIN = _storage_origin()
 PAGES = {"/", "/admin", "/tryon", "/tryon/me", "/buy", "/jeweler", "/jeweler/jobcard", "/demo/look",
-         "/brand-import", "/brand-design", "/sketch", "/variation"}   # sent to the sign-in page instead of getting a 401
+         "/brand-import", "/brand-design", "/sketch", "/variation", "/design", "/social", "/ai"}   # sent to the sign-in page instead of getting a 401
 PUBLIC = {"/login", "/api/auth/login", "/api/auth/register", "/api/auth/logout",
           "/api/auth/google", "/api/auth/google/callback"}
 SECURITY_HEADERS = {
@@ -91,7 +103,7 @@ SECURITY_HEADERS = {
     "Referrer-Policy": "same-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Content-Security-Policy": (
-        f"default-src 'self'; img-src 'self' data: blob:{MEDIA_ORIGIN}; media-src 'self'{MEDIA_ORIGIN}; connect-src 'self'; "
+        f"default-src 'self'; img-src 'self' data: blob:{MEDIA_ORIGIN}; media-src 'self'{MEDIA_ORIGIN}; connect-src 'self' data: blob:; worker-src 'self' blob:; "
         "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'"
     ),
@@ -112,11 +124,28 @@ TRYON_HEADERS = {
 }
 
 
-CAMERA_PAGES = {"/tryon", "/tryon/me", "/sketch", "/variation"}
+CAMERA_PAGES = {"/tryon", "/tryon/me", "/sketch", "/variation", "/design", "/social", "/ai"}
+# Sketch to design, Design variations and Design generator live as tabs inside the AI generation
+# page (/ai), so only those two may be framed, and only by this site.
+FRAMED_PAGES = {"/sketch", "/variation", "/design", "/social"}
+FRAMED_HEADERS = {
+    **TRYON_HEADERS,
+    "X-Frame-Options": "SAMEORIGIN",
+    "Content-Security-Policy": TRYON_HEADERS["Content-Security-Policy"].replace("frame-ancestors 'none'", "frame-ancestors 'self'"),
+}
+AI_HEADERS = {
+    **TRYON_HEADERS,
+    "Content-Security-Policy": TRYON_HEADERS["Content-Security-Policy"].replace("default-src 'self';", "default-src 'self'; frame-src 'self';"),
+}
 
 
 def _secure(resp, path: str = ""):
-    resp.headers.update(TRYON_HEADERS if path in CAMERA_PAGES else SECURITY_HEADERS)
+    if path in FRAMED_PAGES:
+        resp.headers.update(FRAMED_HEADERS)
+    elif path == "/ai":
+        resp.headers.update(AI_HEADERS)
+    else:
+        resp.headers.update(TRYON_HEADERS if path in CAMERA_PAGES else SECURITY_HEADERS)
     # the app's pages and scripts change often: the browser must check for a
     # newer copy every time (a quick 304 when unchanged), never run a stale one
     if (path in PAGES or path.startswith("/tryon-app/")) and "cache-control" not in resp.headers:
@@ -765,7 +794,7 @@ def tryon_design(uid: int = PathParam(..., ge=0)):
     m = engine.by_uid[_uid(uid)]
     slug = tryon.model_for(m)
     photo = tryon.photo_ok(m)
-    if not slug and not photo:
+    if not tryon.part_for(m):   # the model try-on only needs a catalogue front picture
         raise HTTPException(404, "This design has no try-on yet")
     meta_slug = slug or tryon.converted(m)   # real size, even when the 3D look failed its check
     meta = json.loads((TRYON_MODELS / f"{meta_slug}.json").read_text()) if meta_slug else {}
@@ -794,6 +823,149 @@ def tryon_photo(uid: int = PathParam(..., ge=0), metal: str = Query(..., max_len
     except storage.StorageUnavailable:
         raise HTTPException(503, "dataset storage not available")
     return FileResponse(f, media_type="image/png", headers={"Cache-Control": "private, max-age=86400"})
+
+
+# ---------- try-on on ready-made models (library + the user's uploads), AI blended ----------
+
+class CustomModel(BaseModel):
+    image: str = Field(max_length=11_500_000)    # data URL of a JPEG the page re-encoded
+    width: int
+    height: int
+    parts: dict                                  # body part -> landmarks the page measured
+    label: str = Field("", max_length=60)
+
+
+class ModelTryOn(BaseModel):
+    design: int = Field(ge=0)
+    metal: str = Field(max_length=20)
+    model: str = Field(max_length=80)            # "lib:<id>" or "custom:<id>"
+    takes: int = Field(1, ge=1, le=2)
+
+
+@app.get("/api/tryon/models-lib")
+def tryon_model_list(request: Request, design: int | None = Query(None, ge=0)):
+    part = None
+    if design is not None:
+        part = tryon.PART_FOR.get(engine.by_uid[_uid(design)]["category"])
+    return {"part": part, **modeltryon.models_for(request.state.user["uid"], part),
+            "ai": sketch.local_ready()}
+
+
+@app.get("/api/tryon/library/{mid}.thumb.jpg")
+def tryon_library_thumb(mid: str = PathParam(..., max_length=60)):
+    return FileResponse(modeltryon.library_file(mid, thumb=True), media_type="image/jpeg",
+                        headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.get("/api/tryon/library/{mid}.jpg")
+def tryon_library_photo(mid: str = PathParam(..., max_length=60)):
+    return FileResponse(modeltryon.library_file(mid), media_type="image/jpeg",
+                        headers={"Cache-Control": "private, max-age=86400"})
+
+
+@app.post("/api/tryon/custom", dependencies=[Depends(json_only)])
+def tryon_custom_add(request: Request, body: CustomModel):
+    return modeltryon.add_custom(request.state.user["uid"], body.image, body.width, body.height, body.parts, body.label)
+
+
+@app.get("/api/tryon/custom/{cid}.thumb.jpg")
+def tryon_custom_thumb(request: Request, cid: str = PathParam(..., max_length=12)):
+    return FileResponse(modeltryon.custom_file(request.state.user["uid"], cid, thumb=True), media_type="image/jpeg",
+                        headers={"Cache-Control": "private, no-store"})
+
+
+@app.get("/api/tryon/custom/{cid}.jpg")
+def tryon_custom_photo(request: Request, cid: str = PathParam(..., max_length=12)):
+    return FileResponse(modeltryon.custom_file(request.state.user["uid"], cid), media_type="image/jpeg",
+                        headers={"Cache-Control": "private, no-store"})
+
+
+@app.delete("/api/tryon/custom/{cid}")
+def tryon_custom_delete(request: Request, cid: str = PathParam(..., max_length=12)):
+    modeltryon.delete_custom(request.state.user["uid"], cid)
+    return {"ok": True}
+
+
+def _reference(m: dict, metal: str):
+    """The design's catalogue front render (transparent), the AI's picture of the exact design."""
+    from PIL import Image
+    rel = tryon.front_image(m, metal) or next((tryon.front_image(m, mt) for mt in m.get("images", {})
+                                               if tryon.front_image(m, mt)), None)
+    if not rel or rel not in engine.allowed_media:
+        return None
+    try:
+        with Image.open(tryon.cutout(rel)) as im:
+            return im.convert("RGBA")
+    except (FileNotFoundError, storage.StorageUnavailable, OSError):
+        return None
+
+
+_judge_rows: dict[str, np.ndarray] = {}
+
+
+def _design_judge(design_uid: int, category: str):
+    """Is the piece the AI drew THIS design? Its picture is matched against the front
+    pictures of every design of the same kind (SigLIP2, the search model): THIS
+    design must be among the closest 2%. Measured on AI-made rings: the right
+    design ranked 13th-44th of 3,338."""
+    if category not in _judge_rows:
+        _judge_rows[category] = np.array([u for u, m in engine.by_uid.items() if m["category"] == category])
+    rows = _judge_rows[category]
+    front = engine.front[rows]
+    front = front / np.linalg.norm(front, axis=1, keepdims=True)
+    own = engine.front[design_uid] / np.linalg.norm(engine.front[design_uid])
+    allowed = max(25, int(np.ceil(0.02 * len(rows))))
+
+    def judge(piece):
+        v = engine.emb.images([piece])[0]
+        sim = float(own @ v)
+        rank = int((front @ v > sim).sum()) + 1
+        return {"rank": rank, "of": len(rows), "sim": round(sim, 3), "ok": rank <= allowed}
+    return judge
+
+
+@app.post("/api/tryon/generate", dependencies=[Depends(json_only)])
+def tryon_generate(request: Request, body: ModelTryOn):
+    uid = request.state.user["uid"]
+    m = engine.by_uid[_uid(body.design)]
+    if not tryon.part_for(m):
+        raise HTTPException(404, "This design has no try-on yet")
+    metal = body.metal if body.metal in m["images"] else next(iter(m["images"]), body.metal)
+    modeltryon.resolve(uid, body.model)            # unknown model: answer now, not in the job
+    design = {"uid": body.design, "design_id": m["design_id"], "category": m["category"]}
+    reference = _reference(m, metal)
+    if reference is None:
+        raise HTTPException(404, "This design has no catalogue picture for the try-on.")
+    judge = _design_judge(body.design, m["category"])
+    jobs = [model_jobs.start(uid, lambda stage: modeltryon.make(uid, body.model, design, metal, reference,
+                                                                 judge=judge, stage=stage))
+            for _ in range(body.takes)]
+    return {"jobs": jobs}
+
+
+@app.get("/api/tryon/job/{jid}")
+def tryon_job(request: Request, jid: str = PathParam(..., max_length=20)):
+    j = model_jobs.get(jid, request.state.user["uid"])
+    if not j:
+        raise HTTPException(404, "Not found")
+    return j
+
+
+@app.get("/api/tryon/results")
+def tryon_results(request: Request, design: int | None = Query(None, ge=0)):
+    return {"items": modeltryon.results(request.state.user["uid"], design)}
+
+
+@app.get("/api/tryon/result/{rid}.jpg")
+def tryon_result(request: Request, rid: str = PathParam(..., max_length=16)):
+    return FileResponse(modeltryon.result_file(request.state.user["uid"], rid), media_type="image/jpeg",
+                        headers={"Cache-Control": "private, no-store"})
+
+
+@app.delete("/api/tryon/result/{rid}")
+def tryon_result_delete(request: Request, rid: str = PathParam(..., max_length=16)):
+    modeltryon.delete_result(request.state.user["uid"], rid)
+    return {"ok": True}
 
 
 # ---------- body photos for the instant try-on (per user, this server only) ----------
@@ -1329,7 +1501,7 @@ def sketch_job(request: Request, job_id: str = PathParam(..., max_length=20)):
 
 
 @app.get("/api/sketch/mine")
-def sketch_mine(request: Request, panel: Literal["sketch", "variation"] | None = None):
+def sketch_mine(request: Request, panel: Literal["sketch", "variation", "design"] | None = None):
     uid = request.state.user["uid"]
     return {"items": studio.mine(uid, panel=panel), "budget": studio.public_budget(uid)}
 
@@ -1384,6 +1556,223 @@ def variation_job(request: Request, job_id: str = PathParam(..., max_length=20))
     out = _job_out(variation_jobs.get(job_id, uid))
     out["budget"] = studio.public_budget(uid)
     return out
+
+
+# ---------- Design Generator: a jewellery spec -> checked design pictures (design.py) ----------
+
+class DesignStoneIn(BaseModel):
+    type: str = Field("", max_length=60)
+    count: int = Field(1, ge=1, le=999)
+    color: str = Field("", max_length=60)
+    shape: str = Field("", max_length=30)
+    size_mm: float = Field(0, ge=0, le=100)
+    clarity: str = Field("", max_length=30)
+    inventory_id: str = Field("", max_length=20)
+
+
+class DesignIn(BaseModel):
+    mode: Literal["freestyle", "inventory"] = "freestyle"
+    category: str = Field(max_length=20)
+    metal_type: str = Field("", max_length=80)
+    plating: str = Field("", max_length=60)
+    weight_g: float | None = Field(None, ge=0, le=5000)
+    stones: list[DesignStoneIn] = Field(default_factory=list, max_length=designgen.MAX_STONES)
+    style: str = Field("", max_length=designgen.STYLE_MAX)
+    placement: str = Field("", max_length=designgen.PLACEMENT_MAX)
+    regional: str = Field("", max_length=80)
+    gross_weight_g: float | None = Field(None, ge=0, le=5000)
+    reference_url: str = Field("", max_length=2000)
+    background: str = Field("white", max_length=20)
+    designs: int = Field(1, ge=1, le=designgen.DESIGNS_MAX)
+    model: str = Field("", max_length=30)
+
+
+def _reference_picture(url: str) -> bytes:
+    """A reference picture from a link: a picture link, or the product picture of a
+    shop page (the link search's safe fetcher: public addresses only, size and time limits)."""
+    deadline = time.monotonic() + linksearch.BUDGET
+    try:
+        url, _words = linksearch.split_link(url)
+        f = linksearch.fetch(url, "image/*,text/html;q=0.9,*/*;q=0.5", linksearch.MAX_HTML, deadline)
+        if f.ctype.startswith("image/"):
+            return sketch.prepare(f.data)
+        if "html" not in f.ctype:
+            raise sketch.SketchError("The reference link isn't a picture or a web page.")
+        page = linksearch.read_page(f.data.decode("utf-8", "replace"), f.url)
+        found = linksearch.pick_picture(linksearch.read_pictures(engine, linksearch.download_pictures(page, deadline)), True)
+    except linksearch.LinkError as e:
+        raise sketch.SketchError(f"Reference image: {e.message}")
+    except photo.PhotoError:
+        raise sketch.SketchError("Reference image: that picture couldn't be read.")
+    if not found:
+        raise sketch.SketchError("Reference image: no jewellery picture was found at that link.")
+    buf = io.BytesIO()
+    found[1].convert("RGB").save(buf, "JPEG", quality=92)
+    return sketch.prepare(buf.getvalue())
+
+
+def _design_spec(body: DesignIn) -> designgen.Spec:
+    stones = [designgen.Stone(s.type, s.count, s.color, s.shape, s.size_mm, s.clarity, s.inventory_id) for s in body.stones]
+    if body.mode == "inventory":
+        stones = design_inventory.resolve(stones)
+    return designgen.check_spec(designgen.Spec(body.category, body.metal_type, body.plating, body.weight_g or None, stones,
+                                         body.style, body.placement, body.regional, body.gross_weight_g or None,
+                                         body.reference_url.strip(), body.background))
+
+
+@app.get("/api/generator/options")
+async def design_options(request: Request):
+    uid = request.state.user["uid"]
+    staff = bool(await auth.staff_role(uid))
+    return designgen.options(studio, uid, staff, design_inventory)
+
+
+@app.post("/api/generator/generate", dependencies=[Depends(json_only)])
+async def design_generate(request: Request, body: DesignIn):
+    uid = request.state.user["uid"]
+    auth.limiter.check("sketch:" + uid, 12, 600)
+
+    def work():
+        spec = _design_spec(body)
+        model = _sketch_model(body.model or designgen.default_model() or "")
+        picture = _reference_picture(spec.reference_url) if spec.reference_url else None
+        return design_queue.submit(uid, spec, model, body.designs, picture)
+    item = await run_in_threadpool(work)
+    return {"item": item, "items": design_queue.list(uid), "budget": studio.public_budget(uid)}
+
+
+@app.get("/api/generator/queue")
+def design_list(request: Request):
+    uid = request.state.user["uid"]
+    return {"items": design_queue.list(uid), "budget": studio.public_budget(uid)}
+
+
+@app.post("/api/generator/queue/{item_id}/cancel", dependencies=[Depends(json_only)])
+def design_cancel(request: Request, item_id: str = PathParam(..., max_length=20)):
+    if not design_queue.cancel(request.state.user["uid"], item_id):
+        raise HTTPException(409, "Only requests still waiting in the queue can be cancelled.")
+    return {"ok": True}
+
+
+class StoneRecordIn(BaseModel):
+    code: str = Field("", max_length=60)
+    type: str = Field(max_length=60)
+    shape: str = Field(max_length=30)
+    color: str = Field(max_length=60)
+    size_mm: float = Field(ge=0, le=100)
+    clarity: str = Field("", max_length=30)
+    qty: int = Field(ge=0, le=1_000_000)
+    note: str = Field("", max_length=200)
+
+
+class StoneImportIn(BaseModel):
+    csv: str = Field(max_length=500_000)
+
+
+async def _staff(request: Request) -> str:
+    uid = request.state.user["uid"]
+    if not await auth.staff_role(uid):
+        raise HTTPException(403, "Only admins and jewelers can change the stone inventory.")
+    return uid
+
+
+@app.get("/api/generator/inventory")
+def design_inventory_list(_request: Request):
+    return {"items": design_inventory.all()}
+
+
+@app.post("/api/generator/inventory", dependencies=[Depends(json_only)])
+async def design_inventory_add(request: Request, body: StoneRecordIn):
+    uid = await _staff(request)
+    return design_inventory.add(body.model_dump(), uid)
+
+
+@app.put("/api/generator/inventory/{sid}", dependencies=[Depends(json_only)])
+async def design_inventory_edit(request: Request, body: StoneRecordIn, sid: str = PathParam(..., max_length=20)):
+    uid = await _staff(request)
+    return design_inventory.update(sid, body.model_dump(), uid)
+
+
+@app.delete("/api/generator/inventory/{sid}")
+async def design_inventory_delete(request: Request, sid: str = PathParam(..., max_length=20)):
+    await _staff(request)
+    if not design_inventory.delete(sid):
+        raise HTTPException(404, "Not found")
+    return {"ok": True}
+
+
+@app.post("/api/generator/inventory/import", dependencies=[Depends(json_only)])
+async def design_inventory_import(request: Request, body: StoneImportIn):
+    uid = await _staff(request)
+    return design_inventory.import_csv(body.csv, uid)
+
+
+# ---------- Social post: captions for a jewellery picture, per platform ----------
+
+class SocialIn(BaseModel):
+    image: str | None = Field(None, max_length=12_000_000)   # data URL of an upload, or
+    gid: str = Field("", max_length=20)                      # one of the user's AI designs
+    platforms: list[str] = Field(min_length=1, max_length=len(social.PLATFORMS))
+    details: str = Field("", max_length=social.DETAILS_MAX)
+    brand: str = Field("", max_length=social.BRAND_MAX)
+    city: str = Field("", max_length=social.CITY_MAX)
+    tone: Literal[tuple(social.TONES)] = "elegant"
+    goal: Literal[tuple(social.GOALS)] = "sell"
+    cta: Literal[tuple(social.CTAS)] = "dm"
+    cta_text: str = Field("", max_length=social.CTA_MAX)
+    market: Literal[tuple(social.MARKETS)] = "in"
+    occasion: str = Field("auto", max_length=20)
+    emojis: bool = True
+
+
+@app.get("/api/social/options")
+def social_options(request: Request):
+    uid = request.state.user["uid"]
+    return {**social.options(), "designs": [{"id": d["id"], "image": d["image"], "panel": d["panel"]}
+                                            for d in studio.mine(uid, 24)]}
+
+
+@app.post("/api/social/start", dependencies=[Depends(json_only)])
+async def social_start(request: Request):
+    body = await _sketch_body(request, SocialIn)
+    uid = request.state.user["uid"]
+    auth.limiter.check("social:" + uid, 20, 600)
+
+    def picture() -> bytes:
+        if body.gid:
+            f = studio.file(body.gid, uid)
+            if f is None:
+                raise sketch.SketchError("That design is no longer available.", 404)
+            return sketch.prepare(f.read_bytes())
+        if not body.image:
+            raise sketch.SketchError("Add a picture of the jewellery first.")
+        return sketch.prepare(sketch.from_data_url(body.image))
+    pic = await run_in_threadpool(picture)
+    occasion = body.occasion if body.occasion in ("auto", "none") or body.occasion in social.OCCASION_BY_KEY else "auto"
+    brief = social.make_brief(body.platforms, body.details, tone=body.tone, goal=body.goal, cta=body.cta,
+                              cta_text=body.cta_text if body.cta == "custom" else "", brand=" ".join(body.brand.split()),
+                              city=" ".join(body.city.split()), market=body.market, occasion=occasion, emojis=body.emojis)
+    return social_jobs.start(uid, pic, brief)
+
+
+@app.get("/api/social/job/{job_id}")
+def social_job(request: Request, job_id: str = PathParam(..., max_length=20)):
+    j = social_jobs.get(job_id, request.state.user["uid"])
+    if j is None:
+        raise HTTPException(404, "This post set has expired. Make the captions again.")
+    return j
+
+
+class SocialRewriteIn(BaseModel):
+    platform: str = Field(max_length=20)
+    variant: int = Field(1, ge=1, le=1000)
+
+
+@app.post("/api/social/job/{job_id}/rewrite", dependencies=[Depends(json_only)])
+async def social_rewrite(request: Request, body: SocialRewriteIn, job_id: str = PathParam(..., max_length=20)):
+    uid = request.state.user["uid"]
+    auth.limiter.check("social:" + uid, 20, 600)
+    return await run_in_threadpool(social_jobs.rewrite, job_id, uid, body.platform, body.variant)
 
 
 @app.get("/api/sketch/img/{gid}")
@@ -1469,14 +1858,38 @@ def demo_look_page():
     return FileResponse(STATIC / "demo" / "look.html", headers={"Cache-Control": "no-cache"})
 
 
+def _ai_tab(request: Request, tab: str, page: str):
+    """Both AI tools live inside the AI generation page: opening one directly
+    in the browser goes to /ai with that tab open (the frame itself loads it)."""
+    if request.headers.get("sec-fetch-dest") == "document":
+        q = {"tab": tab, **({"from": request.query_params["from"]} if request.query_params.get("from") else {})}
+        return RedirectResponse("/ai?" + urlencode(q), status_code=303)
+    return FileResponse(STATIC / page, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/ai")
+def ai_page():
+    return FileResponse(STATIC / "ai.html", headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/sketch")
-def sketch_page():
-    return FileResponse(STATIC / "sketch.html", headers={"Cache-Control": "no-cache"})
+def sketch_page(request: Request):
+    return _ai_tab(request, "sketch", "sketch.html")
 
 
 @app.get("/variation")
-def variation_page():
-    return FileResponse(STATIC / "variation.html", headers={"Cache-Control": "no-cache"})
+def variation_page(request: Request):
+    return _ai_tab(request, "variation", "variation.html")
+
+
+@app.get("/design")
+def design_page(request: Request):
+    return _ai_tab(request, "design", "design.html")
+
+
+@app.get("/social")
+def social_page(request: Request):
+    return _ai_tab(request, "social", "social.html")
 
 
 @app.get("/tryon/me")

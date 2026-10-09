@@ -132,6 +132,18 @@ section.block { margin-top: 26px; }
   .tab { font-size: 13px; }
 }
 </style>
+<script>
+// This tool is a tab of the AI generation page (/ai). Opened on its own, go there.
+const IN_AI = window.top !== window.self;
+if (!IN_AI) {
+  const q = new URLSearchParams(location.search); q.delete("embed"); q.set("tab", "sketch");
+  location.replace("/ai?" + q);
+} else document.documentElement.classList.add("embed");
+// open the other AI tool (optionally with a picture) as the other tab
+const aiTab = (tab, from) => window.parent.postMessage({ ai: "tab", tab, from: from || "" }, location.origin);
+const toLogin = () => { window.top.location.href = "/login?next=" + encodeURIComponent("/ai?tab=sketch"); };
+</script>
+<style>.embed .topbar { display: none; }</style>
 </head>
 <body>
 <header class="topbar">
@@ -272,7 +284,7 @@ let opts = null, tab = "pad", picture = null, current = null, stream = null, bus
 
 async function api(url, init = {}) {
   const r = await fetch(url, { credentials: "same-origin", ...init });
-  if (r.status === 401) { location.href = "/login?next=/sketch"; throw new Error("Sign in required"); }
+  if (r.status === 401) { toLogin(); throw new Error("Sign in required"); }
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.detail || `Something went wrong (${r.status})`);
   return data;
@@ -412,7 +424,7 @@ async function loadOptions() {
 }
 function showBudget(b) {
   if (!b) return;
-  $("#budget").textContent = `${b.left_today} of ${b.per_user_day} designs left for you today`;
+  $("#budget").textContent = b.per_user_day == null ? "" : `${b.left_today} of ${b.per_user_day} designs left for you today`;
 }
 $("#bg").onchange = () => { $("#customBg").hidden = $("#bg").value !== "custom"; };
 
@@ -464,7 +476,7 @@ $("#similarBtn").onclick = async () => {
   try {
     const res = await api(`/api/sketch/${current.id}/similar`);
     const items = (res.results || []).slice(0, 8);
-    $("#similar").innerHTML = items.length ? items.map(d => `<a class="mini" href="/buy?${new URLSearchParams({ uid: d.uid, id: d.design_id, metal: d.metal_shown || "" })}">
+    $("#similar").innerHTML = items.length ? items.map(d => `<a class="mini" target="_top" href="/buy?${new URLSearchParams({ uid: d.uid, id: d.design_id, metal: d.metal_shown || "" })}">
         <img loading="lazy" src="${esc(d.thumb)}" alt="${esc(d.design_id)}"><div class="cap"><span>${esc(d.design_id)}</span><span>${esc(d.category || "")}</span></div></a>`).join("")
       : `<p class="hint">No close designs found.</p>`;
     $("#similarBlock").hidden = false; $("#similarBlock").scrollIntoView({ behavior: "smooth" });
@@ -492,7 +504,7 @@ async function loadMine() {
   } catch { /* gallery is optional */ }
 }
 
-$("#toVariation").onclick = () => { if (current) location.href = `/variation?from=${encodeURIComponent(current.id)}`; };
+$("#toVariation").onclick = () => { if (current) aiTab("variation", current.id); };
 
 // a design handed over from the variations page: it becomes the uploaded picture
 async function loadFrom(gid) {

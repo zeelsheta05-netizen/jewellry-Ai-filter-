@@ -114,9 +114,10 @@ def live_model(meta: dict) -> str | None:
 
 
 def part_for(meta: dict) -> str | None:
-    """Body photo this design can be tried on: with a 3D model that passed its
-    check, or with its own catalogue render."""
-    return PART_FOR.get(meta["category"]) if model_for(meta) or photo_ok(meta) else None
+    """Body part this design is tried on: every design with a catalogue front
+    picture (the AI draws it on a model photo from that picture, see
+    modeltryon.py); hand for rings and bracelets, face / neck for the rest."""
+    return PART_FOR.get(meta["category"]) if any(front_image(meta, mt) for mt in meta.get("images", {})) else None
 
 
 # ---------- body photos ----------
